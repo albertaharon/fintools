@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דמי ניהול ביטוח מנהלים | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff;
+      padding: 2.4rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      position: relative;
+    }
+    header p {
+      margin-top: .5rem;
+      opacity: .85;
+      font-size: .95rem;
+      font-weight: 300;
+      position: relative;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.88rem;
+      position: relative;
+      margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dk);
+      margin-bottom: 1.1rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid var(--green-lt);
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: .35rem;
+      letter-spacing: .01em;
+    }
+    .field input {
+      width: 100%;
+      padding: .55rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Heebo', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .18s, box-shadow .18s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,122,74,.12);
+      background: #fff;
+    }
+    .field-hint {
+      font-size: .76rem;
+      color: var(--muted);
+      margin-top: .3rem;
+      line-height: 1.4;
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .divider { border: none; border-top: 1.5px solid var(--green-lt); margin: 1.1rem 0; }
+    .section-label {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .8rem;
+    }
+
+    .btn-calc {
+      width: 100%;
+      padding: .75rem;
+      background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff;
+      font-family: 'Heebo', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: .4rem;
+      transition: opacity .18s, transform .12s;
+      letter-spacing: .02em;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 700px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 420px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi.kpi-balance::before { background: var(--green); }
+    .kpi.kpi-total::before   { background: var(--red); }
+    .kpi.kpi-asset::before   { background: var(--amber); }
+    .kpi.kpi-perf::before    { background: var(--teal); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.45rem; font-weight: 700; line-height: 1; }
+    .kpi.kpi-balance .kpi-value { color: var(--green); }
+    .kpi.kpi-total .kpi-value   { color: var(--red); }
+    .kpi.kpi-asset .kpi-value   { color: var(--amber); }
+    .kpi.kpi-perf .kpi-value    { color: var(--teal); }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    .formula-banner {
+      background: var(--green-dk);
+      color: #fff;
+      padding: .75rem 1.1rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      margin-bottom: 1.25rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .formula-banner strong { color: #fbbf24; }
+
+    .table-wrap { max-height: 480px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk);
+      color: #fff;
+      padding: .55rem .6rem;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td {
+      padding: .42rem .55rem;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red   { color: var(--red); font-weight: 600; }
+    .v-muted { color: var(--muted); }
+
+    .chart-wrap { position: relative; height: 320px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>דמי ניהול ביטוח מנהלים</h1>
+    <p>מבנה עמלה משולב: אחוז מצבירה + אחוז מרווח ריאלי</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>הגדרות התיק</h2>
+
+        <div class="field">
+          <label>השקעה התחלתית (₪)</label>
+          <input type="number" id="initialSum" value="100000" min="0" step="1000">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה שנתית (%)</label>
+            <input type="number" id="annualReturn" value="7" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>תקופה (שנים)</label>
+            <input type="number" id="years" value="10" min="1" max="50">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>אינפלציה שנתית (%)</label>
+          <input type="number" id="inflation" value="2.5" step="0.1" min="0">
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">מבנה דמי ניהול</div>
+
+        <div class="row2">
+          <div class="field">
+            <label>דמ״נ מצבירה (%)</label>
+            <input type="number" id="assetFeeRate" value="0.5" step="0.05" min="0" max="2">
+          </div>
+          <div class="field">
+            <label>דמ״נ מרווח ריאלי (%)</label>
+            <input type="number" id="perfFeeRate" value="15" step="1" min="0" max="50">
+          </div>
+        </div>
+
+        <div class="field-hint" style="margin-bottom: 1rem;">רווח ריאלי = רווח ברוטו פחות אינפלציה על הצבירה. אם הרווח הריאלי שלילי — לא נגבים דמי ניהול מרווח.</div>
+
+        <button class="btn-calc" onclick="calculate()">חשב מחדש</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <!-- Formula banner -->
+      <div class="formula-banner" id="formulaBanner">
+        דמי ניהול שנתיים = <strong>0.5%</strong> מיתרת תחילת השנה + <strong>15%</strong> מהרווח הריאלי
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi kpi-balance">
+          <div class="kpi-label">יתרה סופית</div>
+          <div class="kpi-value" id="resBalance">—</div>
+          <div class="kpi-sub">אחרי דמ״נ</div>
+        </div>
+        <div class="kpi kpi-total">
+          <div class="kpi-label">סה״כ דמ״נ ששולמו</div>
+          <div class="kpi-value" id="resTotalFees">—</div>
+          <div class="kpi-sub" id="resTotalFeesPct"></div>
+        </div>
+        <div class="kpi kpi-asset">
+          <div class="kpi-label">מתוכם: מצבירה</div>
+          <div class="kpi-value" id="resAssetFees">—</div>
+          <div class="kpi-sub" id="resAssetFeesPct"></div>
+        </div>
+        <div class="kpi kpi-perf">
+          <div class="kpi-label">מתוכם: מרווח ריאלי</div>
+          <div class="kpi-value" id="resPerfFees">—</div>
+          <div class="kpi-sub" id="resPerfFeesPct"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="chart-wrap">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <h2>פירוט שנתי</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>שנה</th>
+                <th>יתרת פתיחה</th>
+                <th>רווח ברוטו</th>
+                <th>דמ״נ מצבירה</th>
+                <th>רווח ריאלי</th>
+                <th>דמ״נ מרווח</th>
+                <th>סה״כ דמ״נ</th>
+                <th>יתרת סגירה</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+const fmt = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+
+function calculate() {
+  const initialSum   = parseFloat(document.getElementById('initialSum').value)   || 0;
+  const annualReturn = (parseFloat(document.getElementById('annualReturn').value) || 0) / 100;
+  const years        = parseInt(document.getElementById('years').value)           || 10;
+  const inflation    = (parseFloat(document.getElementById('inflation').value)    || 0) / 100;
+  const assetFeeRate = (parseFloat(document.getElementById('assetFeeRate').value) || 0) / 100;
+  const perfFeeRate  = (parseFloat(document.getElementById('perfFeeRate').value)  || 0) / 100;
+
+  // Update formula banner
+  document.getElementById('formulaBanner').innerHTML =
+    `דמי ניהול שנתיים = <strong>${(assetFeeRate * 100).toFixed(2)}%</strong> מיתרת תחילת השנה + <strong>${(perfFeeRate * 100).toFixed(0)}%</strong> מהרווח הריאלי`;
+
+  const tbody = document.getElementById('resultsTable');
+  tbody.innerHTML = '';
+
+  let balance = initialSum;
+  let totalFees = 0, totalAssetFees = 0, totalPerfFees = 0;
+
+  const labels = [];
+  const balanceData = [];
+  const balanceNoFeesData = [];
+  const feeCumData = [];
+  let balanceNoFees = initialSum;
+
+  for (let year = 1; year <= years; year++) {
+    const grossReturn  = balance * annualReturn;
+    const inflationAdj = balance * inflation;
+    const realReturn   = Math.max(0, grossReturn - inflationAdj);
+    const assetFee     = balance * assetFeeRate;
+    const perfFee      = realReturn * perfFeeRate;
+    const totalFee     = assetFee + perfFee;
+    const endBalance   = balance + grossReturn - totalFee;
+
+    totalAssetFees += assetFee;
+    totalPerfFees  += perfFee;
+    totalFees      += totalFee;
+
+    balanceNoFees += balanceNoFees * annualReturn;
+
+    labels.push(`שנה ${year}`);
+    balanceData.push(endBalance);
+    balanceNoFeesData.push(balanceNoFees);
+    feeCumData.push(totalFees);
+
+    tbody.innerHTML += `<tr>
+      <td class="v-muted">${year}</td>
+      <td>${fmt.format(balance)}</td>
+      <td class="v-green">${fmt.format(grossReturn)}</td>
+      <td class="v-red">${fmt.format(assetFee)}</td>
+      <td>${fmt.format(realReturn)}</td>
+      <td class="v-red">${fmt.format(perfFee)}</td>
+      <td class="v-red">${fmt.format(totalFee)}</td>
+      <td class="v-green">${fmt.format(endBalance)}</td>
+    </tr>`;
+
+    balance = endBalance;
+  }
+
+  document.getElementById('resBalance').textContent = fmt.format(balance);
+  document.getElementById('resTotalFees').textContent = fmt.format(totalFees);
+  document.getElementById('resTotalFeesPct').textContent =
+    initialSum > 0 ? `${((totalFees / initialSum) * 100).toFixed(1)}% מההשקעה` : '';
+  document.getElementById('resAssetFees').textContent = fmt.format(totalAssetFees);
+  document.getElementById('resAssetFeesPct').textContent =
+    totalFees > 0 ? `${((totalAssetFees / totalFees) * 100).toFixed(0)}% מסה״כ דמ״נ` : '';
+  document.getElementById('resPerfFees').textContent = fmt.format(totalPerfFees);
+  document.getElementById('resPerfFeesPct').textContent =
+    totalFees > 0 ? `${((totalPerfFees / totalFees) * 100).toFixed(0)}% מסה״כ דמ״נ` : '';
+
+  renderChart(labels, balanceData, balanceNoFeesData, feeCumData);
+}
+
+function renderChart(labels, balanceData, balanceNoFeesData, feeCumData) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'יתרה — ללא דמ״נ',
+          data: balanceNoFeesData,
+          borderColor: '#999',
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y',
+        },
+        {
+          label: 'יתרה — אחרי דמ״נ',
+          data: balanceData,
+          borderColor: '#1a7a4a',
+          backgroundColor: 'rgba(26,122,74,0.09)',
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+          yAxisID: 'y',
+        },
+        {
+          label: 'דמ״נ מצטברים',
+          data: feeCumData,
+          borderColor: '#c0392b',
+          borderWidth: 2,
+          borderDash: [3, 3],
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              return ` ${ctx.dataset.label}: ${new Intl.NumberFormat('he-IL').format(Math.round(v))} ₪`;
+            },
+            afterBody: (items) => {
+              if (items.length >= 2) {
+                const diff = items[0].parsed.y - items[1].parsed.y;
+                return `\n  עלות דמ״נ מצטברת: ${new Intl.NumberFormat('he-IL').format(Math.round(diff))} ₪`;
+              }
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { font: { family: 'Heebo', size: 11 } },
+          grid: { color: 'rgba(0,0,0,.04)' },
+        },
+        y: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: 'יתרת התיק', font: { family: 'Heebo' } },
+          ticks: {
+            font: { family: 'Heebo', size: 11 },
+            callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v),
+          },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'דמ״נ מצטברים', font: { family: 'Heebo' } },
+          ticks: {
+            font: { family: 'Heebo', size: 11 },
+            callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v),
+          },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>

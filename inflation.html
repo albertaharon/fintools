@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון אינפלציה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff;
+      padding: 2.4rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      position: relative;
+    }
+    header p {
+      margin-top: .5rem;
+      opacity: .85;
+      font-size: .95rem;
+      font-weight: 300;
+      position: relative;
+    }
+
+    /* ─── NAV ─── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.88rem;
+      position: relative;
+      margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    /* ─── LAYOUT ─── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dk);
+      margin-bottom: 1.1rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid var(--green-lt);
+    }
+
+    /* ─── FORM CONTROLS ─── */
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: .35rem;
+      letter-spacing: .01em;
+    }
+    .field input {
+      width: 100%;
+      padding: .55rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Heebo', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .18s, box-shadow .18s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,122,74,.12);
+      background: #fff;
+    }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input {
+      border-color: var(--green);
+      background: var(--green-lt);
+    }
+    .field-hint {
+      font-size: .76rem;
+      color: var(--muted);
+      margin-top: .3rem;
+      line-height: 1.4;
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+
+    /* ─── CALC BUTTON ─── */
+    .btn-calc {
+      width: 100%;
+      padding: .75rem;
+      background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff;
+      font-family: 'Heebo', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: .4rem;
+      transition: opacity .18s, transform .12s;
+      letter-spacing: .02em;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* ─── KPI CARDS ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi.kpi-price::before   { background: var(--red); }
+    .kpi.kpi-change::before  { background: var(--amber); }
+    .kpi.kpi-power::before   { background: var(--green); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.55rem; font-weight: 700; line-height: 1; }
+    .kpi.kpi-price .kpi-value  { color: var(--red); }
+    .kpi.kpi-change .kpi-value { color: var(--amber); }
+    .kpi.kpi-power .kpi-value  { color: var(--green); }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { max-height: 480px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk);
+      color: #fff;
+      padding: .55rem .6rem;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td {
+      padding: .42rem .55rem;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red   { color: var(--red); font-weight: 600; }
+    .v-muted { color: var(--muted); }
+
+    /* ─── CHART ─── */
+    .chart-wrap { position: relative; height: 320px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>מחשבון השפעת אינפלציה</h1>
+    <p>כמה ישתנה מחיר המוצר שלך לאורך השנים</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>נתוני חישוב</h2>
+
+        <div class="field highlight">
+          <label>מחיר נוכחי (₪)</label>
+          <input type="number" id="price" value="100" min="0" class="calc-input">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>אינפלציה שנתית (%)</label>
+            <input type="number" id="inflation" value="3" step="0.1" class="calc-input">
+          </div>
+          <div class="field">
+            <label>תקופה (שנים)</label>
+            <input type="number" id="years" value="10" min="1" max="100" class="calc-input">
+          </div>
+        </div>
+
+        <div class="field-hint" style="margin-bottom: 1rem;">ממוצע אינפלציה בישראל בעשור האחרון: כ-1.5%–2.5%</div>
+
+        <button class="btn-calc" onclick="calculate()">חשב השפעה מצטברת</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi kpi-price">
+          <div class="kpi-label">מחיר בסוף התקופה</div>
+          <div class="kpi-value" id="resFinalPrice">—</div>
+          <div class="kpi-sub" id="resFinalPriceSub"></div>
+        </div>
+        <div class="kpi kpi-change">
+          <div class="kpi-label">עלייה מצטברת</div>
+          <div class="kpi-value" id="resCumulative">—</div>
+          <div class="kpi-sub" id="resCumulativeSub"></div>
+        </div>
+        <div class="kpi kpi-power">
+          <div class="kpi-label">כוח הקנייה של ₪100</div>
+          <div class="kpi-value" id="resPower">—</div>
+          <div class="kpi-sub" id="resPowerSub"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="chart-wrap">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <h2>פירוט שנתי</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>שנה</th>
+                <th>מחיר המוצר</th>
+                <th>שינוי מצטבר (₪)</th>
+                <th>עלייה באחוזים</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+const fmt = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+document.querySelectorAll('.calc-input').forEach(input => {
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') calculate();
+  });
+});
+
+function calculate() {
+  const startPrice = parseFloat(document.getElementById('price').value) || 0;
+  const inflationRate = parseFloat(document.getElementById('inflation').value) / 100;
+  const years = parseInt(document.getElementById('years').value) || 10;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  let currentPrice = startPrice;
+  const labels = [];
+  const priceData = [];
+  const powerData = [];
+
+  for (let i = 0; i <= years; i++) {
+    const totalChange = currentPrice - startPrice;
+    const percentChange = ((currentPrice / startPrice) - 1) * 100;
+
+    const row = `<tr>
+      <td class="v-muted">${i === 0 ? 'היום' : i}</td>
+      <td>${fmt.format(currentPrice)}</td>
+      <td class="v-red">${i === 0 ? '—' : fmt.format(totalChange)}</td>
+      <td class="v-red">${i === 0 ? '—' : percentChange.toFixed(1) + '%'}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+
+    labels.push(i === 0 ? 'היום' : `שנה ${i}`);
+    priceData.push(currentPrice);
+    powerData.push(startPrice / currentPrice * 100);
+
+    currentPrice *= (1 + inflationRate);
+  }
+
+  const finalPrice = priceData[priceData.length - 1];
+  const cumChange = ((finalPrice / startPrice) - 1) * 100;
+  const buyingPower = (startPrice / finalPrice * 100).toFixed(1);
+
+  document.getElementById('resFinalPrice').textContent = fmt.format(finalPrice);
+  document.getElementById('resFinalPriceSub').textContent = `לעומת ${fmt.format(startPrice)} היום`;
+
+  document.getElementById('resCumulative').textContent = cumChange.toFixed(1) + '%';
+  document.getElementById('resCumulativeSub').textContent = fmt.format(finalPrice - startPrice);
+
+  document.getElementById('resPower').textContent = '₪' + buyingPower;
+  document.getElementById('resPowerSub').textContent = `בעוד ${years} שנים`;
+
+  renderChart(labels, priceData, powerData);
+}
+
+function renderChart(labels, priceData, powerData) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'מחיר המוצר (₪)',
+          data: priceData,
+          borderColor: '#c0392b',
+          backgroundColor: 'rgba(192,57,43,0.06)',
+          fill: true,
+          yAxisID: 'y',
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+        },
+        {
+          label: 'כוח קנייה של ₪100',
+          data: powerData,
+          borderColor: '#1a7a4a',
+          backgroundColor: 'rgba(26,122,74,0.09)',
+          fill: true,
+          yAxisID: 'y1',
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (ctx.datasetIndex === 0) {
+                return ` ${ctx.dataset.label}: ${new Intl.NumberFormat('he-IL', { minimumFractionDigits: 2 }).format(v)} ₪`;
+              }
+              return ` ${ctx.dataset.label}: ₪${v.toFixed(1)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { font: { family: 'Heebo', size: 11 } },
+          grid: { color: 'rgba(0,0,0,.04)' },
+        },
+        y: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: 'מחיר המוצר', font: { family: 'Heebo' } },
+          ticks: {
+            font: { family: 'Heebo', size: 11 },
+            callback: v => '₪' + v.toFixed(0),
+          },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'כוח קנייה (₪)', font: { family: 'Heebo' } },
+          ticks: {
+            font: { family: 'Heebo', size: 11 },
+            callback: v => '₪' + v.toFixed(0),
+          },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>

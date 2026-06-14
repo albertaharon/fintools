@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דמי ניהול קופת גמל להשקעה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff;
+      padding: 2.4rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      position: relative;
+    }
+    header p {
+      margin-top: .5rem;
+      opacity: .85;
+      font-size: .95rem;
+      font-weight: 300;
+      position: relative;
+    }
+
+    /* ─── NAV ─── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.88rem;
+      position: relative;
+      margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    /* ─── LAYOUT ─── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dk);
+      margin-bottom: 1.1rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid var(--green-lt);
+    }
+
+    /* ─── FORM CONTROLS ─── */
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: .35rem;
+      letter-spacing: .01em;
+    }
+    .field input {
+      width: 100%;
+      padding: .55rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Heebo', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .18s, box-shadow .18s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,122,74,.12);
+      background: #fff;
+    }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input {
+      border-color: var(--green);
+      background: var(--green-lt);
+    }
+    .field-hint {
+      font-size: .76rem;
+      color: var(--muted);
+      margin-top: .3rem;
+      line-height: 1.4;
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .divider { border: none; border-top: 1.5px solid var(--green-lt); margin: 1.1rem 0; }
+    .section-label {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .8rem;
+    }
+
+    /* ─── CALC BUTTON ─── */
+    .btn-calc {
+      width: 100%;
+      padding: .75rem;
+      background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff;
+      font-family: 'Heebo', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: .4rem;
+      transition: opacity .18s, transform .12s;
+      letter-spacing: .02em;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* ─── KPI CARDS ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi.kpi-a::before    { background: var(--red); }
+    .kpi.kpi-b::before    { background: var(--green); }
+    .kpi.kpi-diff::before { background: var(--teal); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.55rem; font-weight: 700; line-height: 1; }
+    .kpi.kpi-a .kpi-value    { color: var(--red); }
+    .kpi.kpi-b .kpi-value    { color: var(--green); }
+    .kpi.kpi-diff .kpi-value { color: var(--teal); }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { max-height: 480px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk);
+      color: #fff;
+      padding: .55rem .6rem;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td {
+      padding: .42rem .55rem;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red   { color: var(--red); }
+    .v-muted { color: var(--muted); }
+
+    /* ─── CHART ─── */
+    .chart-wrap { position: relative; height: 340px; }
+
+    /* ─── SCENARIO LABEL ─── */
+    .scenario-card {
+      border-right: 3px solid var(--border);
+      padding-right: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .scenario-card.sc-a { border-color: var(--red); }
+    .scenario-card.sc-b { border-color: var(--green); }
+    .scenario-title {
+      font-size: .85rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+    }
+    .sc-a .scenario-title { color: var(--red); }
+    .sc-b .scenario-title { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>דמי ניהול קופת גמל להשקעה</h1>
+    <p>כמה דמי הניהול באמת עולים לך — השוואה בין שני תרחישים</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>הגדרות החיסכון</h2>
+
+        <div class="field">
+          <label>יתרה נוכחית (₪)</label>
+          <input type="number" id="initial" value="100000" min="0" step="1000">
+        </div>
+
+        <div class="field">
+          <label>הפקדה חודשית (₪)</label>
+          <input type="number" id="monthly" value="2000" min="0" step="100">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תקופה (שנים)</label>
+            <input type="number" id="years" value="20" min="1" max="50">
+          </div>
+          <div class="field">
+            <label>תשואה שנתית ברוטו (%)</label>
+            <input type="number" id="annualReturn" value="6" step="0.1" min="0">
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="scenario-card sc-a">
+          <div class="scenario-title">תרחיש א׳ — דמ״נ נוכחיים</div>
+          <div class="field highlight" style="--green: var(--red); --green-lt: var(--red-lt);">
+            <label>דמי ניהול מצבירה — שנתי (%)</label>
+            <input type="number" id="feeA" value="1.05" min="0" max="2" step="0.01">
+            <div class="field-hint">מקסימום חוקי: 1.05% — נגבה חודשית (÷12)</div>
+          </div>
+        </div>
+
+        <div class="scenario-card sc-b">
+          <div class="scenario-title">תרחיש ב׳ — דמ״נ מופחתים</div>
+          <div class="field highlight">
+            <label>דמי ניהול מצבירה — שנתי (%)</label>
+            <input type="number" id="feeB" value="0.25" min="0" max="2" step="0.01">
+          </div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב מחדש</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi kpi-a">
+          <div class="kpi-label">צבירה — תרחיש א׳</div>
+          <div class="kpi-value" id="resA">—</div>
+          <div class="kpi-sub" id="resFeesA"></div>
+        </div>
+        <div class="kpi kpi-b">
+          <div class="kpi-label">צבירה — תרחיש ב׳</div>
+          <div class="kpi-value" id="resB">—</div>
+          <div class="kpi-sub" id="resFeesB"></div>
+        </div>
+        <div class="kpi kpi-diff">
+          <div class="kpi-label">הפרש לטובתך</div>
+          <div class="kpi-value" id="resDiff">—</div>
+          <div class="kpi-sub" id="resDiffPct"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="chart-wrap">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <h2>פירוט שנתי</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>שנה</th>
+                <th>הפקדות מצטבר</th>
+                <th>תרחיש א׳</th>
+                <th>דמ״נ א׳ מצטבר</th>
+                <th>תרחיש ב׳</th>
+                <th>דמ״נ ב׳ מצטבר</th>
+                <th>הפרש</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+const fmt = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+
+function simulate(initial, monthly, years, annualReturn, annualFee) {
+  const monthlyReturn = Math.pow(1 + annualReturn / 100, 1/12) - 1;
+  const monthlyFee = annualFee / 100 / 12;
+
+  let balance = initial;
+  let totalFees = 0;
+  let totalDeposits = initial;
+  const snapshots = [];
+
+  for (let y = 1; y <= years; y++) {
+    let yearFees = 0;
+    for (let m = 0; m < 12; m++) {
+      balance += monthly;
+      totalDeposits += monthly;
+
+      const returnAmt = balance * monthlyReturn;
+      balance += returnAmt;
+
+      const fee = balance * monthlyFee;
+      balance -= fee;
+      yearFees += fee;
+      totalFees += fee;
+    }
+    snapshots.push({ balance, totalFees, totalDeposits, yearFees });
+  }
+
+  return { balance, totalFees, snapshots };
+}
+
+function calculate() {
+  const initial = parseFloat(document.getElementById('initial').value) || 0;
+  const monthly = parseFloat(document.getElementById('monthly').value) || 0;
+  const years   = parseInt(document.getElementById('years').value) || 20;
+  const annualReturn = parseFloat(document.getElementById('annualReturn').value) || 0;
+  const feeA = parseFloat(document.getElementById('feeA').value) || 0;
+  const feeB = parseFloat(document.getElementById('feeB').value) || 0;
+
+  const a = simulate(initial, monthly, years, annualReturn, feeA);
+  const b = simulate(initial, monthly, years, annualReturn, feeB);
+
+  const diff = b.balance - a.balance;
+
+  document.getElementById('resA').textContent = fmt.format(a.balance);
+  document.getElementById('resFeesA').textContent = `דמ״נ ששולמו: ${fmt.format(a.totalFees)}`;
+  document.getElementById('resB').textContent = fmt.format(b.balance);
+  document.getElementById('resFeesB').textContent = `דמ״נ ששולמו: ${fmt.format(b.totalFees)}`;
+  document.getElementById('resDiff').textContent = fmt.format(diff);
+  document.getElementById('resDiffPct').textContent =
+    a.balance > 0 ? `+${((diff / a.balance) * 100).toFixed(1)}% יותר` : '';
+
+  // Table
+  const tbody = document.getElementById('resultsTable');
+  let rows = '';
+  for (let y = 0; y < years; y++) {
+    const sa = a.snapshots[y];
+    const sb = b.snapshots[y];
+    rows += `<tr>
+      <td class="v-muted">${y + 1}</td>
+      <td>${fmt.format(sa.totalDeposits)}</td>
+      <td class="v-red">${fmt.format(sa.balance)}</td>
+      <td class="v-red">${fmt.format(sa.totalFees)}</td>
+      <td class="v-green">${fmt.format(sb.balance)}</td>
+      <td class="v-green">${fmt.format(sb.totalFees)}</td>
+      <td style="color: var(--teal); font-weight: 600;">${fmt.format(sb.balance - sa.balance)}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = rows;
+
+  renderChart(a, b, years);
+}
+
+function renderChart(a, b, years) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  const labels = Array.from({ length: years }, (_, i) => `שנה ${i + 1}`);
+  const dataA = a.snapshots.map(s => s.balance);
+  const dataB = b.snapshots.map(s => s.balance);
+  const dataDep = a.snapshots.map(s => s.totalDeposits);
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'תרחיש א׳ (דמ״נ גבוהים)',
+          data: dataA,
+          borderColor: '#c0392b',
+          backgroundColor: 'rgba(192,57,43,0.06)',
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+        },
+        {
+          label: 'תרחיש ב׳ (דמ״נ מופחתים)',
+          data: dataB,
+          borderColor: '#1a7a4a',
+          backgroundColor: 'rgba(26,122,74,0.09)',
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+        },
+        {
+          label: 'סה״כ הפקדות',
+          data: dataDep,
+          borderColor: '#999',
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              return ` ${ctx.dataset.label}: ${new Intl.NumberFormat('he-IL').format(Math.round(v))} ₪`;
+            },
+            afterBody: (items) => {
+              if (items.length >= 2) {
+                const diff = items[1].parsed.y - items[0].parsed.y;
+                return `\n  הפרש: ${new Intl.NumberFormat('he-IL').format(Math.round(diff))} ₪`;
+              }
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { font: { family: 'Heebo', size: 11 } },
+          grid: { color: 'rgba(0,0,0,.04)' },
+        },
+        y: {
+          ticks: {
+            font: { family: 'Heebo', size: 11 },
+            callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v),
+          },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>

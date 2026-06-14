@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון מס ריאלי מול מס נומינלי | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.88rem; position: relative; margin-bottom: 0.3rem; }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt); }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    .field input {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .95rem; color: var(--text); background: var(--bg);
+      transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .divider { border: none; border-top: 1.5px solid var(--green-lt); margin: 1.1rem 0; }
+    .section-label { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+    .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+
+    .btn-calc {
+      width: 100%; padding: .75rem; background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 1rem; font-weight: 700; border: none;
+      border-radius: 10px; cursor: pointer; margin-top: .4rem; transition: opacity .18s, transform .12s;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi.kpi-val::before  { background: var(--green); }
+    .kpi.kpi-dep::before  { background: var(--muted); }
+    .kpi.kpi-nom::before  { background: var(--teal); }
+    .kpi.kpi-real::before { background: var(--amber); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .kpi-val  .kpi-value { color: var(--green); }
+    .kpi-dep  .kpi-value { color: var(--text); }
+    .kpi-nom  .kpi-value { color: var(--teal); }
+    .kpi-real .kpi-value { color: var(--amber); }
+    .kpi-sub  { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* comparison panel */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 560px) { .compare { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: 1fr; } }
+    .cmp-box { border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+    .cmp-box.winner { border-color: var(--green); background: var(--green-lt); }
+    .cmp-title { font-size: .9rem; font-weight: 700; color: var(--green-dk); margin-bottom: .6rem; }
+    .cmp-row { display: flex; justify-content: space-between; font-size: .85rem; padding: .25rem 0; border-bottom: 1px dashed var(--border); }
+    .cmp-row:last-child { border-bottom: none; }
+    .cmp-row .lbl { color: var(--muted); }
+    .cmp-row .val { font-weight: 600; }
+    .cmp-row.tax .val { color: var(--red); }
+    .cmp-row.net .val { color: var(--green); }
+    .badge { display: inline-block; font-size: .7rem; font-weight: 700; color: #fff; background: var(--green); border-radius: 10px; padding: .1rem .5rem; margin-right: .4rem; }
+
+    .table-wrap { max-height: 460px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th { position: sticky; top: 0; z-index: 1; background: var(--green-dk); color: #fff; padding: .55rem .6rem; text-align: center; font-weight: 500; white-space: nowrap; }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .42rem .55rem; text-align: center; border-bottom: 1px solid #f0f0f0; }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-muted { color: var(--muted); }
+
+    .chart-wrap { position: relative; height: 320px; }
+    .note { background: var(--amber-lt); border-right: 3px solid var(--amber); color: #7a5200; padding: .7rem 1rem; border-radius: 8px; font-size: .8rem; line-height: 1.5; margin-bottom: 1.25rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>מס ריאלי מול מס נומינלי</h1>
+    <p>השוואת המס על רווחי השקעה — מס נומינלי על הרווח המלא מול מס ריאלי על הרווח שמעבר לאינפלציה</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>נתוני ההשקעה</h2>
+
+        <div class="field">
+          <label>הפקדה התחלתית (₪)</label>
+          <input type="number" id="initial" value="100000" min="0">
+        </div>
+
+        <div class="field">
+          <label>הפקדה חודשית (₪)</label>
+          <input type="number" id="monthly" value="2000" min="0">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה שנתית (%)</label>
+            <input type="number" id="returnRate" value="7" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>אינפלציה (%)</label>
+            <input type="number" id="inflation" value="3" step="0.1" min="0">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>מספר שנים</label>
+          <input type="number" id="years" value="20" min="1" max="60" step="1">
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">שיעורי מס</div>
+
+        <div class="row2">
+          <div class="field">
+            <label>מס נומינלי (%)</label>
+            <input type="number" id="nominalTax" value="15" step="0.5" min="0" max="100">
+          </div>
+          <div class="field">
+            <label>מס ריאלי (%)</label>
+            <input type="number" id="realTax" value="25" step="0.5" min="0" max="100">
+          </div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <div class="kpi-grid">
+        <div class="kpi kpi-val">
+          <div class="kpi-label">שווי סופי (ברוטו)</div>
+          <div class="kpi-value" id="resFinal">—</div>
+          <div class="kpi-sub">לפני מס</div>
+        </div>
+        <div class="kpi kpi-dep">
+          <div class="kpi-label">סה"כ הופקד</div>
+          <div class="kpi-value" id="resDeposited">—</div>
+          <div class="kpi-sub">קרן נומינלית</div>
+        </div>
+        <div class="kpi kpi-nom">
+          <div class="kpi-label">מס נומינלי</div>
+          <div class="kpi-value" id="resNomTax">—</div>
+          <div class="kpi-sub" id="resNomSub"></div>
+        </div>
+        <div class="kpi kpi-real">
+          <div class="kpi-label">מס ריאלי</div>
+          <div class="kpi-value" id="resRealTax">—</div>
+          <div class="kpi-sub" id="resRealSub"></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>מס נומינלי</strong> מחושב על כל הרווח (שווי סופי פחות סך ההפקדות). <strong>מס ריאלי</strong> מחושב רק על הרווח שמעבר לאינפלציה — קרן ההשקעה מוצמדת למדד, וממוסה רק העודף מעליה. תוצאה זו היא הערכה ואינה ייעוץ מס.
+      </div>
+
+      <div class="card">
+        <h2>השוואת המס נטו לאחר מס</h2>
+        <div class="compare" id="compareBox"></div>
+      </div>
+
+      <div class="card">
+        <h2>צבירה לאורך השנים</h2>
+        <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>פירוט שנתי</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>שנה</th>
+                <th>שווי תיק</th>
+                <th>סה"כ הופקד</th>
+                <th>קרן צמודה למדד</th>
+                <th>רווח נומינלי</th>
+                <th>רווח ריאלי</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let growthChart = null;
+const fmt  = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+const fmtNum = new Intl.NumberFormat('he-IL');
+const fmtP = v => (v * 100).toFixed(1) + '%';
+
+function calculate() {
+  const initial     = parseFloat(document.getElementById('initial').value)    || 0;
+  const monthly     = parseFloat(document.getElementById('monthly').value)     || 0;
+  const annualRet   = parseFloat(document.getElementById('returnRate').value)  || 0;
+  const annualInfl  = parseFloat(document.getElementById('inflation').value)   || 0;
+  const years       = Math.max(1, parseInt(document.getElementById('years').value) || 1);
+  const nomRate     = (parseFloat(document.getElementById('nominalTax').value) || 0) / 100;
+  const realRate    = (parseFloat(document.getElementById('realTax').value)    || 0) / 100;
+
+  const mRet  = Math.pow(1 + annualRet  / 100, 1/12) - 1;
+  const mInfl = Math.pow(1 + annualInfl / 100, 1/12) - 1;
+  const months = years * 12;
+
+  // running figures
+  let balance     = initial;   // nominal portfolio value
+  let nominalCost = initial;   // sum of deposits (no indexation)
+  let indexedCost = initial;   // inflation-indexed cost basis
+
+  // yearly snapshots
+  const snap = [{ year: 0, balance, nominalCost, indexedCost }];
+
+  for (let m = 1; m <= months; m++) {
+    balance     = balance * (1 + mRet) + monthly;     // grow, then deposit at month-end
+    nominalCost = nominalCost + monthly;
+    indexedCost = indexedCost * (1 + mInfl) + monthly; // basis indexes with inflation, new deposit added at its current value
+    if (m % 12 === 0) snap.push({ year: m / 12, balance, nominalCost, indexedCost });
+  }
+
+  const finalValue    = balance;
+  const nominalProfit = Math.max(0, finalValue - nominalCost);
+  const realProfit    = Math.max(0, finalValue - indexedCost);
+
+  const nomTax  = nominalProfit * nomRate;
+  const realTax = realProfit * realRate;
+
+  const netNom  = finalValue - nomTax;
+  const netReal = finalValue - realTax;
+
+  // effective rate out of the full nominal gain (for context)
+  const effNom  = nominalProfit > 0 ? nomTax / nominalProfit : 0;
+  const effReal = nominalProfit > 0 ? realTax / nominalProfit : 0;
+
+  document.getElementById('resFinal').innerText = fmt.format(finalValue);
+  document.getElementById('resDeposited').innerText = fmt.format(nominalCost);
+  document.getElementById('resNomTax').innerText = fmt.format(nomTax);
+  document.getElementById('resNomSub').innerText = fmtP(nomRate) + ' על רווח של ' + fmt.format(nominalProfit);
+  document.getElementById('resRealTax').innerText = fmt.format(realTax);
+  document.getElementById('resRealSub').innerText = fmtP(realRate) + ' על רווח ריאלי של ' + fmt.format(realProfit);
+
+  // comparison boxes
+  const nomWins = nomTax <= realTax;
+  document.getElementById('compareBox').innerHTML =
+    cmpBox('מסלול מס נומינלי', nomRate, nominalProfit, nomTax, netNom, effNom, nomWins) +
+    cmpBox('מסלול מס ריאלי', realRate, realProfit, realTax, netReal, effReal, !nomWins);
+
+  renderTable(snap, nominalProfit, realProfit);
+  renderChart(snap);
+}
+
+function cmpBox(title, rate, profit, tax, net, eff, isWinner) {
+  return '<div class="cmp-box' + (isWinner ? ' winner' : '') + '">' +
+    '<div class="cmp-title">' + (isWinner ? '<span class="badge">המס הנמוך</span>' : '') + title + '</div>' +
+    '<div class="cmp-row"><span class="lbl">בסיס לחישוב המס</span><span class="val">' + fmt.format(profit) + '</span></div>' +
+    '<div class="cmp-row"><span class="lbl">שיעור מס</span><span class="val">' + fmtP(rate) + '</span></div>' +
+    '<div class="cmp-row tax"><span class="lbl">סכום המס</span><span class="val">' + fmt.format(tax) + '</span></div>' +
+    '<div class="cmp-row net"><span class="lbl">נטו ביד</span><span class="val">' + fmt.format(net) + '</span></div>' +
+    '<div class="cmp-row"><span class="lbl">מס אפקטיבי מהרווח הכולל</span><span class="val">' + fmtP(eff) + '</span></div>' +
+    '</div>';
+}
+
+function renderTable(snap, finalNomProfit, finalRealProfit) {
+  let rows = '';
+  snap.forEach(s => {
+    if (s.year === 0) return;
+    const nomP = Math.max(0, s.balance - s.nominalCost);
+    const realP = Math.max(0, s.balance - s.indexedCost);
+    rows += '<tr>' +
+      '<td class="v-muted">' + s.year + '</td>' +
+      '<td class="v-green">' + fmt.format(s.balance) + '</td>' +
+      '<td>' + fmt.format(s.nominalCost) + '</td>' +
+      '<td>' + fmt.format(s.indexedCost) + '</td>' +
+      '<td>' + fmt.format(nomP) + '</td>' +
+      '<td>' + fmt.format(realP) + '</td>' +
+    '</tr>';
+  });
+  document.getElementById('resultsTable').innerHTML = rows;
+}
+
+function renderChart(snap) {
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  if (growthChart) growthChart.destroy();
+  const labels = snap.map(s => 'שנה ' + s.year);
+
+  growthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'שווי תיק', data: snap.map(s => s.balance), borderColor: '#1a7a4a', backgroundColor: 'rgba(26,122,74,0.10)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.25 },
+        { label: 'קרן צמודה למדד', data: snap.map(s => s.indexedCost), borderColor: '#d68910', borderWidth: 2, borderDash: [6,4], pointRadius: 0, tension: 0.25 },
+        { label: 'סה"כ הופקד', data: snap.map(s => s.nominalCost), borderColor: '#607060', borderWidth: 1.5, pointRadius: 0, tension: 0.25 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmtNum.format(Math.round(c.parsed.y)) + ' ₪' } },
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 12, font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>

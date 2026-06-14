@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,.10);
+      --radius:    16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 50%, var(--teal) 100%);
+      color: #fff;
+      padding: 4rem 1.5rem 5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 60px;
+      background: var(--bg);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .hero h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      position: relative;
+      margin-bottom: .5rem;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      font-weight: 300;
+      opacity: .88;
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ─── GRID ─── */
+    .container {
+      max-width: 1000px;
+      margin: -2rem auto 0;
+      padding: 0 1.5rem 3rem;
+      position: relative;
+      z-index: 1;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 640px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2.2rem; }
+    }
+
+    /* ─── CARD ─── */
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.6rem 1.5rem 1.4rem;
+      transition: transform .22s cubic-bezier(.4,0,.2,1),
+                  box-shadow .22s cubic-bezier(.4,0,.2,1),
+                  border-color .22s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green), var(--teal));
+      opacity: 0;
+      transition: opacity .22s;
+    }
+    .card-link:hover .card {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--green);
+    }
+    .card-link:hover .card::before {
+      opacity: 1;
+    }
+    .card-link:active .card {
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      margin-bottom: .65rem;
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .icon-annuity  { background: #dbeafe; }
+    .icon-inflation { background: #fef3c7; }
+    .icon-gemel    { background: #d1fae5; }
+    .icon-bituach  { background: #ede9fe; }
+    .icon-pension  { background: #fce7f3; }
+
+    /* ─── SECTION DIVIDER ─── */
+    .section-title {
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 2rem 0 .85rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* ─── FULL-WIDTH DASHBOARD CARD ─── */
+    .card-full {
+      grid-column: 1 / -1;
+    }
+    .card-full .card {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.2rem 1.5rem;
+    }
+    .card-full .card-desc { margin: 0; }
+    .card-full .card-arrow { margin: 0; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .card-full .card { grid-template-columns: 48px 1fr; }
+      .card-full .card-arrow { grid-column: 1 / -1; }
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .card-desc {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .card-arrow {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      margin-top: .85rem;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--green);
+      transition: gap .2s;
+    }
+    .card-link:hover .card-arrow { gap: .55rem; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1>כלים פיננסיים</h1>
+    <p>מחשבונים פיננסיים לתכנון חכם — אנונה, אינפלציה, דמי ניהול ועוד</p>
+  </div>
+
+  <div class="container">
+    <div class="card-grid">
+
+      <a href="annuity.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-annuity">💰</div>
+            <h3>מחשבון אנונה</h3>
+          </div>
+          <p class="card-desc">כמה נכנס לכיס כל חודש? קביעת יעד נטו עם גילום מס, הצמדה לאינפלציה, וטבלת תזרים מלאה.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="annuity-tax.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-annuity">🧾</div>
+            <h3>אנונה — משיכה שנתית עם מדרגות מס</h3>
+          </div>
+          <p class="card-desc">משיכה שנתית עם מיסוי לפי מדרגות מס הכנסה, נקודות זיכוי ומס על רווחים בלבד. מדרגות 2026 ניתנות לעדכון.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="severance-tax.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-bituach">📑</div>
+            <h3>מס על פיצויים בפריסה</h3>
+          </div>
+          <p class="card-desc">חישוב המס על פיצויים חייבים במס לפני גיל 60, בפריסה על פני מספר שנים — והשוואה למשיכה חד-פעמית.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="real-nominal-tax.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-inflation">⚖️</div>
+            <h3>מס ריאלי מול מס נומינלי</h3>
+          </div>
+          <p class="card-desc">השוואת המס על רווחי השקעה — מס נומינלי על הרווח המלא מול מס ריאלי על הרווח שמעבר לאינפלציה.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="inflation.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-inflation">📈</div>
+            <h3>מחשבון אינפלציה</h3>
+          </div>
+          <p class="card-desc">כמה ישתנה מחיר המוצר שלך לאורך השנים, ומה יהיה כוח הקנייה של הכסף שלך בעתיד.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="gemel-fees.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-gemel">🏦</div>
+            <h3>דמי ניהול קופת גמל להשקעה</h3>
+          </div>
+          <p class="card-desc">השוואה בין שני תרחישי דמי ניהול מצבירה — כמה באמת עולה ההפרש לאורך השנים.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <a href="bituach-fees.html" class="card-link">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon icon-bituach">🛡️</div>
+            <h3>דמי ניהול ביטוח מנהלים</h3>
+          </div>
+          <p class="card-desc">מבנה עמלה משולב — אחוז מצבירה + אחוז מרווח ריאלי. כמה זה באמת עולה לך.</p>
+          <div class="card-arrow">פתח מחשבון ←</div>
+        </div>
+      </a>
+
+      <div class="section-title">דשבורדים</div>
+
+      <a href="pension.html" class="card-link card-full">
+        <div class="card">
+          <div class="card-icon icon-pension">📊</div>
+          <div>
+            <h3>דשבורד קרנות פנסיה</h3>
+            <p class="card-desc">תשואות שנתיות של 405 מסלולי פנסיה מ-17 חברות — 2008 עד 2025. סינון, השוואה וגרפים.</p>
+          </div>
+          <div class="card-arrow">פתח דשבורד ←</div>
+        </div>
+      </a>
+
+      <a href="gemel.html" class="card-link card-full">
+        <div class="card">
+          <div class="card-icon icon-gemel">🏦</div>
+          <div>
+            <h3>דשבורד גמל והשתלמות</h3>
+            <p class="card-desc">תשואות חודשיות ושנתיות של 707 קופות גמל וקרנות השתלמות — 2016 עד 2026. סינון לפי סוג, חברה והשוואה.</p>
+          </div>
+          <div class="card-arrow">פתח דשבורד ←</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <footer>כלים פיננסיים &mdash; לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי</footer>
+
+</body>
+</html>

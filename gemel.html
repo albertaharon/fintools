@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דשבורד גמל והשתלמות | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="gemel_data.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.88rem; position: relative; margin-bottom: 0.3rem; }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt); }
+
+    .filters { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+    .filter-group { min-width: 140px; }
+    .filter-group.wide { flex: 2; min-width: 260px; }
+    .filter-group label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    select, input[type="text"] {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .9rem; color: var(--text); background: var(--surface); outline: none;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); }
+    .filter-hint { font-size: .72rem; color: var(--muted); margin-top: .25rem; }
+
+    .track-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .7rem; border-radius: 20px; font-size: .78rem; font-weight: 500;
+      border: 1.5px solid var(--border); background: var(--surface); cursor: pointer;
+      transition: all .15s; user-select: none;
+    }
+    .chip:hover { border-color: var(--green); background: var(--green-lt); }
+    .chip.active { border-color: var(--green); background: var(--green); color: #fff; }
+
+    .selected-tracks { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+    .sel-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .25rem .6rem; border-radius: 16px; font-size: .75rem;
+      background: var(--green-lt); color: var(--green-dk); border: 1px solid var(--green);
+      cursor: pointer;
+    }
+    .sel-chip:hover { background: var(--red-lt); border-color: var(--red); color: var(--red); }
+
+    .range-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .range-row select { width: 80px; }
+    .range-row span { color: var(--muted); font-size: .9rem; }
+
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 860px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-wrap { position: relative; height: 360px; }
+
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk); color: #fff; padding: .55rem .6rem;
+      text-align: center; font-weight: 500; white-space: nowrap;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .45rem .55rem; text-align: center; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red { color: var(--red); font-weight: 600; }
+    .v-muted { color: var(--muted); }
+    .winner { background: var(--green-lt) !important; font-weight: 700 !important; }
+    .loser { background: var(--red-lt) !important; font-weight: 700 !important; }
+    .track-name-col { text-align: right !important; max-width: 280px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .35rem; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 700px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--green); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; color: var(--green); line-height: 1; }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    .custom-select { position: relative; }
+    .cs-selected {
+      display: flex; align-items: center; gap: .45rem;
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .9rem; color: var(--text); background: var(--surface);
+      cursor: pointer; user-select: none;
+    }
+    .cs-selected::after { content: '▾'; margin-right: auto; color: var(--muted); font-size: .75rem; }
+    .cs-selected:hover { border-color: var(--green); }
+    .cs-options {
+      display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+      background: var(--surface); border: 1.5px solid var(--green); border-radius: 8px;
+      box-shadow: var(--shadow); max-height: 260px; overflow-y: auto; margin-top: 2px;
+    }
+    .cs-options.open { display: block; }
+    .cs-option {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .5rem .85rem; font-size: .88rem; cursor: pointer;
+    }
+    .cs-option:hover { background: var(--green-lt); }
+    .cs-option.active { background: var(--green-lt); font-weight: 600; }
+
+    .toggle-group { display: inline-flex; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .toggle-btn {
+      padding: .5rem 1rem; font-family: 'Heebo', sans-serif; font-size: .85rem; font-weight: 500;
+      border: none; background: var(--surface); color: var(--text); cursor: pointer;
+      transition: all .15s;
+    }
+    .toggle-btn:not(:last-child) { border-left: 1.5px solid var(--border); }
+    .toggle-btn.active { background: var(--green); color: #fff; }
+    .toggle-btn:hover:not(.active) { background: var(--green-lt); }
+
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container" style="padding:0 1.25rem;">
+    <a href="index.html" class="back-link">&#8592; חזרה לדף הראשי</a>
+    <h1>דשבורד גמל והשתלמות</h1>
+    <p>השוואת תשואות חודשיות ומצטברות של קופות גמל וקרנות השתלמות</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>בחירת קופות להשוואה</h2>
+    <div class="filters">
+      <div class="filter-group">
+        <label>סוג קופה</label>
+        <div class="toggle-group" id="typeToggle">
+          <button class="toggle-btn active" data-type="">הכל</button>
+          <button class="toggle-btn" data-type="g">גמל</button>
+          <button class="toggle-btn" data-type="i">גמל להשקעה</button>
+          <button class="toggle-btn" data-type="h">השתלמות</button>
+        </div>
+      </div>
+      <div class="filter-group wide">
+        <label>חיפוש קופה</label>
+        <input type="text" id="searchInput" placeholder='הקלד מילת מפתח, למשל: מניות, הלכה, S&P, כללי...'>
+        <div class="filter-hint">אפשר כמה מילים בכל סדר (למשל: הראל מניות). לחיפוש חלקי הוסף * (למשל: מניות*)</div>
+      </div>
+      <div class="filter-group" style="position:relative;">
+        <label>חברה</label>
+        <div class="custom-select" id="companySelect">
+          <div class="cs-selected" id="csSelected">הכל</div>
+          <div class="cs-options" id="csOptions"></div>
+        </div>
+        <input type="hidden" id="filterCompany" value="">
+      </div>
+    </div>
+
+    <div style="margin-top: .85rem;">
+      <div class="filters">
+        <div class="filter-group">
+          <label>מתאריך</label>
+          <div class="range-row">
+            <select id="yearFrom"></select>
+            <select id="monthFrom"></select>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>עד תאריך</label>
+          <div class="range-row">
+            <select id="yearTo"></select>
+            <select id="monthTo"></select>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>תצוגה</label>
+          <div class="toggle-group" id="viewToggle">
+            <button class="toggle-btn" data-view="monthly">חודשי</button>
+            <button class="toggle-btn active" data-view="yearly">שנתי</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="track-chips" id="trackChips"></div>
+
+    <div id="selectedArea" style="margin-top: .75rem; display: none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem;">
+        <label style="font-size: .78rem; font-weight: 600; color: var(--green-dk);">קופות שנבחרו:</label>
+        <button id="clearAll" style="font-family:'Heebo',sans-serif; font-size:.75rem; color:var(--red); background:none; border:none; cursor:pointer; text-decoration:underline;">נקה הכל ✕</button>
+      </div>
+      <div class="selected-tracks" id="selectedTracks"></div>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid" style="display: none;">
+    <div class="kpi"><div class="kpi-label">קופות מושוות</div><div class="kpi-value" id="kpiCount">—</div><div class="kpi-sub">קופות</div></div>
+    <div class="kpi"><div class="kpi-label">תשואה מצטברת ממוצעת</div><div class="kpi-value" id="kpiAvgCum">—</div><div class="kpi-sub" id="kpiAvgCumSub"></div></div>
+    <div class="kpi"><div class="kpi-label">הקופה הטובה ביותר</div><div class="kpi-value" id="kpiBest">—</div><div class="kpi-sub" id="kpiBestSub"></div></div>
+    <div class="kpi"><div class="kpi-label">הקופה החלשה ביותר</div><div class="kpi-value" id="kpiWorst">—</div><div class="kpi-sub" id="kpiWorstSub"></div></div>
+  </div>
+
+  <div class="charts-grid" id="chartsArea" style="display: none;">
+    <div class="card">
+      <h2 id="chartPeriodicTitle">תשואה שנתית</h2>
+      <div class="chart-wrap"><canvas id="chartPeriodic"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>תשואה מצטברת</h2>
+      <div class="chart-wrap"><canvas id="chartCumulative"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" id="tableCard" style="display: none;">
+    <h2>טבלת השוואה</h2>
+    <div class="table-wrap">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    חפש קופות ובחר אותן להשוואה
+  </div>
+
+</div>
+
+<script>
+const COLORS = ['#1a7a4a','#c0392b','#2563eb','#d68910','#8b5cf6','#17a589','#db2777','#0891b2','#65a30d','#ea580c',
+                '#4f46e5','#059669','#b91c1c','#0284c7','#a16207','#7c3aed','#0d9488','#be185d','#4338ca','#15803d'];
+
+const COMPANY_ICONS = {
+  'הראל': 'icons/harel.ico',
+  'כלל': 'icons/clal.ico',
+  'מגדל': 'icons/migdal.ico',
+  'הפניקס': 'icons/phoenix.ico',
+  'מנורה': 'icons/menora.ico',
+  'איילון': 'icons/ayalon.ico',
+  'מיטב': 'icons/meitav.ico',
+  'אלטשולר': 'icons/altshuler.ico',
+  'מור': 'icons/mor.ico',
+  'אינפיניטי': 'icons/infinity.ico',
+};
+
+function companyIconPath(name) {
+  for (const key in COMPANY_ICONS) {
+    if (name && name.includes(key)) return COMPANY_ICONS[key];
+  }
+  return null;
+}
+
+function companyIcon(name, size) {
+  size = size || 16;
+  const path = companyIconPath(name);
+  if (!path) return '';
+  return '<img src="' + path + '" width="' + size + '" height="' + size + '" style="vertical-align:middle;flex-shrink:0;border-radius:2px;" alt="" onerror="this.style.display=\'none\'">';
+}
+
+const MONTH_NAMES = ['','ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
+
+let selectedCodes = new Set();
+let chartPeriodic = null, chartCumulative = null;
+let allFunds = [];
+let filterType = '';
+let viewMode = 'yearly';
+
+// Build fund lookup and index by period
+const fundMap = {};
+GEMEL_FUNDS.forEach(f => { fundMap[f.c] = f; });
+
+// Build return index: returnsByFund[code][period] = return%
+const returnsByFund = {};
+GEMEL_DATA.forEach(d => {
+  if (!returnsByFund[d.c]) returnsByFund[d.c] = {};
+  returnsByFund[d.c][d.p] = d.r;
+});
+
+function init() {
+  allFunds = GEMEL_FUNDS.map(f => ({
+    code: f.c,
+    name: f.n,
+    type: f.k,
+    company: f.n.split(' ')[0]
+  })).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'));
+
+  // Company dropdown
+  const companies = [...new Set(allFunds.map(f => f.company))].sort((a, b) => a.localeCompare(b, 'he'));
+  const csOptions = document.getElementById('csOptions');
+  const csSelected = document.getElementById('csSelected');
+  const filterCompany = document.getElementById('filterCompany');
+
+  csOptions.innerHTML = '<div class="cs-option active" data-value="">הכל</div>' +
+    companies.map(c => '<div class="cs-option" data-value="' + c.replace(/"/g, '&quot;') + '">' + companyIcon(c, 18) + ' ' + c + '</div>').join('');
+
+  csSelected.addEventListener('click', e => { e.stopPropagation(); csOptions.classList.toggle('open'); });
+  csOptions.querySelectorAll('.cs-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      filterCompany.value = opt.dataset.value;
+      csOptions.querySelectorAll('.cs-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      csSelected.innerHTML = opt.innerHTML;
+      csOptions.classList.remove('open');
+      showMatchingFunds();
+      render();
+    });
+  });
+  document.addEventListener('click', () => csOptions.classList.remove('open'));
+
+  // Year/month selects
+  const allPeriods = [...new Set(GEMEL_DATA.map(d => d.p))].sort();
+  const minP = allPeriods[0], maxP = allPeriods[allPeriods.length - 1];
+  const minY = Math.floor(minP / 100), maxY = Math.floor(maxP / 100);
+
+  const selYF = document.getElementById('yearFrom');
+  const selYT = document.getElementById('yearTo');
+  const selMF = document.getElementById('monthFrom');
+  const selMT = document.getElementById('monthTo');
+
+  for (let y = minY; y <= maxY; y++) {
+    let o1 = document.createElement('option'); o1.value = y; o1.textContent = y; selYF.appendChild(o1);
+    let o2 = document.createElement('option'); o2.value = y; o2.textContent = y; selYT.appendChild(o2);
+  }
+  for (let m = 1; m <= 12; m++) {
+    let o1 = document.createElement('option'); o1.value = m; o1.textContent = MONTH_NAMES[m]; selMF.appendChild(o1);
+    let o2 = document.createElement('option'); o2.value = m; o2.textContent = MONTH_NAMES[m]; selMT.appendChild(o2);
+  }
+  selYF.value = 2020; selMF.value = 1;
+  selYT.value = maxY; selMT.value = maxP % 100;
+
+  // Events
+  document.getElementById('searchInput').addEventListener('input', () => { showMatchingFunds(); render(); });
+  [selYF, selYT, selMF, selMT].forEach(s => s.addEventListener('change', render));
+  document.getElementById('clearAll').addEventListener('click', () => {
+    selectedCodes.clear();
+    showMatchingFunds();
+    renderSelectedChips();
+    render();
+  });
+
+  // Type toggle
+  document.getElementById('typeToggle').querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('typeToggle').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterType = btn.dataset.type;
+      showMatchingFunds();
+      render();
+    });
+  });
+
+  // View toggle
+  document.getElementById('viewToggle').querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('viewToggle').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      viewMode = btn.dataset.view;
+      render();
+    });
+  });
+}
+
+// Smart search: every word in the query must appear somewhere in the name,
+// regardless of order. A trailing * on a word makes it a partial (substring) match;
+// otherwise the word must appear as a whole word (bounded by spaces/dashes/punctuation/digit-letter borders).
+function matchFund(fund, query) {
+  const name = (fund.name || '').toLowerCase();
+  const q = query.toLowerCase().trim();
+  if (!q) return true;
+
+  const words = q.split(/\s+/).filter(Boolean);
+  return words.every(w => {
+    if (w.endsWith('*')) return name.includes(w.slice(0, -1));
+    // word must start at a word boundary (start / space / dash / punctuation / digit-letter border)
+    const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(?:^|[\\s\\-\\&\\.\\,\\/\\(\\)]|(?<=[a-zA-Z])(?=\\d)|(?<=\\d)(?=[a-zA-Z]))' + esc, 'i');
+    return re.test(name);
+  });
+}
+
+function showMatchingFunds() {
+  const query = document.getElementById('searchInput').value.trim();
+  const company = document.getElementById('filterCompany').value;
+  const container = document.getElementById('trackChips');
+
+  if (!query && !company && !filterType) { container.innerHTML = ''; return; }
+
+  let matches = allFunds;
+  if (filterType) matches = matches.filter(f => f.type === filterType);
+  if (company) matches = matches.filter(f => f.company === company);
+  if (query) matches = matches.filter(f => matchFund(f, query));
+
+  if (matches.length > 50) {
+    container.innerHTML = '<span style="font-size:.82rem;color:var(--muted);">' + matches.length + ' תוצאות — נא לצמצם את החיפוש</span>';
+    return;
+  }
+
+  container.innerHTML = matches.map(f => {
+    const active = selectedCodes.has(f.code) ? ' active' : '';
+    const badge = f.type === 'g' ? ' [גמל]' : f.type === 'i' ? ' [גמל להשקעה]' : f.type === 'h' ? ' [השתלמות]' : '';
+    return '<span class="chip' + active + '" data-code="' + f.code + '">' + companyIcon(f.name, 16) + ' ' + (f.name || '—') + badge + '</span>';
+  }).join('');
+
+  container.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => toggleFund(chip.dataset.code));
+  });
+}
+
+function toggleFund(code) {
+  if (selectedCodes.has(code)) selectedCodes.delete(code);
+  else selectedCodes.add(code);
+  showMatchingFunds();
+  renderSelectedChips();
+  render();
+}
+
+function renderSelectedChips() {
+  const area = document.getElementById('selectedArea');
+  const container = document.getElementById('selectedTracks');
+  if (selectedCodes.size === 0) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  const chips = [...selectedCodes].map(code => {
+    const fund = allFunds.find(f => f.code === code);
+    const name = fund ? (fund.name || '—') : code;
+    return '<span class="sel-chip" data-code="' + code + '" title="לחץ להסרה">' + companyIcon(name, 14) + ' ' + name + ' ✕</span>';
+  }).join('');
+  container.innerHTML = chips;
+  container.querySelectorAll('.sel-chip').forEach(chip => {
+    chip.addEventListener('click', () => toggleFund(chip.dataset.code));
+  });
+}
+
+function getPeriodRange() {
+  const yf = parseInt(document.getElementById('yearFrom').value);
+  const yt = parseInt(document.getElementById('yearTo').value);
+  const mf = parseInt(document.getElementById('monthFrom').value);
+  const mt = parseInt(document.getElementById('monthTo').value);
+  const from = Math.min(yf, yt) * 100 + (yf <= yt ? mf : mt);
+  const to = Math.max(yf, yt) * 100 + (yf <= yt ? mt : mf);
+  return { from, to };
+}
+
+function buildPeriods(from, to) {
+  const periods = [];
+  let y = Math.floor(from / 100), m = from % 100;
+  while (y * 100 + m <= to) {
+    periods.push(y * 100 + m);
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return periods;
+}
+
+function periodLabel(p) {
+  return MONTH_NAMES[p % 100] + ' ' + Math.floor(p / 100);
+}
+
+function render() {
+  const empty = document.getElementById('emptyState');
+  const kpis = document.getElementById('kpiGrid');
+  const charts = document.getElementById('chartsArea');
+  const table = document.getElementById('tableCard');
+
+  if (selectedCodes.size === 0) {
+    empty.style.display = 'block'; kpis.style.display = 'none';
+    charts.style.display = 'none'; table.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none'; kpis.style.display = 'grid';
+  charts.style.display = 'grid'; table.style.display = 'block';
+
+  const { from, to } = getPeriodRange();
+  const allPeriods = buildPeriods(from, to);
+
+  // Build per-fund data
+  const funds = [...selectedCodes].map(code => {
+    const fund = allFunds.find(f => f.code === code);
+    const rets = returnsByFund[code] || {};
+    const byPeriod = {};
+    allPeriods.forEach(p => { if (rets[p] != null) byPeriod[p] = rets[p]; });
+    return {
+      code, name: fund ? fund.name : code,
+      company: fund ? fund.company : '',
+      byPeriod, cumByPeriod: {}, totalCum: 0
+    };
+  });
+
+  // Filter periods where no fund has data
+  const activePeriods = allPeriods.filter(p => funds.some(f => f.byPeriod[p] != null));
+
+  // Compute cumulative
+  funds.forEach(f => {
+    let cum = 1;
+    activePeriods.forEach(p => {
+      const r = f.byPeriod[p] != null ? f.byPeriod[p] : 0;
+      cum *= (1 + r / 100);
+      f.cumByPeriod[p] = (cum - 1) * 100;
+    });
+    f.totalCum = activePeriods.length ? f.cumByPeriod[activePeriods[activePeriods.length - 1]] || 0 : 0;
+  });
+
+  funds.sort((a, b) => b.totalCum - a.totalCum);
+
+  if (viewMode === 'yearly') {
+    renderYearly(funds, activePeriods);
+  } else {
+    renderMonthly(funds, activePeriods);
+  }
+}
+
+function aggregateToYears(funds, periods) {
+  const years = [...new Set(periods.map(p => Math.floor(p / 100)))].sort();
+  const yearlyFunds = funds.map(f => {
+    const byYear = {};
+    years.forEach(y => {
+      const monthsInYear = periods.filter(p => Math.floor(p / 100) === y);
+      let cum = 1, hasSome = false;
+      monthsInYear.forEach(p => {
+        const r = f.byPeriod[p];
+        if (r != null) { cum *= (1 + r / 100); hasSome = true; }
+      });
+      if (hasSome) byYear[y] = (cum - 1) * 100;
+    });
+    // Cumulative per year
+    const cumByYear = {};
+    let cum = 1;
+    years.forEach(y => {
+      const r = byYear[y] != null ? byYear[y] : 0;
+      cum *= (1 + r / 100);
+      cumByYear[y] = (cum - 1) * 100;
+    });
+    return { ...f, byYear, cumByYear, totalCum: cumByYear[years[years.length - 1]] || f.totalCum };
+  });
+  yearlyFunds.sort((a, b) => b.totalCum - a.totalCum);
+  return { years, yearlyFunds };
+}
+
+function renderYearly(funds, periods) {
+  const { years, yearlyFunds } = aggregateToYears(funds, periods);
+  const activeYears = years.filter(y => yearlyFunds.some(f => f.byYear[y] != null));
+
+  document.getElementById('chartPeriodicTitle').textContent = 'תשואה שנתית';
+  updateKPIs(yearlyFunds, activeYears[0] + '–' + activeYears[activeYears.length - 1]);
+  renderBarChart(yearlyFunds, activeYears, y => String(y), f => f.byYear);
+  renderCumLineChart(yearlyFunds, activeYears, y => String(y), f => f.cumByYear);
+  renderYearlyTable(yearlyFunds, activeYears);
+}
+
+function renderMonthly(funds, periods) {
+  document.getElementById('chartPeriodicTitle').textContent = 'תשואה חודשית';
+  updateKPIs(funds, periodLabel(periods[0]) + '–' + periodLabel(periods[periods.length - 1]));
+  renderBarChart(funds, periods, periodLabel, f => f.byPeriod);
+  renderCumLineChart(funds, periods, periodLabel, f => f.cumByPeriod);
+  renderMonthlyTable(funds, periods);
+}
+
+function shortName(name) {
+  return (name || '—').length > 35 ? (name || '').substring(0, 33) + '...' : (name || '—');
+}
+
+function updateKPIs(funds, rangeLbl) {
+  document.getElementById('kpiCount').textContent = funds.length;
+  const avgCum = funds.reduce((s, f) => s + f.totalCum, 0) / funds.length;
+  document.getElementById('kpiAvgCum').textContent = avgCum.toFixed(1) + '%';
+  document.getElementById('kpiAvgCumSub').textContent = rangeLbl;
+  const best = funds[0], worst = funds[funds.length - 1];
+  document.getElementById('kpiBest').textContent = best.totalCum.toFixed(1) + '%';
+  document.getElementById('kpiBestSub').textContent = shortName(best.name);
+  document.getElementById('kpiWorst').textContent = worst.totalCum.toFixed(1) + '%';
+  document.getElementById('kpiWorstSub').textContent = shortName(worst.name);
+}
+
+function renderBarChart(funds, keys, labelFn, dataFn) {
+  const ctx = document.getElementById('chartPeriodic').getContext('2d');
+  if (chartPeriodic) chartPeriodic.destroy();
+  const datasets = funds.map((f, i) => ({
+    label: shortName(f.name),
+    data: keys.map(k => dataFn(f)[k] != null ? dataFn(f)[k] : null),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '99',
+    borderWidth: 1, borderRadius: 3,
+  }));
+  chartPeriodic = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: keys.map(labelFn), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Heebo', size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(2) + '%' : '—') } },
+      },
+      scales: {
+        x: { ticks: { font: { family: 'Heebo', size: 10 }, maxRotation: 45 }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+function renderCumLineChart(funds, keys, labelFn, dataFn) {
+  const ctx = document.getElementById('chartCumulative').getContext('2d');
+  if (chartCumulative) chartCumulative.destroy();
+  const datasets = funds.map((f, i) => ({
+    label: shortName(f.name),
+    data: keys.map(k => dataFn(f)[k]),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '18',
+    fill: false, borderWidth: 2, pointRadius: keys.length > 36 ? 0 : 3, pointHoverRadius: 5, tension: 0.3,
+  }));
+  chartCumulative = new Chart(ctx, {
+    type: 'line',
+    data: { labels: keys.map(labelFn), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Heebo', size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(1) + '%' : '—') } },
+      },
+      scales: {
+        x: { ticks: { font: { family: 'Heebo', size: 10 }, maxRotation: 45, maxTicksLimit: 24 }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+function renderYearlyTable(funds, years) {
+  let header = '<tr><th>קופה</th>';
+  years.forEach(y => { header += '<th>' + y + '</th>'; });
+  header += '<th>מצטברת</th></tr>';
+  document.getElementById('tableHead').innerHTML = header;
+
+  // Winners/losers per year
+  const win = {}, lose = {};
+  years.forEach(y => {
+    let bestR = -Infinity, worstR = Infinity, bestC = null, worstC = null, cnt = 0;
+    funds.forEach(f => {
+      if (f.byYear[y] != null) {
+        cnt++;
+        if (f.byYear[y] > bestR) { bestR = f.byYear[y]; bestC = f.code; }
+        if (f.byYear[y] < worstR) { worstR = f.byYear[y]; worstC = f.code; }
+      }
+    });
+    win[y] = cnt > 1 ? bestC : null;
+    lose[y] = cnt > 1 ? worstC : null;
+  });
+  let bestCum = -Infinity, worstCum = Infinity, bestCC = null, worstCC = null;
+  funds.forEach(f => {
+    if (f.totalCum > bestCum) { bestCum = f.totalCum; bestCC = f.code; }
+    if (f.totalCum < worstCum) { worstCum = f.totalCum; worstCC = f.code; }
+  });
+  if (funds.length <= 1) { bestCC = null; worstCC = null; }
+
+  let body = '';
+  funds.forEach((f, i) => {
+    const color = COLORS[i % COLORS.length];
+    body += '<tr>';
+    body += '<td class="track-name-col" style="border-right: 3px solid ' + color + ';">' + companyIcon(f.name, 18) + ' ' + (f.name || '—') + '</td>';
+    years.forEach(y => {
+      const r = f.byYear[y];
+      if (r != null) {
+        const cls = r >= 0 ? 'v-green' : 'v-red';
+        const hl = win[y] === f.code ? ' winner' : lose[y] === f.code ? ' loser' : '';
+        body += '<td class="' + cls + hl + '">' + r.toFixed(2) + '%</td>';
+      } else {
+        body += '<td class="v-muted">—</td>';
+      }
+    });
+    const clsCum = f.totalCum >= 0 ? 'v-green' : 'v-red';
+    const hlCum = bestCC === f.code ? ' winner' : worstCC === f.code ? ' loser' : '';
+    body += '<td class="' + clsCum + hlCum + '" style="font-weight:700;">' + f.totalCum.toFixed(1) + '%</td>';
+    body += '</tr>';
+  });
+  document.getElementById('tableBody').innerHTML = body;
+}
+
+function renderMonthlyTable(funds, periods) {
+  let header = '<tr><th>קופה</th>';
+  periods.forEach(p => { header += '<th>' + periodLabel(p) + '</th>'; });
+  header += '<th>מצטברת</th></tr>';
+  document.getElementById('tableHead').innerHTML = header;
+
+  const win = {}, lose = {};
+  periods.forEach(p => {
+    let bestR = -Infinity, worstR = Infinity, bestC = null, worstC = null, cnt = 0;
+    funds.forEach(f => {
+      if (f.byPeriod[p] != null) {
+        cnt++;
+        if (f.byPeriod[p] > bestR) { bestR = f.byPeriod[p]; bestC = f.code; }
+        if (f.byPeriod[p] < worstR) { worstR = f.byPeriod[p]; worstC = f.code; }
+      }
+    });
+    win[p] = cnt > 1 ? bestC : null;
+    lose[p] = cnt > 1 ? worstC : null;
+  });
+  let bestCum = -Infinity, worstCum = Infinity, bestCC = null, worstCC = null;
+  funds.forEach(f => {
+    if (f.totalCum > bestCum) { bestCum = f.totalCum; bestCC = f.code; }
+    if (f.totalCum < worstCum) { worstCum = f.totalCum; worstCC = f.code; }
+  });
+  if (funds.length <= 1) { bestCC = null; worstCC = null; }
+
+  let body = '';
+  funds.forEach((f, i) => {
+    const color = COLORS[i % COLORS.length];
+    body += '<tr>';
+    body += '<td class="track-name-col" style="border-right: 3px solid ' + color + ';">' + companyIcon(f.name, 18) + ' ' + (f.name || '—') + '</td>';
+    periods.forEach(p => {
+      const r = f.byPeriod[p];
+      if (r != null) {
+        const cls = r >= 0 ? 'v-green' : 'v-red';
+        const hl = win[p] === f.code ? ' winner' : lose[p] === f.code ? ' loser' : '';
+        body += '<td class="' + cls + hl + '">' + r.toFixed(2) + '%</td>';
+      } else {
+        body += '<td class="v-muted">—</td>';
+      }
+    });
+    const clsCum = f.totalCum >= 0 ? 'v-green' : 'v-red';
+    const hlCum = bestCC === f.code ? ' winner' : worstCC === f.code ? ' loser' : '';
+    body += '<td class="' + clsCum + hlCum + '" style="font-weight:700;">' + f.totalCum.toFixed(1) + '%</td>';
+    body += '</tr>';
+  });
+  document.getElementById('tableBody').innerHTML = body;
+}
+
+init();
+</script>
+</body>
+</html>

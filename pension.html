@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דשבורד פנסיה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="pension_data.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.88rem; position: relative; margin-bottom: 0.3rem; }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt); }
+
+    /* ─── FILTERS ─── */
+    .filters { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+    .filter-group { min-width: 160px; }
+    .filter-group.wide { flex: 2; min-width: 280px; }
+    .filter-group label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    select, input[type="text"] {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .9rem; color: var(--text); background: var(--surface); outline: none;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); }
+    .filter-hint { font-size: .72rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── TRACK PICKER ─── */
+    .track-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .7rem; border-radius: 20px; font-size: .78rem; font-weight: 500;
+      border: 1.5px solid var(--border); background: var(--surface); cursor: pointer;
+      transition: all .15s; user-select: none;
+    }
+    .chip:hover { border-color: var(--green); background: var(--green-lt); }
+    .chip.active { border-color: var(--green); background: var(--green); color: #fff; }
+    .chip .remove { font-size: .7rem; opacity: .6; }
+    .chip.active .remove { opacity: .8; }
+
+    /* ─── SELECTED TRACKS ─── */
+    .selected-tracks { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+    .sel-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .25rem .6rem; border-radius: 16px; font-size: .75rem;
+      background: var(--green-lt); color: var(--green-dk); border: 1px solid var(--green);
+      cursor: pointer;
+    }
+    .sel-chip:hover { background: var(--red-lt); border-color: var(--red); color: var(--red); }
+
+    /* ─── YEAR RANGE ─── */
+    .year-range { display: flex; align-items: center; gap: .5rem; }
+    .year-range select { width: 90px; }
+    .year-range span { color: var(--muted); font-size: .9rem; }
+
+    /* ─── CHARTS ─── */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 860px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-wrap { position: relative; height: 360px; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk); color: #fff; padding: .55rem .6rem;
+      text-align: center; font-weight: 500; white-space: nowrap;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .45rem .55rem; text-align: center; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red { color: var(--red); font-weight: 600; }
+    .v-muted { color: var(--muted); }
+    .winner { background: var(--green-lt) !important; font-weight: 700 !important; }
+    .loser { background: var(--red-lt) !important; font-weight: 700 !important; }
+    .track-name-col { text-align: right !important; max-width: 280px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .35rem; }
+
+    /* ─── KPI ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 700px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--green); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; color: var(--green); line-height: 1; }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── CUSTOM SELECT ─── */
+    .custom-select { position: relative; }
+    .cs-selected {
+      display: flex; align-items: center; gap: .45rem;
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .9rem; color: var(--text); background: var(--surface);
+      cursor: pointer; user-select: none;
+    }
+    .cs-selected::after { content: '▾'; margin-right: auto; color: var(--muted); font-size: .75rem; }
+    .cs-selected:hover { border-color: var(--green); }
+    .cs-options {
+      display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+      background: var(--surface); border: 1.5px solid var(--green); border-radius: 8px;
+      box-shadow: var(--shadow); max-height: 260px; overflow-y: auto; margin-top: 2px;
+    }
+    .cs-options.open { display: block; }
+    .cs-option {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .5rem .85rem; font-size: .88rem; cursor: pointer;
+    }
+    .cs-option:hover { background: var(--green-lt); }
+    .cs-option.active { background: var(--green-lt); font-weight: 600; }
+
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container" style="padding:0 1.25rem;">
+    <a href="index.html" class="back-link">&#8592; חזרה לדף הראשי</a>
+    <h1>דשבורד קרנות פנסיה</h1>
+    <p>השוואת תשואות שנתיות ומצטברות של מסלולי פנסיה בישראל</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- FILTERS -->
+  <div class="card">
+    <h2>בחירת מסלולים להשוואה</h2>
+    <div class="filters">
+      <div class="filter-group wide">
+        <label>חיפוש מסלול</label>
+        <input type="text" id="searchInput" placeholder='הקלד מילת מפתח, למשל: מניות, הלכה, S&P, כללי...'>
+        <div class="filter-hint">אפשר כמה מילים בכל סדר (למשל: הראל מניות). לחיפוש חלקי הוסף * (למשל: מניות*)</div>
+      </div>
+      <div class="filter-group" style="position:relative;">
+        <label>חברה</label>
+        <div class="custom-select" id="companySelect">
+          <div class="cs-selected" id="csSelected">הכל</div>
+          <div class="cs-options" id="csOptions"></div>
+        </div>
+        <input type="hidden" id="filterCompany" value="">
+      </div>
+      <div class="filter-group">
+        <label>טווח שנים</label>
+        <div class="year-range">
+          <select id="yearFrom"></select>
+          <span>—</span>
+          <select id="yearTo"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="track-chips" id="trackChips"></div>
+
+    <div id="selectedArea" style="margin-top: .75rem; display: none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem;">
+        <label style="font-size: .78rem; font-weight: 600; color: var(--green-dk);">מסלולים שנבחרו:</label>
+        <button id="clearAll" style="font-family:'Heebo',sans-serif; font-size:.75rem; color:var(--red); background:none; border:none; cursor:pointer; text-decoration:underline;">נקה הכל ✕</button>
+      </div>
+      <div class="selected-tracks" id="selectedTracks"></div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid" style="display: none;">
+    <div class="kpi"><div class="kpi-label">מסלולים מושווים</div><div class="kpi-value" id="kpiCount">—</div><div class="kpi-sub">מסלולים</div></div>
+    <div class="kpi"><div class="kpi-label">תשואה מצטברת ממוצעת</div><div class="kpi-value" id="kpiAvgCum">—</div><div class="kpi-sub" id="kpiAvgCumSub"></div></div>
+    <div class="kpi"><div class="kpi-label">המסלול הטוב ביותר</div><div class="kpi-value" id="kpiBest">—</div><div class="kpi-sub" id="kpiBestSub"></div></div>
+    <div class="kpi"><div class="kpi-label">המסלול החלש ביותר</div><div class="kpi-value" id="kpiWorst">—</div><div class="kpi-sub" id="kpiWorstSub"></div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid" id="chartsArea" style="display: none;">
+    <div class="card">
+      <h2>תשואה שנתית</h2>
+      <div class="chart-wrap"><canvas id="chartYearly"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>תשואה מצטברת</h2>
+      <div class="chart-wrap"><canvas id="chartCumulative"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card" id="tableCard" style="display: none;">
+    <h2>טבלת השוואה</h2>
+    <div class="table-wrap">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    חפש מסלולים ובחר אותם להשוואה
+  </div>
+
+</div>
+
+<script>
+const COLORS = ['#1a7a4a','#c0392b','#2563eb','#d68910','#8b5cf6','#17a589','#db2777','#0891b2','#65a30d','#ea580c',
+                '#4f46e5','#059669','#b91c1c','#0284c7','#a16207','#7c3aed','#0d9488','#be185d','#4338ca','#15803d'];
+
+const COMPANY_ICONS = {
+  'הראל': 'icons/harel.ico',
+  'כלל': 'icons/clal.ico',
+  'מגדל': 'icons/migdal.ico',
+  'הפניקס': 'icons/phoenix.ico',
+  'מנורה': 'icons/menora.ico',
+  'איילון': 'icons/ayalon.ico',
+  'מיטב': 'icons/meitav.ico',
+  'אלטשולר': 'icons/altshuler.ico',
+  'מור': 'icons/mor.ico',
+  'אינפיניטי': 'icons/infinity.ico',
+};
+
+function companyIconPath(companyName) {
+  for (const key in COMPANY_ICONS) {
+    if (companyName && companyName.includes(key)) return COMPANY_ICONS[key];
+  }
+  return null;
+}
+
+function companyIcon(companyName, size) {
+  size = size || 16;
+  const path = companyIconPath(companyName);
+  if (!path) return '';
+  return '<img src="' + path + '" width="' + size + '" height="' + size + '" style="vertical-align:middle;flex-shrink:0;border-radius:2px;" alt="" onerror="this.style.display=\'none\'">';
+}
+
+let selectedCodes = new Set();
+let chartYearly = null, chartCumulative = null;
+let allTracks = [];
+
+function init() {
+  // Build unique tracks list
+  const seen = new Set();
+  DATA.forEach(d => {
+    if (!seen.has(d.c)) { seen.add(d.c); allTracks.push({ code: d.c, company: d.m, name: d.t }); }
+  });
+  allTracks.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'));
+
+  // Build company filter (custom dropdown with icons)
+  const companies = [...new Set(DATA.map(d => d.m))].sort();
+  const csOptions = document.getElementById('csOptions');
+  const csSelected = document.getElementById('csSelected');
+  const filterCompany = document.getElementById('filterCompany');
+
+  csOptions.innerHTML = '<div class="cs-option active" data-value="">הכל</div>' +
+    companies.map(c => {
+      const short = c.replace(/ בע"מ/g, '').replace(/פנסיה וגמל/g, '').replace(/גמל ופנסיה/g, '').replace(/השתלמות, גמל ופנסיה/g, '').trim();
+      return '<div class="cs-option" data-value="' + c.replace(/"/g, '&quot;') + '">' + companyIcon(c, 18) + ' ' + short + '</div>';
+    }).join('');
+
+  csSelected.addEventListener('click', e => {
+    e.stopPropagation();
+    csOptions.classList.toggle('open');
+  });
+  csOptions.querySelectorAll('.cs-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      filterCompany.value = opt.dataset.value;
+      csOptions.querySelectorAll('.cs-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      csSelected.innerHTML = opt.innerHTML;
+      csOptions.classList.remove('open');
+      showMatchingTracks();
+      render();
+    });
+  });
+  document.addEventListener('click', () => csOptions.classList.remove('open'));
+
+  // Build year selects
+  const years = [...new Set(DATA.map(d => d.y))].sort();
+  const selFrom = document.getElementById('yearFrom');
+  const selTo = document.getElementById('yearTo');
+  years.forEach(y => {
+    let o1 = document.createElement('option'); o1.value = y; o1.textContent = y; selFrom.appendChild(o1);
+    let o2 = document.createElement('option'); o2.value = y; o2.textContent = y; selTo.appendChild(o2);
+  });
+  selFrom.value = years.includes(2020) ? 2020 : years[0];
+  selTo.value = years.includes(2025) ? 2025 : years[years.length - 1];
+
+  // Events — every filter change triggers both chip refresh and render
+  document.getElementById('searchInput').addEventListener('input', () => { showMatchingTracks(); render(); });
+  // Company filter events are handled in the custom dropdown above
+  selFrom.addEventListener('change', render);
+  selTo.addEventListener('change', render);
+  document.getElementById('clearAll').addEventListener('click', () => {
+    selectedCodes.clear();
+    showMatchingTracks();
+    renderSelectedChips();
+    render();
+  });
+}
+
+// Smart search: every word in the query must appear somewhere in the name,
+// regardless of order. A trailing * on a word makes it a partial (substring) match;
+// otherwise the word must appear as a whole word (bounded by spaces/dashes/punctuation/digit-letter borders).
+function matchTrack(track, query) {
+  const name = (track.name || '').toLowerCase();
+  const q = query.toLowerCase().trim();
+  if (!q) return true;
+
+  const words = q.split(/\s+/).filter(Boolean);
+  return words.every(w => {
+    if (w.endsWith('*')) return name.includes(w.slice(0, -1));
+    // word must start at a word boundary (start / space / dash / punctuation / digit-letter border)
+    const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(?:^|[\\s\\-\\&\\.\\,\\/\\(\\)]|(?<=[a-zA-Z])(?=\\d)|(?<=\\d)(?=[a-zA-Z]))' + esc, 'i');
+    return re.test(name);
+  });
+}
+
+function showMatchingTracks() {
+  const query = document.getElementById('searchInput').value.trim();
+  const company = document.getElementById('filterCompany').value;
+  const container = document.getElementById('trackChips');
+
+  if (!query && !company) { container.innerHTML = ''; return; }
+
+  let matches = allTracks;
+  if (company) matches = matches.filter(t => t.company === company);
+  if (query) matches = matches.filter(t => matchTrack(t, query));
+
+  if (matches.length > 50) {
+    container.innerHTML = '<span style="font-size:.82rem;color:var(--muted);">' + matches.length + ' תוצאות — נא לצמצם את החיפוש</span>';
+    return;
+  }
+
+  container.innerHTML = matches.map(t => {
+    const active = selectedCodes.has(t.code) ? ' active' : '';
+    const short = t.company.replace(/ בע"מ/g, '').replace(/פנסיה וגמל/g, '').replace(/גמל ופנסיה/g, '').trim();
+    return '<span class="chip' + active + '" data-code="' + t.code + '" title="' + short + '">' + companyIcon(t.company, 16) + ' ' + (t.name || '—') + '</span>';
+  }).join('');
+
+  container.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => toggleTrack(chip.dataset.code));
+  });
+}
+
+function toggleTrack(code) {
+  if (selectedCodes.has(code)) selectedCodes.delete(code);
+  else selectedCodes.add(code);
+  showMatchingTracks();
+  renderSelectedChips();
+  render();
+}
+
+function renderSelectedChips() {
+  const area = document.getElementById('selectedArea');
+  const container = document.getElementById('selectedTracks');
+  if (selectedCodes.size === 0) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+
+  const chips = [...selectedCodes].map(code => {
+    const track = allTracks.find(t => t.code === code);
+    const name = track ? (track.name || '—') : code;
+    const comp = track ? track.company : '';
+    return '<span class="sel-chip" data-code="' + code + '" title="לחץ להסרה">' + companyIcon(comp, 14) + ' ' + name + ' ✕</span>';
+  }).join('');
+  container.innerHTML = chips;
+
+  container.querySelectorAll('.sel-chip').forEach(chip => {
+    chip.addEventListener('click', () => toggleTrack(chip.dataset.code));
+  });
+}
+
+function render() {
+  const empty = document.getElementById('emptyState');
+  const kpis = document.getElementById('kpiGrid');
+  const charts = document.getElementById('chartsArea');
+  const table = document.getElementById('tableCard');
+
+  if (selectedCodes.size === 0) {
+    empty.style.display = 'block'; kpis.style.display = 'none';
+    charts.style.display = 'none'; table.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none'; kpis.style.display = 'grid';
+  charts.style.display = 'grid'; table.style.display = 'block';
+
+  const yFrom = parseInt(document.getElementById('yearFrom').value);
+  const yTo = parseInt(document.getElementById('yearTo').value);
+  const years = [];
+  for (let y = Math.min(yFrom, yTo); y <= Math.max(yFrom, yTo); y++) years.push(y);
+
+  // Build per-track data
+  const tracks = [...selectedCodes].map(code => {
+    const track = allTracks.find(t => t.code === code);
+    const rows = DATA.filter(d => d.c === code && d.y >= years[0] && d.y <= years[years.length - 1]);
+    const byYear = {};
+    rows.forEach(d => { byYear[d.y] = d; });
+
+    return {
+      code, name: track ? track.name : code,
+      company: track ? track.company : '',
+      byYear, cumByYear: {},
+      totalCum: 0
+    };
+  });
+
+  // Filter out years where NO selected track has data
+  const activeYears = years.filter(y => tracks.some(t => t.byYear[y]));
+
+  // Compute cumulative returns on activeYears only
+  tracks.forEach(t => {
+    let cum = 1;
+    activeYears.forEach(y => {
+      const r = t.byYear[y] ? t.byYear[y].r : 0;
+      cum *= (1 + r / 100);
+      t.cumByYear[y] = (cum - 1) * 100;
+    });
+    t.totalCum = activeYears.length ? t.cumByYear[activeYears[activeYears.length - 1]] || 0 : 0;
+  });
+
+  tracks.sort((a, b) => b.totalCum - a.totalCum);
+
+  updateKPIs(tracks, activeYears);
+  renderYearlyChart(tracks, activeYears);
+  renderCumulativeChart(tracks, activeYears);
+  renderTable(tracks, activeYears);
+}
+
+function shortName(name) {
+  return (name || '—').length > 40 ? (name || '').substring(0, 38) + '...' : (name || '—');
+}
+
+function updateKPIs(tracks, years) {
+  document.getElementById('kpiCount').textContent = tracks.length;
+  const avgCum = tracks.reduce((s, t) => s + t.totalCum, 0) / tracks.length;
+  document.getElementById('kpiAvgCum').textContent = avgCum.toFixed(1) + '%';
+  document.getElementById('kpiAvgCumSub').textContent = years[0] + '–' + years[years.length - 1];
+
+  const best = tracks[0];
+  const worst = tracks[tracks.length - 1];
+  document.getElementById('kpiBest').textContent = best.totalCum.toFixed(1) + '%';
+  document.getElementById('kpiBestSub').textContent = shortName(best.name);
+  document.getElementById('kpiWorst').textContent = worst.totalCum.toFixed(1) + '%';
+  document.getElementById('kpiWorstSub').textContent = shortName(worst.name);
+}
+
+function renderYearlyChart(tracks, years) {
+  const ctx = document.getElementById('chartYearly').getContext('2d');
+  if (chartYearly) chartYearly.destroy();
+
+  const datasets = tracks.map((t, i) => ({
+    label: shortName(t.name),
+    data: years.map(y => t.byYear[y] ? t.byYear[y].r : null),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '99',
+    borderWidth: 1, borderRadius: 3,
+  }));
+
+  chartYearly = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Heebo', size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(2) + '%' : '—') } },
+      },
+      scales: {
+        x: { ticks: { font: { family: 'Heebo', size: 11 } }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+function renderCumulativeChart(tracks, years) {
+  const ctx = document.getElementById('chartCumulative').getContext('2d');
+  if (chartCumulative) chartCumulative.destroy();
+
+  const datasets = tracks.map((t, i) => ({
+    label: shortName(t.name),
+    data: years.map(y => t.cumByYear[y]),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '18',
+    fill: false, borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.3,
+  }));
+
+  chartCumulative = new Chart(ctx, {
+    type: 'line',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Heebo', size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(1) + '%' : '—') } },
+      },
+      scales: {
+        x: { ticks: { font: { family: 'Heebo', size: 11 } }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+function renderTable(tracks, years) {
+  // Header
+  let header = '<tr><th>מסלול</th>';
+  years.forEach(y => {
+    header += '<th>' + y + '<br><small>תשואה</small></th>';
+    header += '<th>' + y + '<br><small>איזון</small></th>';
+  });
+  header += '<th>מצטברת</th><th>איזון<br><small>ממוצע</small></th></tr>';
+  document.getElementById('tableHead').innerHTML = header;
+
+  // Find winners and losers per year (highest/lowest return, highest/lowest actuarial)
+  const winReturn = {}, loseReturn = {}, winActuarial = {}, loseActuarial = {};
+  years.forEach(y => {
+    let bestR = -Infinity, worstR = Infinity, bestA = -Infinity, worstA = Infinity;
+    let bestRCode = null, worstRCode = null, bestACode = null, worstACode = null;
+    let rCount = 0, aCount = 0;
+    tracks.forEach(t => {
+      const d = t.byYear[y];
+      if (d && d.r != null) {
+        rCount++;
+        if (d.r > bestR) { bestR = d.r; bestRCode = t.code; }
+        if (d.r < worstR) { worstR = d.r; worstRCode = t.code; }
+      }
+      if (d && d.a != null) {
+        aCount++;
+        if (d.a > bestA) { bestA = d.a; bestACode = t.code; }
+        if (d.a < worstA) { worstA = d.a; worstACode = t.code; }
+      }
+    });
+    winReturn[y] = rCount > 1 ? bestRCode : null;
+    loseReturn[y] = rCount > 1 ? worstRCode : null;
+    winActuarial[y] = aCount > 1 ? bestACode : null;
+    loseActuarial[y] = aCount > 1 ? worstACode : null;
+  });
+  let bestCum = -Infinity, bestCumCode = null, worstCum = Infinity, worstCumCode = null;
+  tracks.forEach(t => {
+    if (t.totalCum > bestCum) { bestCum = t.totalCum; bestCumCode = t.code; }
+    if (t.totalCum < worstCum) { worstCum = t.totalCum; worstCumCode = t.code; }
+  });
+  if (tracks.length <= 1) { bestCumCode = null; worstCumCode = null; }
+
+  // Compute average actuarial per track and find winner/loser
+  tracks.forEach(t => {
+    let sum = 0, cnt = 0;
+    years.forEach(y => {
+      const d = t.byYear[y];
+      if (d && d.a != null) { sum += d.a; cnt++; }
+    });
+    t.avgActuarial = cnt > 0 ? sum / cnt : null;
+  });
+  let bestAvgAct = -Infinity, bestAvgActCode = null, worstAvgAct = Infinity, worstAvgActCode = null;
+  tracks.forEach(t => {
+    if (t.avgActuarial != null) {
+      if (t.avgActuarial > bestAvgAct) { bestAvgAct = t.avgActuarial; bestAvgActCode = t.code; }
+      if (t.avgActuarial < worstAvgAct) { worstAvgAct = t.avgActuarial; worstAvgActCode = t.code; }
+    }
+  });
+  if (tracks.filter(t => t.avgActuarial != null).length <= 1) { bestAvgActCode = null; worstAvgActCode = null; }
+
+  let body = '';
+  tracks.forEach((t, i) => {
+    const color = COLORS[i % COLORS.length];
+    body += '<tr>';
+    body += '<td class="track-name-col" style="border-right: 3px solid ' + color + ';">' + companyIcon(t.company, 18) + ' ' + (t.name || '—') + '</td>';
+    years.forEach(y => {
+      const d = t.byYear[y];
+      const ret = d ? d.r : null;
+      const act = d ? d.a : null;
+      // Return cell
+      if (ret !== null) {
+        const cls = ret >= 0 ? 'v-green' : 'v-red';
+        const hl = winReturn[y] === t.code ? ' winner' : loseReturn[y] === t.code ? ' loser' : '';
+        body += '<td class="' + cls + hl + '">' + ret.toFixed(2) + '%</td>';
+      } else {
+        body += '<td class="v-muted">—</td>';
+      }
+      // Actuarial cell
+      if (act !== null) {
+        const cls2 = act > 0 ? 'v-green' : act < 0 ? 'v-red' : 'v-muted';
+        const hl2 = winActuarial[y] === t.code ? ' winner' : loseActuarial[y] === t.code ? ' loser' : '';
+        body += '<td class="' + cls2 + hl2 + '">' + act.toFixed(2) + '%</td>';
+      } else {
+        body += '<td class="v-muted">—</td>';
+      }
+    });
+    // Cumulative
+    const clsCum = t.totalCum >= 0 ? 'v-green' : 'v-red';
+    const hlCum = bestCumCode === t.code ? ' winner' : worstCumCode === t.code ? ' loser' : '';
+    body += '<td class="' + clsCum + hlCum + '" style="font-weight:700;">' + t.totalCum.toFixed(1) + '%</td>';
+    // Average actuarial
+    if (t.avgActuarial !== null) {
+      const clsAvg = t.avgActuarial > 0 ? 'v-green' : t.avgActuarial < 0 ? 'v-red' : 'v-muted';
+      const hlAvg = bestAvgActCode === t.code ? ' winner' : worstAvgActCode === t.code ? ' loser' : '';
+      body += '<td class="' + clsAvg + hlAvg + '">' + t.avgActuarial.toFixed(2) + '%</td>';
+    } else {
+      body += '<td class="v-muted">—</td>';
+    }
+    body += '</tr>';
+  });
+  document.getElementById('tableBody').innerHTML = body;
+}
+
+init();
+</script>
+</body>
+</html>

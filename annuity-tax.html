@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון אנונה — משיכה שנתית עם מדרגות מס | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="tax-config.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.88rem; position: relative; margin-bottom: 0.3rem; }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt); }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    .field input {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .95rem; color: var(--text); background: var(--bg);
+      transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input { border-color: var(--green); background: var(--green-lt); }
+    .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .divider { border: none; border-top: 1.5px solid var(--green-lt); margin: 1.1rem 0; }
+    .section-label { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+
+    .btn-calc {
+      width: 100%; padding: .75rem; background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 1rem; font-weight: 700; border: none;
+      border-radius: 10px; cursor: pointer; margin-top: .4rem; transition: opacity .18s, transform .12s;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi.kpi-main::before { background: var(--green); }
+    .kpi.kpi-net::before  { background: var(--teal); }
+    .kpi.kpi-tax::before  { background: var(--red); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.55rem; font-weight: 700; line-height: 1; }
+    .kpi-main .kpi-value { color: var(--green); }
+    .kpi-net  .kpi-value { color: var(--teal); }
+    .kpi-tax  .kpi-value { color: var(--red); }
+    .kpi-sub  { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    .alert { padding: .75rem 1rem; border-radius: 8px; font-size: .83rem; margin-bottom: 1rem; display: none; border-right: 3px solid; line-height: 1.5; }
+    .alert.warn { background: var(--amber-lt); border-color: var(--amber); color: #7a5200; display: block; }
+
+    .table-wrap { max-height: 480px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th { position: sticky; top: 0; z-index: 1; background: var(--green-dk); color: #fff; padding: .55rem .6rem; text-align: center; font-weight: 500; white-space: nowrap; }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .42rem .55rem; text-align: center; border-bottom: 1px solid #f0f0f0; }
+    td.partial { background: var(--amber-lt) !important; }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red   { color: var(--red); }
+    .v-muted { color: var(--muted); }
+
+    .chart-wrap { position: relative; height: 320px; }
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: .9rem; }
+
+    /* ─── TAX CONFIG PANEL ─── */
+    .tax-config { background: var(--green-lt); border: 1px solid var(--border); border-radius: 8px; padding: .85rem 1rem; font-size: .78rem; color: var(--text); margin-bottom: 1.25rem; }
+    .tax-config strong { color: var(--green-dk); }
+    .tax-config .brackets { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
+    .tax-config .bracket-chip { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: .15rem .55rem; font-size: .72rem; }
+    .tax-config .cfg-note { color: var(--muted); margin-top: .5rem; font-size: .72rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>מחשבון אנונה — משיכה שנתית עם מדרגות מס</h1>
+    <p>משיכה שנתית עם מיסוי לפי מדרגות מס הכנסה, נקודות זיכוי, ומס על רווחים בלבד</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>הגדרות התיק</h2>
+
+        <div class="field">
+          <label>סכום התחלתי / צבירה (₪)</label>
+          <input type="number" id="capital" value="2000000" min="0">
+        </div>
+
+        <div class="field highlight">
+          <label>משיכה שנתית נטו רצויה (₪)</label>
+          <input type="number" id="netWithdrawal" value="120000" min="1">
+          <div class="field-hint">צמוד למדד — ערכו הריאלי נשמר לאורך כל התקופה</div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה שנתית (%)</label>
+            <input type="number" id="returnRate" value="5" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>אינפלציה (%)</label>
+            <input type="number" id="inflation" value="2" step="0.1" min="0">
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">מיסוי</div>
+
+        <div class="field">
+          <label>אחוז רווח נוכחי בצבירה (%)</label>
+          <input type="number" id="initialProfitPerc" value="40" min="0" max="100">
+          <div class="field-hint">אם הצבירה 2,000,000 ₪ והפקדת 1,200,000 ₪ — הרווח הוא 800,000, כלומר 40%</div>
+        </div>
+
+        <div class="field">
+          <label>נקודות זיכוי</label>
+          <input type="number" id="creditPoints" value="2.25" step="0.25" min="0">
+          <div class="field-hint">תושב ישראל זכאי ל-2.25 נקודות. כל נקודה שווה <span id="cfgPointVal">2,904</span> ₪ לשנה</div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב מחדש</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <!-- Tax config panel -->
+      <div class="tax-config" id="taxConfigPanel"></div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi kpi-main">
+          <div class="kpi-label">הכסף יספיק ל</div>
+          <div class="kpi-value" id="resYears">—</div>
+          <div class="kpi-sub">שנים</div>
+        </div>
+        <div class="kpi kpi-net">
+          <div class="kpi-label">סה"כ נטו שקיבלת</div>
+          <div class="kpi-value" id="resTotalNet">—</div>
+          <div class="kpi-sub">נומינלי</div>
+        </div>
+        <div class="kpi kpi-tax">
+          <div class="kpi-label">סה"כ מס ששולם</div>
+          <div class="kpi-value" id="resTotalTax">—</div>
+          <div class="kpi-sub">ש"ח</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert warn" id="alertBanner"></div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <h2>פירוט שנתי מלא</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>שנה</th>
+                <th>נטו בפועל</th>
+                <th>ברוטו שנמשך</th>
+                <th>רווח חייב במס</th>
+                <th>מס ששולם</th>
+                <th>מס אפקטיבי</th>
+                <th>% רווח בצבירה</th>
+                <th>יתרה</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable">
+              <tr><td colspan="8" class="empty">לחץ "חשב מחדש" כדי לראות תוצאות</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+const fmt  = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+const fmtP = v => (v * 100).toFixed(1) + '%';
+const fmtNum = new Intl.NumberFormat('he-IL');
+
+// Find the gross annual withdrawal whose net (after income tax on the profit portion) equals desiredNet.
+// Tax is progressive (brackets) minus credit points, applied only to the profit portion of the withdrawal.
+function grossForNet(desiredNet, profitRatio, creditPoints, cap) {
+  let lo = desiredNet, hi = Math.max(desiredNet, cap);
+  // ensure hi is high enough that net(hi) >= desiredNet
+  let guard = 0;
+  while (hi - incomeTaxAfterCredits(hi * profitRatio, creditPoints) < desiredNet && guard++ < 60) {
+    hi *= 1.5;
+  }
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2;
+    const net = mid - incomeTaxAfterCredits(mid * profitRatio, creditPoints);
+    if (net < desiredNet) lo = mid; else hi = mid;
+  }
+  return hi;
+}
+
+function renderTaxConfig() {
+  document.getElementById('cfgPointVal').textContent = fmtNum.format(TAX_CONFIG.creditPointAnnual);
+  let chips = '';
+  let prev = 0;
+  TAX_CONFIG.brackets.forEach(b => {
+    const to = b.upTo === null ? 'ומעלה' : fmtNum.format(b.upTo);
+    const from = fmtNum.format(prev);
+    chips += '<span class="bracket-chip">' + from + '–' + to + ': <strong>' + +(b.rate * 100).toFixed(2) + '%</strong></span>';
+    prev = b.upTo;
+  });
+  document.getElementById('taxConfigPanel').innerHTML =
+    '<strong>מדרגות מס לשנת ' + TAX_CONFIG.year + '</strong> · נקודת זיכוי = ' +
+    fmtNum.format(TAX_CONFIG.creditPointAnnual) + ' ₪ לשנה' +
+    '<div class="brackets">' + chips + '</div>' +
+    '<div class="cfg-note">המס מחושב על חלק הרווח בלבד מכל משיכה. ניתן לעדכן את המדרגות ושווי נקודת הזיכוי בקובץ <code>tax-config.js</code>.</div>';
+}
+
+function calculate() {
+  const capital         = parseFloat(document.getElementById('capital').value)           || 0;
+  const netWithdrawalIn = parseFloat(document.getElementById('netWithdrawal').value)      || 0;
+  const annualReturn    = parseFloat(document.getElementById('returnRate').value)         || 0;
+  const annualInflation = parseFloat(document.getElementById('inflation').value)          || 0;
+  const initProfitPerc  = parseFloat(document.getElementById('initialProfitPerc').value)  || 0;
+  const creditPoints    = parseFloat(document.getElementById('creditPoints').value)       || 0;
+
+  let balance    = capital;
+  let costBasis  = capital * (1 - initProfitPerc / 100);
+  let desiredNet = netWithdrawalIn;
+
+  let labels = [], balanceData = [], grossData = [];
+  let tableRows = '';
+  let totalNet = 0, totalTax = 0;
+  let partialYears = 0;
+  let year = 0;
+
+  while (balance > 0.01 && year < 100) {
+    year++;
+
+    // index the target to inflation (year 1 = base year)
+    if (year > 1) desiredNet *= (1 + annualInflation / 100);
+
+    // ── משיכה בתחילת השנה: לא ניתן למשוך יותר מהיתרה הקיימת כעת ──
+    const profit       = Math.max(0, balance - costBasis);
+    const profitRatio  = balance > 0 ? profit / balance : 0;
+
+    const requiredGross = grossForNet(desiredNet, profitRatio, creditPoints, balance);
+    const isPartial     = requiredGross > balance;
+    const grossWithdrawn = Math.min(balance, requiredGross);
+
+    const taxableProfit = grossWithdrawn * profitRatio;
+    const taxPayment    = incomeTaxAfterCredits(taxableProfit, creditPoints);
+    const actualNet     = grossWithdrawn - taxPayment;
+    const effTax        = taxableProfit > 0 ? taxPayment / taxableProfit : 0;
+
+    balance -= grossWithdrawn;
+
+    const costPortion = grossWithdrawn * (1 - profitRatio);
+    costBasis = Math.max(0, costBasis - costPortion);
+
+    // ── היתרה שנותרה צומחת לאורך שאר השנה ──
+    balance += balance * (annualReturn / 100);
+
+    totalNet += actualNet;
+    totalTax += taxPayment;
+    if (isPartial) partialYears++;
+
+    labels.push('שנה ' + year);
+    balanceData.push(balance);
+    grossData.push(grossWithdrawn);
+
+    const partialClass = isPartial ? ' class="partial"' : '';
+    tableRows += '<tr' + partialClass + '>' +
+      '<td class="v-muted">' + year + '</td>' +
+      '<td class="v-green">' + fmt.format(actualNet) + (isPartial ? ' ⚠' : '') + '</td>' +
+      '<td>' + fmt.format(grossWithdrawn) + '</td>' +
+      '<td>' + fmt.format(taxableProfit) + '</td>' +
+      '<td class="v-red">' + fmt.format(taxPayment) + '</td>' +
+      '<td class="v-muted">' + fmtP(effTax) + '</td>' +
+      '<td class="v-muted">' + fmtP(profitRatio) + '</td>' +
+      '<td>' + fmt.format(balance) + '</td>' +
+    '</tr>';
+  }
+
+  document.getElementById('resYears').innerText = year + ' שנים';
+  document.getElementById('resTotalNet').innerText = fmt.format(totalNet);
+  document.getElementById('resTotalTax').innerText = fmt.format(totalTax);
+  document.getElementById('resultsTable').innerHTML = tableRows;
+
+  const banner = document.getElementById('alertBanner');
+  if (partialYears > 0) {
+    banner.className = 'alert warn';
+    banner.textContent = '⚠ בשנה ' + (year - partialYears + 1) + ' ואילך לא ניתן למשוך את מלוא הסכום הרצוי (יתרה לא מספיקה). שורות אלו מסומנות בצהוב.';
+  } else {
+    banner.className = 'alert';
+    banner.textContent = '';
+  }
+
+  renderChart(labels, balanceData, grossData);
+}
+
+function renderChart(labels, balanceData, grossData) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'יתרת התיק (₪)', data: balanceData, borderColor: '#1a7a4a', backgroundColor: 'rgba(26,122,74,0.09)', fill: true, yAxisID: 'y', pointRadius: 0, borderWidth: 2, tension: 0.3 },
+        { label: 'ברוטו נמשך לשנה (₪)', data: grossData, borderColor: '#c0392b', borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, yAxisID: 'y1', tension: 0.3 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmtNum.format(Math.round(ctx.parsed.y)) + ' ₪' } },
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 14, font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: { type: 'linear', position: 'right', title: { display: true, text: 'יתרת התיק', font: { family: 'Heebo' } }, ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) }, grid: { color: 'rgba(0,0,0,.05)' } },
+        y1: { type: 'linear', position: 'left', title: { display: true, text: 'ברוטו שנתי', font: { family: 'Heebo' } }, ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) }, grid: { drawOnChartArea: false } },
+      },
+    },
+  });
+}
+
+window.onload = () => {
+  document.getElementById('creditPoints').value = TAX_CONFIG.defaultCreditPoints;
+  renderTaxConfig();
+  calculate();
+};
+</script>
+</body>
+</html>
