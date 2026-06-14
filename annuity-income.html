@@ -134,6 +134,20 @@
     .btn-outline:active { transform: translateY(1px); }
     .mc-note { font-size: .8rem; color: var(--muted); line-height: 1.55; margin-bottom: 1rem; background: var(--green-lt); border-radius: 8px; padding: .7rem .9rem; }
     .mc-note strong { color: var(--green-dk); }
+    .conf-title { font-size: .85rem; font-weight: 700; color: var(--green-dk); margin-bottom: .6rem; }
+    .conf-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: .6rem; margin-bottom: 1.25rem; }
+    @media (max-width: 680px) { .conf-options { grid-template-columns: repeat(2, 1fr); } }
+    .conf-card {
+      border: 1.5px solid var(--border); border-radius: 10px; padding: .7rem .5rem; text-align: center;
+      cursor: pointer; background: var(--surface); transition: border-color .15s, background .15s, transform .1s; user-select: none;
+    }
+    .conf-card:hover { border-color: var(--green); background: var(--green-lt); }
+    .conf-card:active { transform: translateY(1px); }
+    .conf-card.active { border-color: var(--green); background: var(--green); }
+    .conf-card.active .conf-lvl, .conf-card.active .conf-amt, .conf-card.active .conf-succ { color: #fff; }
+    .conf-lvl { font-size: .74rem; font-weight: 600; color: var(--muted); margin-bottom: .25rem; }
+    .conf-amt { font-size: 1.05rem; font-weight: 700; color: var(--green-dk); line-height: 1.1; }
+    .conf-succ { font-size: .68rem; color: var(--muted); margin-top: .25rem; }
 
     /* ─── MOBILE ─── */
     @media (max-width: 600px) {
@@ -257,6 +271,8 @@
           <div class="kpi kpi-net"><div class="kpi-label">יתרה בסוף — חציון</div><div class="kpi-value" id="mcEndP50">—</div><div class="kpi-sub">אחוזון 50</div></div>
           <div class="kpi kpi-nom"><div class="kpi-label">יתרה בסוף — תרחיש טוב</div><div class="kpi-value" id="mcEndP90">—</div><div class="kpi-sub">אחוזון 90</div></div>
         </div>
+        <div class="conf-title">כמה למשוך לפי רמת ודאות — לחצו לבחירה</div>
+        <div class="conf-options" id="confOptions"></div>
         <div class="chart-wrap"><canvas id="mcChartCanvas"></canvas></div>
       </div>
 
@@ -343,15 +359,28 @@ function calculate() {
   }
   const baseNet = (lo + hi) / 2;  // סכום חודשי נטו בערך של היום
   lastBaseNet = baseNet;          // נשמר לשימוש בסימולציית מונטה קרלו
+  projectScenario(baseNet, true);
+}
 
-  // ─── סימולציה מלאה להצגה (עם הגבלת יתרה) ───
+// הקרנה דטרמיניסטית (תשואה קבועה) של סכום חודשי ריאלי נתון — ממלא KPI, גרף וטבלה.
+function projectScenario(baseNet, isBase) {
+  const capital         = parseFloat(document.getElementById('capital').value)            || 0;
+  const years           = parseInt(document.getElementById('years').value)                || 1;
+  const annualReturn    = parseFloat(document.getElementById('returnRate').value)         || 0;
+  const annualInflation = parseFloat(document.getElementById('inflation').value)          || 0;
+  const taxRate         = parseFloat(document.getElementById('taxRate').value)     / 100   || 0;
+  const initProfitPerc  = parseFloat(document.getElementById('initialProfitPerc').value)  || 0;
+  const targetMonths = Math.max(1, Math.round(years * 12));
+  const mReturn    = Math.pow(1 + annualReturn   / 100, 1/12) - 1;
+  const mInflation = Math.pow(1 + annualInflation / 100, 1/12) - 1;
+
   let balance = capital;
   let costBasis = capital * (1 - initProfitPerc / 100);
   let desiredNet = baseNet;
   let labels = [], balanceData = [], netData = [];
   let tableRows = '';
   let totalNet = 0, totalTax = 0;
-  let firstNet = 0, lastNet = 0;
+  let firstNet = 0, lastNet = 0, depletedMonth = 0;
 
   for (let month = 1; month <= targetMonths; month++) {
     balance += balance * mReturn;
@@ -374,6 +403,7 @@ function calculate() {
     totalTax += taxPayment;
     if (month === 1) firstNet = actualNet;
     lastNet = actualNet;
+    if (depletedMonth === 0 && balance <= 0.01) depletedMonth = month;
 
     const lbl = fmtDur(month);
     labels.push(lbl);
@@ -397,9 +427,16 @@ function calculate() {
   document.getElementById('resTotalTax').innerText = fmt.format(totalTax);
   document.getElementById('resultsTable').innerHTML = tableRows;
 
+  const leftover = Math.max(0, balance);
   const banner = document.getElementById('alertBanner');
   banner.className = 'alert info';
-  banner.textContent = `מתוך צבירה של ${fmt.format(capital)} ניתן למשוך כ-${fmt.format(baseNet)} נטו בחודש (בערך של היום) למשך ${years} שנים. הסכום צמוד למדד — בפועל הוא גדל מ-${fmt.format(firstNet)} בחודש הראשון ל-${fmt.format(lastNet)} בחודש האחרון.`;
+  if (depletedMonth > 0) {
+    banner.textContent = `בסכום של ${fmt.format(baseNet)} נטו בחודש (בערך של היום), בתשואה הקבועה הכסף נגמר אחרי ${fmtDur(depletedMonth)} — לפני תום ${years} השנים.`;
+  } else if (isBase) {
+    banner.textContent = `מתוך צבירה של ${fmt.format(capital)} ניתן למשוך כ-${fmt.format(baseNet)} נטו בחודש (בערך של היום) למשך ${years} שנים. הסכום צמוד למדד — בפועל הוא גדל מ-${fmt.format(firstNet)} בחודש הראשון ל-${fmt.format(lastNet)} בחודש האחרון.`;
+  } else {
+    banner.textContent = `בסכום של ${fmt.format(baseNet)} נטו בחודש (בערך של היום), בתשואה הקבועה נשארת יתרה של ${fmt.format(leftover)} בתום ${years} השנים — כרית הביטחון שמסבירה את רמת הוודאות הגבוהה יותר.`;
+  }
 
   renderChart(labels, balanceData, netData);
 }
@@ -472,8 +509,83 @@ function percentile(sorted, p) {
   return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
 }
 
+let mcPaths = null, mcMeta = null, mcVol = 0;
+
+// בדיקת הישרדות בלבד (מהיר) מעל מסלולי התשואה השמורים — לחיפוש סכום לפי רמת ודאות
+function successOnly(baseNet) {
+  const { capital, costBasis0, mInfl, taxRate, targetMonths } = mcMeta;
+  const RUNS = mcPaths.length;
+  let survived = 0;
+  for (let run = 0; run < RUNS; run++) {
+    const rets = mcPaths[run];
+    let balance = capital, costBasis = costBasis0, desiredNet = baseNet, depleted = false;
+    for (let m = 1; m <= targetMonths; m++) {
+      balance += balance * rets[m - 1];
+      desiredNet *= (1 + mInfl);
+      if (balance < 0) balance = 0;
+      const profit = Math.max(0, balance - costBasis), pr = balance > 0 ? profit / balance : 0;
+      const denom = 1 - pr * taxRate, rg = denom > 0 ? desiredNet / denom : balance;
+      const g = Math.min(Math.max(balance, 0), rg);
+      balance -= g;
+      costBasis = Math.max(0, costBasis - g * (1 - pr));
+      if (balance <= 0.01) { depleted = true; break; }
+    }
+    if (!depleted) survived++;
+  }
+  return survived / RUNS;
+}
+
+// סימולציה מלאה מעל המסלולים השמורים — מחזירה הצלחה, התפלגות יתרה סופית ורצועות אחוזונים
+function simOverPaths(baseNet) {
+  const { capital, costBasis0, mInfl, taxRate, targetMonths } = mcMeta;
+  const RUNS = mcPaths.length;
+  let survived = 0;
+  const ends = [], perMonth = [];
+  for (let run = 0; run < RUNS; run++) {
+    const rets = mcPaths[run];
+    let balance = capital, costBasis = costBasis0, desiredNet = baseNet, depleted = false;
+    for (let m = 1; m <= targetMonths; m++) {
+      balance += balance * rets[m - 1];
+      desiredNet *= (1 + mInfl);
+      if (balance < 0) balance = 0;
+      const profit = Math.max(0, balance - costBasis), pr = balance > 0 ? profit / balance : 0;
+      const denom = 1 - pr * taxRate, rg = denom > 0 ? desiredNet / denom : balance;
+      const g = Math.min(Math.max(balance, 0), rg);
+      balance -= g;
+      costBasis = Math.max(0, costBasis - g * (1 - pr));
+      (perMonth[m - 1] || (perMonth[m - 1] = [])).push(Math.max(0, balance));
+      if (balance <= 0.01) { depleted = true; break; }
+    }
+    if (!depleted) survived++;
+    ends.push(Math.max(0, balance));
+  }
+  ends.sort((a, b) => a - b);
+  const labels = [], lo = [], mid = [], hi = [];
+  for (let m = 0; m < targetMonths; m++) {
+    const arr = (perMonth[m] || []).slice();
+    while (arr.length < RUNS) arr.push(0); // תרחישים שהתרוקנו = יתרה 0
+    arr.sort((a, b) => a - b);
+    labels.push(fmtDur(m + 1));
+    lo.push(percentile(arr, 0.10));
+    mid.push(percentile(arr, 0.50));
+    hi.push(percentile(arr, 0.90));
+  }
+  return { success: survived / RUNS, ends, labels, lo, mid, hi };
+}
+
+// הסכום החודשי המקסימלי שעדיין משיג רמת ודאות (שיעור הישרדות) נתונה
+function solveForConfidence(target) {
+  let lo = 0, hi = Math.max(mcMeta.capital, 1), guard = 0;
+  while (successOnly(hi) >= target && hi < mcMeta.capital * 100 && guard++ < 25) hi *= 2;
+  for (let i = 0; i < 34; i++) {
+    const mid = (lo + hi) / 2;
+    if (successOnly(mid) >= target) lo = mid; else hi = mid;
+  }
+  return lo;
+}
+
 function runMonteCarlo() {
-  calculate(); // רענון — מחשב את הסכום החודשי הריאלי (lastBaseNet)
+  calculate(); // רענון — מחשב את הסכום ה"ממוצע" (lastBaseNet)
   const capital        = parseFloat(document.getElementById('capital').value)           || 0;
   const years          = parseInt(document.getElementById('years').value)               || 1;
   const annualReturn   = parseFloat(document.getElementById('returnRate').value)        || 0;
@@ -482,57 +594,63 @@ function runMonteCarlo() {
   const taxRate        = parseFloat(document.getElementById('taxRate').value)    / 100   || 0;
   const initProfitPerc = parseFloat(document.getElementById('initialProfitPerc').value) || 0;
 
-  const baseNet = lastBaseNet;
   const targetMonths = Math.max(1, Math.round(years * 12));
   const mu    = Math.pow(1 + annualReturn / 100, 1/12) - 1;
   const sig   = (annualVol / 100) / Math.sqrt(12);
   const mInfl = Math.pow(1 + annualInfl / 100, 1/12) - 1;
   const RUNS = 1000;
+  mcVol = annualVol;
 
-  let survived = 0;
-  const endBalances = [], perMonth = [];
-  for (let run = 0; run < RUNS; run++) {
-    let balance = capital, costBasis = capital * (1 - initProfitPerc / 100), desiredNet = baseNet, depleted = false;
-    for (let m = 1; m <= targetMonths; m++) {
-      balance += balance * (randn() * sig + mu);
-      desiredNet *= (1 + mInfl);
-      if (balance < 0) balance = 0;
-      const profit = Math.max(0, balance - costBasis), pr = balance > 0 ? profit / balance : 0;
-      const denom = 1 - pr * taxRate, reqGross = denom > 0 ? desiredNet / denom : balance;
-      const gross = Math.min(Math.max(balance, 0), reqGross);
-      balance -= gross;
-      costBasis = Math.max(0, costBasis - gross * (1 - pr));
-      (perMonth[m - 1] || (perMonth[m - 1] = [])).push(Math.max(0, balance));
-      if (balance <= 0.01) { depleted = true; break; }
-    }
-    if (!depleted) survived++;
-    endBalances.push(Math.max(0, balance));
+  // הגרלה חד-פעמית של 1,000 מסלולי תשואה — כל הסכומים נבחנים על אותם מסלולים (יציב ומונוטוני)
+  mcMeta = { capital, costBasis0: capital * (1 - initProfitPerc / 100), mInfl, taxRate, targetMonths };
+  mcPaths = new Array(RUNS);
+  for (let r = 0; r < RUNS; r++) {
+    const a = new Float64Array(targetMonths);
+    for (let m = 0; m < targetMonths; m++) a[m] = randn() * sig + mu;
+    mcPaths[r] = a;
   }
-  endBalances.sort((a, b) => a - b);
-  const success = survived / RUNS * 100;
 
-  document.getElementById('mcSuccess').innerText = success.toFixed(0) + '%';
-  document.getElementById('mcEndP10').innerText = fmt.format(percentile(endBalances, 0.10));
-  document.getElementById('mcEndP50').innerText = fmt.format(percentile(endBalances, 0.50));
-  document.getElementById('mcEndP90').innerText = fmt.format(percentile(endBalances, 0.90));
+  // סכומים לפי רמות ודאות
+  const targets = [1.00, 0.95, 0.90, 0.85];
+  const conf = targets.map(t => ({ t, amount: solveForConfidence(t) }));
+  const baseSuccess = successOnly(lastBaseNet);
 
-  document.getElementById('mcNote').innerHTML =
-    `<strong>תנודתיות = ${annualVol}% סטיית תקן.</strong> בהינתן משיכה של ${fmt.format(baseNet)} נטו בחודש (בערך של היום) למשך ${years} שנים — ` +
-    `ב-1,000 תרחישים מדומים הכסף החזיק את כל התקופה ב-<strong>${success.toFixed(0)}%</strong> מהמקרים. ` +
-    `ככל ששיעור ההצלחה נמוך יותר, כדאי לשקול משיכה חודשית נמוכה יותר או אופק קצר יותר. (התשואה אקראית, האינפלציה קבועה.)`;
-
-  const labels = [], bLo = [], bMid = [], bHi = [];
-  for (let m = 0; m < targetMonths; m++) {
-    const arr = (perMonth[m] || []).slice();
-    while (arr.length < RUNS) arr.push(0); // תרחישים שכבר התרוקנו = יתרה 0
-    arr.sort((a, b) => a - b);
-    labels.push(fmtDur(m + 1));
-    bLo.push(percentile(arr, 0.10));
-    bMid.push(percentile(arr, 0.50));
-    bHi.push(percentile(arr, 0.90));
+  let html = `<div class="conf-card" data-amt="${lastBaseNet}" onclick="selectScenario(${lastBaseNet})">
+      <div class="conf-lvl">סכום ממוצע</div>
+      <div class="conf-amt">${fmt.format(lastBaseNet)}</div>
+      <div class="conf-succ">${Math.round(baseSuccess * 100)}% ודאות</div></div>`;
+  for (const c of conf) {
+    html += `<div class="conf-card" data-amt="${c.amount}" onclick="selectScenario(${c.amount})">
+      <div class="conf-lvl">${Math.round(c.t * 100)}% ודאות</div>
+      <div class="conf-amt">${fmt.format(c.amount)}</div>
+      <div class="conf-succ">למשך ${years} שנים</div></div>`;
   }
+  document.getElementById('confOptions').innerHTML = html;
   document.getElementById('mcCard').style.display = 'block';
-  renderFanChart(labels, bLo, bMid, bHi, 'יתרת התיק');
+  selectScenario(lastBaseNet); // ברירת מחדל: הסכום הממוצע
+}
+
+// בחירת תרחיש: מקרין את הסכום הנבחר (KPI, גרף וטבלת פריסה) ומעדכן את נתוני המונטה קרלו
+function selectScenario(amount) {
+  const isBase = Math.abs(amount - lastBaseNet) < 1e-6;
+  projectScenario(amount, isBase);
+  const s = simOverPaths(amount);
+
+  document.getElementById('mcSuccess').innerText = Math.round(s.success * 100) + '%';
+  document.getElementById('mcEndP10').innerText = fmt.format(percentile(s.ends, 0.10));
+  document.getElementById('mcEndP50').innerText = fmt.format(percentile(s.ends, 0.50));
+  document.getElementById('mcEndP90').innerText = fmt.format(percentile(s.ends, 0.90));
+
+  const yrs = parseInt(document.getElementById('years').value) || 1;
+  document.getElementById('mcNote').innerHTML =
+    `<strong>תנודתיות = ${mcVol}% סטיית תקן.</strong> בסכום נבחר של <strong>${fmt.format(amount)}</strong> נטו בחודש (בערך של היום) למשך ${yrs} שנים — ` +
+    `ב-1,000 תרחישים מדומים הכסף החזיק את כל התקופה ב-<strong>${Math.round(s.success * 100)}%</strong> מהמקרים. ` +
+    `הטבלה והגרף למטה מציגים את הפריסה של הסכום הנבחר. (התשואה אקראית, האינפלציה קבועה.)`;
+
+  document.querySelectorAll('.conf-card').forEach(el =>
+    el.classList.toggle('active', Math.abs(parseFloat(el.dataset.amt) - amount) < 1e-6));
+
+  renderFanChart(s.labels, s.lo, s.mid, s.hi, 'יתרת התיק');
 }
 
 function renderFanChart(labels, bLo, bMid, bHi, yTitle) {
