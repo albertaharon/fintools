@@ -322,7 +322,7 @@
           <div class="kpi-sub" id="resFeesB"></div>
         </div>
         <div class="kpi kpi-diff">
-          <div class="kpi-label">הפרש לטובתך</div>
+          <div class="kpi-label">הפרש</div>
           <div class="kpi-value" id="resDiff">—</div>
           <div class="kpi-sub" id="resDiffPct"></div>
         </div>
@@ -412,7 +412,7 @@ function calculate() {
   document.getElementById('resFeesB').textContent = `דמ״נ ששולמו: ${fmt.format(b.totalFees)}`;
   document.getElementById('resDiff').textContent = fmt.format(diff);
   document.getElementById('resDiffPct').textContent =
-    a.balance > 0 ? `+${((diff / a.balance) * 100).toFixed(1)}% יותר` : '';
+    a.balance > 0 ? `${((diff / a.balance) * 100).toFixed(1)}%` : '';
 
   // Table
   const tbody = document.getElementById('resultsTable');
