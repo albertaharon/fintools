@@ -26,6 +26,7 @@
       --radius:    14px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
     /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -102,7 +103,7 @@
     .cmp-row.net .val { color: var(--green); }
     .badge { display: inline-block; font-size: .7rem; font-weight: 700; color: #fff; background: var(--green); border-radius: 10px; padding: .1rem .5rem; margin-right: .4rem; }
 
-    .table-wrap { max-height: 460px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+    .table-wrap { max-height: 460px; overflow: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: .82rem; }
     thead th { position: sticky; top: 0; z-index: 1; background: var(--green-dk); color: #fff; padding: .55rem .6rem; text-align: center; font-weight: 500; white-space: nowrap; }
     tbody tr:nth-child(odd)  { background: #fafafa; }

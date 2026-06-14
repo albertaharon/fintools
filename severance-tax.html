@@ -27,6 +27,7 @@
       --radius:    14px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
     /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -89,7 +90,7 @@
     .kpi-save .kpi-value { color: var(--amber); }
     .kpi-sub  { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
 
-    .table-wrap { border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+    .table-wrap { border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table { width: 100%; border-collapse: collapse; font-size: .82rem; }
     thead th { background: var(--green-dk); color: #fff; padding: .55rem .6rem; text-align: center; font-weight: 500; white-space: nowrap; }
     tbody tr:nth-child(odd)  { background: #fafafa; }
