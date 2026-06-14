@@ -268,6 +268,10 @@
     }
     .scn-btn:hover { border-color: var(--green); background: var(--green-lt); }
     .scn-btn.active { background: var(--green); border-color: var(--green); color: #fff; }
+    .kpi.clickable { cursor: pointer; }
+    .kpi.clickable:hover { border-color: var(--green); box-shadow: 0 4px 16px rgba(0,0,0,.10); }
+    .kpi.sel { outline: 2px solid var(--green); outline-offset: 1px; }
+    .mc-hint { font-size: .8rem; color: var(--green-dk); font-weight: 600; background: var(--green-lt); border-radius: 8px; padding: .55rem .8rem; margin-bottom: 1rem; }
 
     /* ─── MOBILE ─── */
     @media (max-width: 600px) {
@@ -384,11 +388,12 @@
       <div class="card" id="mcCard" style="display:none;">
         <h2>סימולציית תנודתיות — מונטה קרלו (1,000 תרחישים)</h2>
         <div class="mc-note" id="mcNote"></div>
-        <div class="kpi-grid" style="margin-bottom:1.1rem;">
-          <div class="kpi kpi-tax"><div class="kpi-label">תרחיש גרוע (אחוזון 10)</div><div class="kpi-value" id="mcP10">—</div><div class="kpi-sub">הכסף החזיק לפחות</div></div>
-          <div class="kpi kpi-main"><div class="kpi-label">חציון</div><div class="kpi-value" id="mcP50">—</div><div class="kpi-sub">מחצית מהתרחישים</div></div>
-          <div class="kpi kpi-net"><div class="kpi-label">תרחיש טוב (אחוזון 90)</div><div class="kpi-value" id="mcP90">—</div><div class="kpi-sub">הכסף החזיק עד</div></div>
+        <div class="kpi-grid" style="margin-bottom:.8rem;">
+          <div class="kpi kpi-tax clickable" id="card-worst" onclick="selectTableScenario('worst')"><div class="kpi-label">תרחיש גרוע (אחוזון 10)</div><div class="kpi-value" id="mcP10">—</div><div class="kpi-sub">לחצו להצגת הטבלה ↓</div></div>
+          <div class="kpi kpi-main clickable" id="card-median" onclick="selectTableScenario('median')"><div class="kpi-label">חציון</div><div class="kpi-value" id="mcP50">—</div><div class="kpi-sub">לחצו להצגת הטבלה ↓</div></div>
+          <div class="kpi kpi-net clickable" id="card-best" onclick="selectTableScenario('best')"><div class="kpi-label">תרחיש טוב (אחוזון 90)</div><div class="kpi-value" id="mcP90">—</div><div class="kpi-sub">לחצו להצגת הטבלה ↓</div></div>
         </div>
+        <div class="mc-hint">👆 לחצו על אחד התרחישים כדי לעדכן את טבלת הפירוט וגרף היתרה למטה. אפשר לחזור ל״תשואה קבועה״ בכפתורים שמעל הטבלה.</div>
         <div class="chart-wrap"><canvas id="mcChartCanvas"></canvas></div>
       </div>
 
@@ -628,6 +633,10 @@ let mcScenarios = null;
 function setActiveScenario(key) {
   document.querySelectorAll('#scenarioBar .scn-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.key === key));
+  ['worst', 'median', 'best'].forEach(k => {
+    const el = document.getElementById('card-' + k);
+    if (el) el.classList.toggle('sel', k === key);
+  });
 }
 function selectTableScenario(key) {
   if (key !== 'const' && (!mcScenarios || !mcScenarios[key])) return;
