@@ -273,8 +273,12 @@ const COMPANY_ICONS = {
 };
 
 function companyIconPath(name) {
+  if (!name) return null;
+  // match the brand only as a whole word (bounded by non-letters), so "כללי" (כללי=general)
+  // does NOT match "כלל" (Clal), and "מורים" does NOT match "מור".
   for (const key in COMPANY_ICONS) {
-    if (name && name.includes(key)) return COMPANY_ICONS[key];
+    const re = new RegExp('(?:^|[^א-תa-zA-Z0-9])' + key + '(?=$|[^א-תa-zA-Z0-9])');
+    if (re.test(name)) return COMPANY_ICONS[key];
   }
   return null;
 }
