@@ -15,6 +15,8 @@
       --teal:      #17a589;
       --red:       #c0392b;
       --red-lt:    #fdecea;
+      --blue:      #2563eb;
+      --blue-lt:   #e7effd;
       --amber:     #d68910;
       --amber-lt:  #fef9e7;
       --bg:        #f4f6f5;
@@ -188,14 +190,14 @@
       position: absolute; top: 0; left: 0; right: 0;
       height: 3px;
     }
-    .kpi.kpi-a::before    { background: var(--red); }
+    .kpi.kpi-a::before    { background: var(--blue); }
     .kpi.kpi-b::before    { background: var(--green); }
-    .kpi.kpi-diff::before { background: var(--teal); }
+    .kpi.kpi-diff::before { background: var(--amber); }
     .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
     .kpi-value { font-size: 1.55rem; font-weight: 700; line-height: 1; }
-    .kpi.kpi-a .kpi-value    { color: var(--red); }
+    .kpi.kpi-a .kpi-value    { color: var(--blue); }
     .kpi.kpi-b .kpi-value    { color: var(--green); }
-    .kpi.kpi-diff .kpi-value { color: var(--teal); }
+    .kpi.kpi-diff .kpi-value { color: var(--amber); }
     .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
 
     /* ─── TABLE ─── */
@@ -220,7 +222,7 @@
       border-bottom: 1px solid #f0f0f0;
     }
     .v-green { color: var(--green); font-weight: 600; }
-    .v-red   { color: var(--red); }
+    .v-blue  { color: var(--blue); font-weight: 600; }
     .v-muted { color: var(--muted); }
 
     /* ─── CHART ─── */
@@ -232,14 +234,14 @@
       padding-right: 1rem;
       margin-bottom: 1.2rem;
     }
-    .scenario-card.sc-a { border-color: var(--red); }
+    .scenario-card.sc-a { border-color: var(--blue); }
     .scenario-card.sc-b { border-color: var(--green); }
     .scenario-title {
       font-size: .85rem;
       font-weight: 700;
       margin-bottom: .6rem;
     }
-    .sc-a .scenario-title { color: var(--red); }
+    .sc-a .scenario-title { color: var(--blue); }
     .sc-b .scenario-title { color: var(--green); }
   </style>
 </head>
@@ -249,7 +251,7 @@
   <div class="container">
     <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
     <h1>דמי ניהול קופת גמל להשקעה</h1>
-    <p>כמה דמי הניהול באמת עולים לך — השוואה בין שני תרחישים</p>
+    <p>כמה דמי הניהול באמת עולים לך — השוואה בין שתי אופציות</p>
   </div>
 </header>
 
@@ -285,16 +287,15 @@
         <hr class="divider">
 
         <div class="scenario-card sc-a">
-          <div class="scenario-title">תרחיש א׳ — דמ״נ נוכחיים</div>
-          <div class="field highlight" style="--green: var(--red); --green-lt: var(--red-lt);">
+          <div class="scenario-title">אופציה א׳</div>
+          <div class="field highlight" style="--green: var(--blue); --green-lt: var(--blue-lt);">
             <label>דמי ניהול מצבירה — שנתי (%)</label>
             <input type="number" id="feeA" value="1.05" min="0" max="2" step="0.01">
-            <div class="field-hint">מקסימום חוקי: 1.05% — נגבה חודשית (÷12)</div>
           </div>
         </div>
 
         <div class="scenario-card sc-b">
-          <div class="scenario-title">תרחיש ב׳ — דמ״נ מופחתים</div>
+          <div class="scenario-title">אופציה ב׳</div>
           <div class="field highlight">
             <label>דמי ניהול מצבירה — שנתי (%)</label>
             <input type="number" id="feeB" value="0.25" min="0" max="2" step="0.01">
@@ -311,12 +312,12 @@
       <!-- KPIs -->
       <div class="kpi-grid">
         <div class="kpi kpi-a">
-          <div class="kpi-label">צבירה — תרחיש א׳</div>
+          <div class="kpi-label">צבירה — אופציה א׳</div>
           <div class="kpi-value" id="resA">—</div>
           <div class="kpi-sub" id="resFeesA"></div>
         </div>
         <div class="kpi kpi-b">
-          <div class="kpi-label">צבירה — תרחיש ב׳</div>
+          <div class="kpi-label">צבירה — אופציה ב׳</div>
           <div class="kpi-value" id="resB">—</div>
           <div class="kpi-sub" id="resFeesB"></div>
         </div>
@@ -343,9 +344,9 @@
               <tr>
                 <th>שנה</th>
                 <th>הפקדות מצטבר</th>
-                <th>תרחיש א׳</th>
+                <th>אופציה א׳</th>
                 <th>דמ״נ א׳ מצטבר</th>
-                <th>תרחיש ב׳</th>
+                <th>אופציה ב׳</th>
                 <th>דמ״נ ב׳ מצטבר</th>
                 <th>הפרש</th>
               </tr>
@@ -422,8 +423,8 @@ function calculate() {
     rows += `<tr>
       <td class="v-muted">${y + 1}</td>
       <td>${fmt.format(sa.totalDeposits)}</td>
-      <td class="v-red">${fmt.format(sa.balance)}</td>
-      <td class="v-red">${fmt.format(sa.totalFees)}</td>
+      <td class="v-blue">${fmt.format(sa.balance)}</td>
+      <td class="v-blue">${fmt.format(sa.totalFees)}</td>
       <td class="v-green">${fmt.format(sb.balance)}</td>
       <td class="v-green">${fmt.format(sb.totalFees)}</td>
       <td style="color: var(--teal); font-weight: 600;">${fmt.format(sb.balance - sa.balance)}</td>
@@ -449,10 +450,10 @@ function renderChart(a, b, years) {
       labels,
       datasets: [
         {
-          label: 'תרחיש א׳ (דמ״נ גבוהים)',
+          label: 'אופציה א׳',
           data: dataA,
-          borderColor: '#c0392b',
-          backgroundColor: 'rgba(192,57,43,0.06)',
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.06)',
           fill: false,
           pointRadius: 3,
           pointHoverRadius: 6,
@@ -460,7 +461,7 @@ function renderChart(a, b, years) {
           tension: 0.3,
         },
         {
-          label: 'תרחיש ב׳ (דמ״נ מופחתים)',
+          label: 'אופציה ב׳',
           data: dataB,
           borderColor: '#1a7a4a',
           backgroundColor: 'rgba(26,122,74,0.09)',
