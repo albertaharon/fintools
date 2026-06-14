@@ -143,6 +143,19 @@
     .cs-option.active { background: var(--green-lt); font-weight: 600; }
 
     .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .95rem; }
+    /* ─── MOBILE ─── */
+    @media (max-width: 600px) {
+      header { padding: 1.5rem 0 1.3rem; }
+      header h1 { font-size: 1.45rem; line-height: 1.2; }
+      header p { font-size: .85rem; }
+      .container { padding: 1rem; }
+      .card { padding: 1.1rem 1rem; }
+      .filters { gap: .75rem; }
+      .filter-group, .filter-group.wide { min-width: 100%; flex: 1 1 100%; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { font-size: .76rem; }
+      .chart-wrap { height: 300px; }
+    }
   </style>
 </head>
 <body>
