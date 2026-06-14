@@ -250,6 +250,17 @@
       color: var(--muted);
       font-size: .9rem;
     }
+    /* ─── MONTE CARLO ─── */
+    .btn-outline {
+      width: 100%; padding: .7rem; background: var(--surface); color: var(--green-dk);
+      font-family: 'Heebo', sans-serif; font-size: .95rem; font-weight: 700; border: 1.5px solid var(--green);
+      border-radius: 10px; cursor: pointer; margin-top: .6rem; transition: background .15s, transform .12s;
+    }
+    .btn-outline:hover { background: var(--green-lt); }
+    .btn-outline:active { transform: translateY(1px); }
+    .mc-note { font-size: .8rem; color: var(--muted); line-height: 1.55; margin-bottom: 1rem; background: var(--green-lt); border-radius: 8px; padding: .7rem .9rem; }
+    .mc-note strong { color: var(--green-dk); }
+
     /* ─── MOBILE ─── */
     @media (max-width: 600px) {
       header { padding: 1.5rem 0 1.3rem; }
@@ -304,6 +315,12 @@
           </div>
         </div>
 
+        <div class="field">
+          <label>תנודתיות שנתית — סטיית תקן (%)</label>
+          <input type="number" id="volatility" value="10" step="0.5" min="0">
+          <div class="field-hint">פיזור התשואה סביב הממוצע, לסימולציית מונטה קרלו. 0 = ללא תנודתיות. ~10% לתיק מעורב, ~15%+ למנייתי</div>
+        </div>
+
         <hr class="divider">
         <div class="section-label">מיסוי</div>
 
@@ -319,6 +336,7 @@
         </div>
 
         <button class="btn-calc" onclick="calculate()">חשב מחדש</button>
+        <button class="btn-outline" onclick="runMonteCarlo()">הרץ סימולציית תנודתיות 🎲</button>
       </div>
     </aside>
 
@@ -352,6 +370,18 @@
         <div class="chart-wrap">
           <canvas id="myChart"></canvas>
         </div>
+      </div>
+
+      <!-- Monte Carlo -->
+      <div class="card" id="mcCard" style="display:none;">
+        <h2>סימולציית תנודתיות — מונטה קרלו (1,000 תרחישים)</h2>
+        <div class="mc-note" id="mcNote"></div>
+        <div class="kpi-grid" style="margin-bottom:1.1rem;">
+          <div class="kpi kpi-tax"><div class="kpi-label">תרחיש גרוע (אחוזון 10)</div><div class="kpi-value" id="mcP10">—</div><div class="kpi-sub">הכסף החזיק לפחות</div></div>
+          <div class="kpi kpi-main"><div class="kpi-label">חציון</div><div class="kpi-value" id="mcP50">—</div><div class="kpi-sub">מחצית מהתרחישים</div></div>
+          <div class="kpi kpi-net"><div class="kpi-label">תרחיש טוב (אחוזון 90)</div><div class="kpi-value" id="mcP90">—</div><div class="kpi-sub">הכסף החזיק עד</div></div>
+        </div>
+        <div class="chart-wrap"><canvas id="mcChartCanvas"></canvas></div>
       </div>
 
       <!-- Table -->
@@ -548,6 +578,107 @@ function renderChart(labels, balanceData, grossData) {
           },
           grid: { drawOnChartArea: false },
         },
+      },
+    },
+  });
+}
+
+// ─── מונטה קרלו: הזרקת תנודתיות לתשואה (התפלגות נורמלית) ───
+let mcChart = null;
+function randn() { // Box-Muller — דגימה מהתפלגות נורמלית סטנדרטית
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function percentile(sorted, p) {
+  if (!sorted.length) return 0;
+  const idx = (sorted.length - 1) * p, lo = Math.floor(idx), hi = Math.ceil(idx);
+  return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+function runMonteCarlo() {
+  calculate(); // רענון החישוב הדטרמיניסטי לצורך השוואה
+  const capital        = parseFloat(document.getElementById('capital').value)           || 0;
+  const netBase        = parseFloat(document.getElementById('netWithdrawal').value)     || 0;
+  const annualReturn   = parseFloat(document.getElementById('returnRate').value)        || 0;
+  const annualInfl     = parseFloat(document.getElementById('inflation').value)         || 0;
+  const annualVol      = parseFloat(document.getElementById('volatility').value)        || 0;
+  const taxRate        = parseFloat(document.getElementById('taxRate').value)    / 100   || 0;
+  const initProfitPerc = parseFloat(document.getElementById('initialProfitPerc').value) || 0;
+
+  const mu    = Math.pow(1 + annualReturn / 100, 1/12) - 1;   // תוחלת חודשית
+  const sig   = (annualVol / 100) / Math.sqrt(12);            // סטיית תקן חודשית
+  const mInfl = Math.pow(1 + annualInfl / 100, 1/12) - 1;
+  const RUNS = 1000, CAP = 1200;
+
+  const durations = [], perMonth = [];
+  for (let run = 0; run < RUNS; run++) {
+    let balance = capital, costBasis = capital * (1 - initProfitPerc / 100), desiredNet = netBase, month = 0;
+    while (balance > 0.01 && month < CAP) {
+      month++;
+      balance += balance * (randn() * sig + mu);
+      desiredNet *= (1 + mInfl);
+      if (balance < 0) balance = 0;
+      const profit = Math.max(0, balance - costBasis), pr = balance > 0 ? profit / balance : 0;
+      const denom = 1 - pr * taxRate, reqGross = denom > 0 ? desiredNet / denom : balance;
+      const gross = Math.min(balance, reqGross);
+      balance -= gross;
+      costBasis = Math.max(0, costBasis - gross * (1 - pr));
+      (perMonth[month - 1] || (perMonth[month - 1] = [])).push(Math.max(0, balance));
+    }
+    durations.push(month);
+  }
+  durations.sort((a, b) => a - b);
+  const dP10 = percentile(durations, 0.10), dP50 = percentile(durations, 0.50), dP90 = percentile(durations, 0.90);
+
+  document.getElementById('mcP10').innerText = fmtDur(Math.round(dP10));
+  document.getElementById('mcP50').innerText = fmtDur(Math.round(dP50));
+  document.getElementById('mcP90').innerText = fmtDur(Math.round(dP90));
+
+  const det = document.getElementById('resYears').innerText;
+  document.getElementById('mcNote').innerHTML =
+    `<strong>תנודתיות = ${annualVol}% סטיית תקן.</strong> בתשואה קבועה (ללא תנודתיות) הכסף מחזיק <strong>${det}</strong>. ` +
+    `עם תנודתיות, ב-1,000 תרחישים מדומים משך הזמן נע בין <strong>${fmtDur(Math.round(dP10))}</strong> (תרחיש גרוע) ל-<strong>${fmtDur(Math.round(dP90))}</strong> (תרחיש טוב), חציון <strong>${fmtDur(Math.round(dP50))}</strong>. ` +
+    `בגלל סיכון רצף התשואות התוצאה החציונית בדרך כלל נמוכה מהחישוב הקבוע. (התשואה אקראית, האינפלציה קבועה.)`;
+
+  const horizon = Math.min(CAP, Math.max(12, Math.ceil(percentile(durations, 0.95))));
+  const labels = [], bLo = [], bMid = [], bHi = [];
+  for (let m = 0; m < horizon; m++) {
+    const arr = (perMonth[m] || []).slice();
+    while (arr.length < RUNS) arr.push(0); // תרחישים שכבר התרוקנו = יתרה 0
+    arr.sort((a, b) => a - b);
+    labels.push(fmtDur(m + 1));
+    bLo.push(percentile(arr, 0.10));
+    bMid.push(percentile(arr, 0.50));
+    bHi.push(percentile(arr, 0.90));
+  }
+  document.getElementById('mcCard').style.display = 'block';
+  renderFanChart(labels, bLo, bMid, bHi, 'יתרת התיק');
+}
+
+function renderFanChart(labels, bLo, bMid, bHi, yTitle) {
+  const ctx = document.getElementById('mcChartCanvas').getContext('2d');
+  if (mcChart) mcChart.destroy();
+  mcChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'אחוזון 10 (תרחיש גרוע)', data: bLo, borderColor: '#c0392b', borderWidth: 1.5, pointRadius: 0, tension: .3 },
+      { label: 'חציון', data: bMid, borderColor: '#1a7a4a', borderWidth: 2, pointRadius: 0, tension: .3 },
+      { label: 'אחוזון 90 (תרחיש טוב)', data: bHi, borderColor: '#17a589', borderWidth: 1.5, pointRadius: 0, tension: .3, backgroundColor: 'rgba(26,122,74,0.10)', fill: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${new Intl.NumberFormat('he-IL').format(Math.round(c.parsed.y))} ₪` } },
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 12, font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: { title: { display: true, text: yTitle, font: { family: 'Heebo' } },
+             ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) },
+             grid: { color: 'rgba(0,0,0,.05)' } },
       },
     },
   });
