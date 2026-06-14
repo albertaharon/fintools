@@ -27,6 +27,9 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { max-width: 100%; overflow-x: hidden; }
+    .grid, .charts-grid { min-width: 0; }
+    .grid > *, .charts-grid > * { min-width: 0; }
+    canvas, img { max-width: 100%; }
     body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
 
     header {

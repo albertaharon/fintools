@@ -28,6 +28,9 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { max-width: 100%; overflow-x: hidden; }
+    .grid, .charts-grid { min-width: 0; }
+    .grid > *, .charts-grid > * { min-width: 0; }
+    canvas, img { max-width: 100%; }
     /* הסתרת חצי המקלדת (spinner) בשדות מספר — הקלדה ידנית בלבד */
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
