@@ -408,7 +408,8 @@ function calculate() {
   const a = simulate(initial, monthly, years, annualReturn, feeA);
   const b = simulate(initial, monthly, years, annualReturn, feeB);
 
-  const diff = b.balance - a.balance;
+  const diff = Math.abs(b.balance - a.balance);
+  const base = Math.min(a.balance, b.balance);
 
   document.getElementById('resA').textContent = fmt.format(a.balance);
   document.getElementById('resFeesA').textContent = `דמ״נ ששולמו: ${fmt.format(a.totalFees)}`;
@@ -416,7 +417,7 @@ function calculate() {
   document.getElementById('resFeesB').textContent = `דמ״נ ששולמו: ${fmt.format(b.totalFees)}`;
   document.getElementById('resDiff').textContent = fmt.format(diff);
   document.getElementById('resDiffPct').textContent =
-    a.balance > 0 ? `${((diff / a.balance) * 100).toFixed(1)}%` : '';
+    base > 0 ? `${((diff / base) * 100).toFixed(1)}%` : '';
 
   // Table
   const tbody = document.getElementById('resultsTable');
@@ -431,7 +432,7 @@ function calculate() {
       <td class="v-blue">${fmt.format(sa.totalFees)}</td>
       <td class="v-green">${fmt.format(sb.balance)}</td>
       <td class="v-green">${fmt.format(sb.totalFees)}</td>
-      <td style="color: var(--teal); font-weight: 600;">${fmt.format(sb.balance - sa.balance)}</td>
+      <td style="color: var(--amber); font-weight: 600;">${fmt.format(Math.abs(sb.balance - sa.balance))}</td>
     </tr>`;
   }
   tbody.innerHTML = rows;
