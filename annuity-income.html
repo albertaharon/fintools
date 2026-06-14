@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון אנונה — סכום חודשי מהצבירה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --blue:      #2563eb;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .grid, .charts-grid { min-width: 0; }
+    .grid > *, .charts-grid > * { min-width: 0; }
+    canvas, img { max-width: 100%; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.88rem; position: relative; margin-bottom: 0.3rem; }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    /* ─── LAYOUT ─── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ─── CARD ─── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt); }
+
+    /* ─── FORM ─── */
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    .field input {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: 'Heebo', sans-serif; font-size: .95rem; color: var(--text); background: var(--bg);
+      transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input { border-color: var(--green); background: var(--green-lt); }
+    .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .divider { border: none; border-top: 1.5px solid var(--green-lt); margin: 1.1rem 0; }
+    .section-label { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+
+    .btn-calc {
+      width: 100%; padding: .75rem; background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 1rem; font-weight: 700; border: none;
+      border-radius: 10px; cursor: pointer; margin-top: .4rem; transition: opacity .18s, transform .12s; letter-spacing: .02em;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* ─── KPI ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi.kpi-main::before { background: var(--green); }
+    .kpi.kpi-nom::before  { background: var(--blue); }
+    .kpi.kpi-net::before  { background: var(--teal); }
+    .kpi.kpi-tax::before  { background: var(--red); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.7rem; font-weight: 700; line-height: 1.05; }
+    .kpi-main .kpi-value { color: var(--green); }
+    .kpi-nom  .kpi-value { color: var(--blue); }
+    .kpi-net  .kpi-value { color: var(--teal); }
+    .kpi-tax  .kpi-value { color: var(--red); }
+    .kpi-sub  { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── ALERT ─── */
+    .alert { padding: .75rem 1rem; border-radius: 8px; font-size: .83rem; margin-bottom: 1rem; display: none; border-right: 3px solid; line-height: 1.5; }
+    .alert.info { background: var(--green-lt); border-color: var(--green); color: var(--green-dk); display: block; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { max-height: 480px; overflow: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      position: sticky; top: 0; z-index: 1; background: var(--green-dk); color: #fff;
+      padding: .55rem .6rem; text-align: center; font-weight: 500; letter-spacing: .02em; white-space: nowrap;
+    }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .42rem .55rem; text-align: center; border-bottom: 1px solid #f0f0f0; }
+    .v-green { color: var(--green); font-weight: 600; }
+    .v-red   { color: var(--red); }
+    .v-muted { color: var(--muted); }
+
+    /* ─── CHART ─── */
+    .chart-wrap { position: relative; height: 320px; }
+
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: .9rem; }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 600px) {
+      header { padding: 1.5rem 0 1.3rem; }
+      header h1 { font-size: 1.45rem; line-height: 1.2; }
+      header p { font-size: .85rem; }
+      .container { padding-left: 1rem; padding-right: 1rem; }
+      .grid { gap: 1rem; margin-top: 1.1rem; }
+      .card { padding: 1.1rem 1rem; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { font-size: .76rem; }
+      .chart-wrap { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>אנונה — סכום חודשי מהצבירה</h1>
+    <p>כמה נטו אפשר למשוך כל חודש מצבירה נתונה, על פני מספר שנים נבחר</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>הגדרות התיק</h2>
+
+        <div class="field highlight">
+          <label>סכום הצבירה (₪)</label>
+          <input type="number" id="capital" value="1000000" min="0">
+        </div>
+
+        <div class="field">
+          <label>מספר שנים למשיכה</label>
+          <input type="number" id="years" value="20" min="1" max="80">
+          <div class="field-hint">לאורך כמה שנים הכסף צריך להספיק — בסוף התקופה התיק מתאפס</div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה שנתית (%)</label>
+            <input type="number" id="returnRate" value="5" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>אינפלציה (%)</label>
+            <input type="number" id="inflation" value="2" step="0.1" min="0">
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">מיסוי</div>
+
+        <div class="field">
+          <label>מס רווח הון (%)</label>
+          <input type="number" id="taxRate" value="25" min="0" max="100">
+        </div>
+
+        <div class="field">
+          <label>אחוז רווח נוכחי בתיק (%)</label>
+          <input type="number" id="initialProfitPerc" value="50" min="0" max="100">
+          <div class="field-hint">אם קנית ב-1,000,000 ₪ והתיק שווה 1,500,000 ₪ — הכנס 33.3</div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב סכום חודשי</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <div class="kpi-grid">
+        <div class="kpi kpi-main">
+          <div class="kpi-label">סכום חודשי נטו — בערך של היום</div>
+          <div class="kpi-value" id="resMonthly">—</div>
+          <div class="kpi-sub">ריאלי — כוח הקנייה נשמר לאורך כל התקופה</div>
+        </div>
+        <div class="kpi kpi-nom">
+          <div class="kpi-label">משיכה חודשית נטו — נומינלי</div>
+          <div class="kpi-value" id="resNominalRange">—</div>
+          <div class="kpi-sub">חודש ראשון ← חודש אחרון</div>
+        </div>
+        <div class="kpi kpi-net">
+          <div class="kpi-label">סה"כ נטו שתקבל</div>
+          <div class="kpi-value" id="resTotalNet">—</div>
+          <div class="kpi-sub">נומינלי, לכל התקופה</div>
+        </div>
+        <div class="kpi kpi-tax">
+          <div class="kpi-label">סה"כ מס ששולם</div>
+          <div class="kpi-value" id="resTotalTax">—</div>
+          <div class="kpi-sub">מס רווח הון</div>
+        </div>
+      </div>
+
+      <div class="alert info" id="alertBanner"></div>
+
+      <div class="card">
+        <div class="chart-wrap">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>פירוט חודשי מלא</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ותק</th>
+                <th>נטו בפועל</th>
+                <th>ברוטו שנמשך</th>
+                <th>מס שנוכה</th>
+                <th>% רווח בתיק</th>
+                <th>יתרה</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable">
+              <tr><td colspan="7" class="empty">לחץ "חשב סכום חודשי" כדי לראות תוצאות</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+const fmt  = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+const fmtP = v => (v * 100).toFixed(1) + '%';
+function fmtDur(m) {
+  const y = Math.floor(m / 12), mo = m % 12;
+  if (y === 0) return mo + 'ח';
+  if (mo === 0) return y + 'ש';
+  return y + 'ש ' + mo + 'ח';
+}
+
+// יתרת התיק לאחר targetMonths חודשי משיכה, בהינתן בסיס משיכה ריאלי baseNet (ערך היום).
+// ללא הגבלת יתרה — משמש רק לפתרון הבינארי (היתרה מונוטונית יורדת ככל ש-baseNet גדל).
+function residualBalance(baseNet, capital, mReturn, mInflation, taxRate, initProfitPerc, targetMonths) {
+  let balance = capital;
+  let costBasis = capital * (1 - initProfitPerc / 100);
+  let desiredNet = baseNet;
+  for (let m = 0; m < targetMonths; m++) {
+    balance += balance * mReturn;
+    desiredNet *= (1 + mInflation);
+    const profit      = Math.max(0, balance - costBasis);
+    const profitRatio = balance > 0 ? profit / balance : 0;
+    const denom       = 1 - profitRatio * taxRate;
+    const gross       = denom > 0 ? desiredNet / denom : desiredNet;
+    balance -= gross;
+    const costPortion = gross * (1 - profitRatio);
+    costBasis = Math.max(0, costBasis - costPortion);
+  }
+  return balance;
+}
+
+function calculate() {
+  const capital         = parseFloat(document.getElementById('capital').value)            || 0;
+  const years           = parseInt(document.getElementById('years').value)                || 1;
+  const annualReturn    = parseFloat(document.getElementById('returnRate').value)         || 0;
+  const annualInflation = parseFloat(document.getElementById('inflation').value)          || 0;
+  const taxRate         = parseFloat(document.getElementById('taxRate').value)     / 100   || 0;
+  const initProfitPerc  = parseFloat(document.getElementById('initialProfitPerc').value)  || 0;
+
+  const targetMonths = Math.max(1, Math.round(years * 12));
+  const mReturn    = Math.pow(1 + annualReturn   / 100, 1/12) - 1;
+  const mInflation = Math.pow(1 + annualInflation / 100, 1/12) - 1;
+
+  // ─── פתרון בינארי: מציאת הסכום הריאלי שמרוקן את התיק בדיוק בתום התקופה ───
+  let lo = 0, hi = Math.max(capital, 1);
+  // הרחבת הגבול העליון אם צריך (כדי שהיתרה בסוף תהיה שלילית)
+  while (residualBalance(hi, capital, mReturn, mInflation, taxRate, initProfitPerc, targetMonths) > 0 && hi < capital * 100) {
+    hi *= 2;
+  }
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    const r = residualBalance(mid, capital, mReturn, mInflation, taxRate, initProfitPerc, targetMonths);
+    if (r > 0) lo = mid; else hi = mid;
+  }
+  const baseNet = (lo + hi) / 2;  // סכום חודשי נטו בערך של היום
+
+  // ─── סימולציה מלאה להצגה (עם הגבלת יתרה) ───
+  let balance = capital;
+  let costBasis = capital * (1 - initProfitPerc / 100);
+  let desiredNet = baseNet;
+  let labels = [], balanceData = [], netData = [];
+  let tableRows = '';
+  let totalNet = 0, totalTax = 0;
+  let firstNet = 0, lastNet = 0;
+
+  for (let month = 1; month <= targetMonths; month++) {
+    balance += balance * mReturn;
+    desiredNet *= (1 + mInflation);
+
+    const profit      = Math.max(0, balance - costBasis);
+    const profitRatio = balance > 0 ? profit / balance : 0;
+    const denom       = 1 - profitRatio * taxRate;
+    const requiredGross = denom > 0 ? desiredNet / denom : balance;
+    const grossWithdrawn = Math.min(Math.max(balance, 0), requiredGross);
+
+    const taxPayment = grossWithdrawn * profitRatio * taxRate;
+    const actualNet  = grossWithdrawn - taxPayment;
+
+    balance -= grossWithdrawn;
+    const costPortion = grossWithdrawn * (1 - profitRatio);
+    costBasis = Math.max(0, costBasis - costPortion);
+
+    totalNet += actualNet;
+    totalTax += taxPayment;
+    if (month === 1) firstNet = actualNet;
+    lastNet = actualNet;
+
+    const lbl = fmtDur(month);
+    labels.push(lbl);
+    balanceData.push(Math.max(0, balance));
+    netData.push(actualNet);
+
+    tableRows += `<tr>
+      <td class="v-muted">${month}</td>
+      <td class="v-muted">${lbl}</td>
+      <td class="v-green">${fmt.format(actualNet)}</td>
+      <td>${fmt.format(grossWithdrawn)}</td>
+      <td class="v-red">${fmt.format(taxPayment)}</td>
+      <td class="v-muted">${fmtP(profitRatio)}</td>
+      <td>${fmt.format(Math.max(0, balance))}</td>
+    </tr>`;
+  }
+
+  document.getElementById('resMonthly').innerText = fmt.format(baseNet);
+  document.getElementById('resNominalRange').innerText = fmt.format(firstNet) + ' ← ' + fmt.format(lastNet);
+  document.getElementById('resTotalNet').innerText = fmt.format(totalNet);
+  document.getElementById('resTotalTax').innerText = fmt.format(totalTax);
+  document.getElementById('resultsTable').innerHTML = tableRows;
+
+  const banner = document.getElementById('alertBanner');
+  banner.className = 'alert info';
+  banner.textContent = `מתוך צבירה של ${fmt.format(capital)} ניתן למשוך כ-${fmt.format(baseNet)} נטו בחודש (בערך של היום) למשך ${years} שנים. הסכום צמוד למדד — בפועל הוא גדל מ-${fmt.format(firstNet)} בחודש הראשון ל-${fmt.format(lastNet)} בחודש האחרון.`;
+
+  renderChart(labels, balanceData, netData);
+}
+
+function renderChart(labels, balanceData, netData) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'יתרת התיק (₪)',
+          data: balanceData,
+          borderColor: '#1a7a4a',
+          backgroundColor: 'rgba(26,122,74,0.09)',
+          fill: true, yAxisID: 'y', pointRadius: 0, borderWidth: 2, tension: 0.3,
+        },
+        {
+          label: 'משיכה חודשית נטו (₪)',
+          data: netData,
+          borderColor: '#17a589',
+          borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, yAxisID: 'y1', tension: 0.4,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${new Intl.NumberFormat('he-IL').format(Math.round(ctx.parsed.y))} ₪`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 12, font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: {
+          type: 'linear', position: 'right',
+          title: { display: true, text: 'יתרת התיק', font: { family: 'Heebo' } },
+          ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+        y1: {
+          type: 'linear', position: 'left',
+          title: { display: true, text: 'משיכה חודשית', font: { family: 'Heebo' } },
+          ticks: { font: { family: 'Heebo', size: 11 }, callback: v => new Intl.NumberFormat('he-IL', { notation: 'compact' }).format(v) },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>
