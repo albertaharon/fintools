@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f5233"/>
+      <stop offset="0.55" stop-color="#1a7a4a"/>
+      <stop offset="1" stop-color="#17a589"/>
+    </linearGradient>
+    <linearGradient id="bars" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#g)"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="1.5"/>
+  <!-- growth bars -->
+  <g fill="url(#bars)">
+    <rect x="13" y="36" width="8" height="15" rx="2.5"/>
+    <rect x="28" y="28" width="8" height="23" rx="2.5"/>
+    <rect x="43" y="18" width="8" height="33" rx="2.5"/>
+  </g>
+  <!-- upward arrow -->
+  <path d="M13 39 L30 28 L40 33 L52 17" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M44 15 L54 14 L53 24 Z" fill="#ffffff"/>
+</svg>
