@@ -290,11 +290,22 @@
           </div>
         </div>
 
+        <div class="row2">
+          <div class="field">
+            <label>מקדם המרה בגיל 60</label>
+            <input type="number" id="factor60" value="240" step="1" class="calc-input">
+          </div>
+          <div class="field">
+            <label>מקדם המרה בגיל 67</label>
+            <input type="number" id="factor67" value="200" step="1" class="calc-input">
+          </div>
+        </div>
+
         <button class="btn-calc" onclick="calculate()">חשב קצבאות</button>
 
         <div class="formula-box" id="realFormula"></div>
         <div class="field-hint" style="margin-top:.6rem;">
-          מקדמי המרה: 220 בגיל 60 עד 200 בגיל 67 (אינטרפולציה לינארית) · ללא מס · ללא הפקדות עתידיות · קבלת קצבה עד גיל 82.
+          מקדם ההמרה לגילאי הביניים מחושב באינטרפולציה לינארית בין שני הערכים שהוגדרו · ללא מס · ללא הפקדות עתידיות · קבלת קצבה עד גיל 82.
         </div>
       </div>
     </aside>
@@ -357,15 +368,13 @@
 <script>
 let myChart = null;
 
-const FACTOR_AT_60 = 220;
-const FACTOR_AT_67 = 200;
 const LIFE_END_AGE = 82;
 
 const fmtNIS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
 
-function getMekaDam(age) {
+function getMekaDam(age, factor60, factor67) {
   const clamped = Math.max(60, Math.min(67, age));
-  return FACTOR_AT_60 + ((FACTOR_AT_67 - FACTOR_AT_60) / (67 - 60)) * (clamped - 60);
+  return factor60 + ((factor67 - factor60) / (67 - 60)) * (clamped - 60);
 }
 
 document.querySelectorAll('.calc-input').forEach(input => {
@@ -377,6 +386,8 @@ function calculate() {
   const balance    = parseFloat(document.getElementById('balance').value) || 0;
   const nominal    = parseFloat(document.getElementById('nominal').value) || 0;
   const inflation  = parseFloat(document.getElementById('inflation').value) || 0;
+  const factor60   = parseFloat(document.getElementById('factor60').value) || 0;
+  const factor67   = parseFloat(document.getElementById('factor67').value) || 0;
 
   const realReturn = (1 + nominal / 100) / (1 + inflation / 100) - 1;
 
@@ -387,7 +398,7 @@ function calculate() {
   const rows = ages.map(age => {
     const years = Math.max(0, age - currentAge);
     const futureValue = balance * Math.pow(1 + realReturn, years);
-    const mekadam = getMekaDam(age);
+    const mekadam = getMekaDam(age, factor60, factor67);
     const monthlyPension = futureValue / mekadam;
     const annualPension = monthlyPension * 12;
     const yearsReceiving = Math.max(0, LIFE_END_AGE - age);
