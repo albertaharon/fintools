@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>קצבאות מגמל להשקעה — ערכים ריאליים | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --purple:    #7c3aed;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .grid, .charts-grid { min-width: 0; }
+    .grid > *, .charts-grid > * { min-width: 0; }
+    canvas, img { max-width: 100%; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff;
+      padding: 2.4rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      position: relative;
+    }
+    header p {
+      margin-top: .5rem;
+      opacity: .85;
+      font-size: .95rem;
+      font-weight: 300;
+      position: relative;
+    }
+
+    /* ─── NAV ─── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.88rem;
+      position: relative;
+      margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    /* ─── LAYOUT ─── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dk);
+      margin-bottom: 1.1rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid var(--green-lt);
+    }
+
+    /* ─── FORM CONTROLS ─── */
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: .35rem;
+      letter-spacing: .01em;
+    }
+    .field input {
+      width: 100%;
+      padding: .55rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Heebo', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color .18s, box-shadow .18s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,122,74,.12);
+      background: #fff;
+    }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input {
+      border-color: var(--green);
+      background: var(--green-lt);
+    }
+    .field-hint {
+      font-size: .76rem;
+      color: var(--muted);
+      margin-top: .3rem;
+      line-height: 1.4;
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+
+    .formula-box {
+      margin-top: .25rem;
+      font-size: .8rem;
+      color: var(--muted);
+      background: var(--green-lt);
+      border-radius: 8px;
+      padding: .7rem .8rem;
+      line-height: 1.5;
+    }
+    .formula-box strong { color: var(--green-dk); }
+
+    /* ─── CALC BUTTON ─── */
+    .btn-calc {
+      width: 100%;
+      padding: .75rem;
+      background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff;
+      font-family: 'Heebo', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: .4rem;
+      transition: opacity .18s, transform .12s;
+      letter-spacing: .02em;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* ─── KPI CARDS ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi.kpi-real::before    { background: var(--blue, #2563eb); background: #2563eb; }
+    .kpi.kpi-pension::before { background: var(--green); }
+    .kpi.kpi-life::before    { background: var(--purple); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.55rem; font-weight: 700; line-height: 1; }
+    .kpi.kpi-real .kpi-value    { color: #2563eb; }
+    .kpi.kpi-pension .kpi-value { color: var(--green); }
+    .kpi.kpi-life .kpi-value    { color: var(--purple); }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { max-height: 480px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; table-layout: fixed; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      background: var(--green-dk);
+      color: #fff;
+      padding: .5rem .35rem;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: .01em;
+      line-height: 1.25;
+    }
+    tbody tr:nth-child(odd)  { background: #fafafa; }
+    tbody tr:nth-child(even) { background: #fff; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td {
+      padding: .42rem .3rem;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+      word-break: break-word;
+    }
+    .v-green  { color: var(--green); font-weight: 700; }
+    .v-purple { color: var(--purple); font-weight: 700; }
+    .v-blue   { color: #2563eb; font-weight: 600; }
+    .v-muted  { color: var(--muted); }
+    .v-age    { color: var(--green-dk); font-weight: 700; }
+
+    /* ─── CHART ─── */
+    .chart-wrap { position: relative; height: 320px; }
+    /* ─── MOBILE ─── */
+    @media (max-width: 600px) {
+      header { padding: 1.5rem 0 1.3rem; }
+      header h1 { font-size: 1.35rem; line-height: 1.2; }
+      header p { font-size: .85rem; }
+      .container { padding-left: 1rem; padding-right: 1rem; }
+      .grid { gap: 1rem; margin-top: 1.1rem; }
+      .card { padding: 1.1rem 1rem; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { font-size: .76rem; }
+      .chart-wrap { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>קצבאות מגמל להשקעה — ערכים ריאליים</h1>
+    <p>כמה קצבה חודשית תניב הצבירה לפי גיל הפרישה — בכוח קנייה של היום</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ SIDEBAR INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>נתוני חישוב</h2>
+
+        <div class="row2">
+          <div class="field">
+            <label>גיל נוכחי</label>
+            <input type="number" id="currentAge" value="48" min="18" max="67" class="calc-input">
+          </div>
+          <div class="field highlight">
+            <label>יתרה נוכחית (₪)</label>
+            <input type="number" id="balance" value="880000" min="0" class="calc-input">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה נומינלית (%)</label>
+            <input type="number" id="nominal" value="7" step="0.1" class="calc-input">
+          </div>
+          <div class="field">
+            <label>אינפלציה ממוצעת (%)</label>
+            <input type="number" id="inflation" value="2.5" step="0.1" class="calc-input">
+          </div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב קצבאות</button>
+
+        <div class="formula-box" id="realFormula"></div>
+        <div class="field-hint" style="margin-top:.6rem;">
+          מקדמי המרה: 240 בגיל 60 עד 200 בגיל 67 (אינטרפולציה לינארית) · ללא מס · ללא הפקדות עתידיות · קבלת קצבה עד גיל 82.
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi kpi-real">
+          <div class="kpi-label">תשואה ריאלית שנתית</div>
+          <div class="kpi-value" id="resReal">—</div>
+          <div class="kpi-sub">מעבר לאינפלציה</div>
+        </div>
+        <div class="kpi kpi-pension">
+          <div class="kpi-label">קצבה חודשית בגיל 60</div>
+          <div class="kpi-value" id="resPension">—</div>
+          <div class="kpi-sub" id="resPensionSub"></div>
+        </div>
+        <div class="kpi kpi-life">
+          <div class="kpi-label">סה"כ לאורך חיים (גיל 60)</div>
+          <div class="kpi-value" id="resLife">—</div>
+          <div class="kpi-sub" id="resLifeSub"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="chart-wrap">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <h2>פירוט לפי גיל פרישה</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>גיל פרישה</th>
+                <th>שנות צבירה</th>
+                <th>מקדם המרה</th>
+                <th>יתרה בפרישה (ריאלי)</th>
+                <th>קצבה חודשית</th>
+                <th>קצבה שנתית</th>
+                <th>שנות קבלה</th>
+                <th>סה"כ לאורך חיים</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+let myChart = null;
+
+const FACTOR_AT_60 = 240;
+const FACTOR_AT_67 = 200;
+const LIFE_END_AGE = 82;
+
+const fmtNIS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+
+function getMekaDam(age) {
+  const clamped = Math.max(60, Math.min(67, age));
+  return FACTOR_AT_60 + ((FACTOR_AT_67 - FACTOR_AT_60) / (67 - 60)) * (clamped - 60);
+}
+
+document.querySelectorAll('.calc-input').forEach(input => {
+  input.addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+});
+
+function calculate() {
+  const currentAge = parseFloat(document.getElementById('currentAge').value) || 0;
+  const balance    = parseFloat(document.getElementById('balance').value) || 0;
+  const nominal    = parseFloat(document.getElementById('nominal').value) || 0;
+  const inflation  = parseFloat(document.getElementById('inflation').value) || 0;
+
+  const realReturn = (1 + nominal / 100) / (1 + inflation / 100) - 1;
+
+  document.getElementById('realFormula').innerHTML =
+    `תשואה ריאלית = (1 + ${nominal}%) ÷ (1 + ${inflation}%) − 1 = <strong>${(realReturn * 100).toFixed(2)}%</strong>`;
+
+  const ages = [60, 61, 62, 63, 64, 65, 66, 67];
+  const rows = ages.map(age => {
+    const years = Math.max(0, age - currentAge);
+    const futureValue = balance * Math.pow(1 + realReturn, years);
+    const mekadam = getMekaDam(age);
+    const monthlyPension = futureValue / mekadam;
+    const annualPension = monthlyPension * 12;
+    const yearsReceiving = Math.max(0, LIFE_END_AGE - age);
+    const totalLifetime = monthlyPension * 12 * yearsReceiving;
+    return { age, years, futureValue, mekadam, monthlyPension, annualPension, yearsReceiving, totalLifetime };
+  });
+
+  // Table
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="v-age">${r.age}</td>
+      <td class="v-muted">${r.years}</td>
+      <td class="v-muted">${r.mekadam.toFixed(1)}</td>
+      <td>${fmtNIS.format(r.futureValue)}</td>
+      <td class="v-green">${fmtNIS.format(r.monthlyPension)}</td>
+      <td>${fmtNIS.format(r.annualPension)}</td>
+      <td class="v-muted">${r.yearsReceiving}</td>
+      <td class="v-purple">${fmtNIS.format(r.totalLifetime)}</td>
+    </tr>`).join('');
+
+  // KPIs (age 60)
+  const at60 = rows[0];
+  document.getElementById('resReal').textContent = (realReturn * 100).toFixed(2) + '%';
+  document.getElementById('resPension').textContent = fmtNIS.format(at60.monthlyPension);
+  document.getElementById('resPensionSub').textContent = `מתוך יתרה של ${fmtNIS.format(at60.futureValue)}`;
+  document.getElementById('resLife').textContent = fmtNIS.format(at60.totalLifetime);
+  document.getElementById('resLifeSub').textContent = `על פני ${at60.yearsReceiving} שנים`;
+
+  renderChart(rows);
+}
+
+function renderChart(rows) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (myChart) myChart.destroy();
+
+  myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => 'גיל ' + r.age),
+      datasets: [
+        {
+          type: 'bar',
+          label: 'קצבה חודשית (₪)',
+          data: rows.map(r => r.monthlyPension),
+          backgroundColor: 'rgba(26,122,74,0.75)',
+          borderColor: '#1a7a4a',
+          borderWidth: 1,
+          borderRadius: 6,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: 'יתרה בפרישה (₪)',
+          data: rows.map(r => r.futureValue),
+          borderColor: '#7c3aed',
+          backgroundColor: 'rgba(124,58,237,0.08)',
+          fill: true,
+          yAxisID: 'y1',
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2.5,
+          tension: 0.3,
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' } } },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.dataset.label}: ${fmtNIS.format(c.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { font: { family: 'Heebo', size: 11 } },
+          grid: { color: 'rgba(0,0,0,.04)' },
+        },
+        y: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: 'קצבה חודשית', font: { family: 'Heebo' } },
+          ticks: { font: { family: 'Heebo', size: 11 }, callback: v => '₪' + (v / 1000).toFixed(0) + 'K' },
+          grid: { color: 'rgba(0,0,0,.05)' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'יתרה בפרישה', font: { family: 'Heebo' } },
+          ticks: { font: { family: 'Heebo', size: 11 }, callback: v => '₪' + (v / 1000000).toFixed(1) + 'M' },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  });
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>
