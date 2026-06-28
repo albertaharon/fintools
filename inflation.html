@@ -470,5 +470,14 @@ function renderChart(labels, priceData, powerData) {
 
 window.onload = calculate;
 </script>
+<script>
+/* data-noscroll-guard: prevent mouse-wheel from changing number inputs */
+document.addEventListener("wheel", function (e) {
+  var el = e.target;
+  if (el instanceof HTMLInputElement && el.type === "number" && el === document.activeElement) {
+    el.blur();
+  }
+}, { passive: true });
+</script>
 </body>
 </html>
