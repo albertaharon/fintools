@@ -478,6 +478,12 @@ document.addEventListener("wheel", function (e) {
     el.blur();
   }
 }, { passive: true });
+document.addEventListener("keydown", function (e) {
+  var el = e.target;
+  if (el instanceof HTMLInputElement && el.type === "number" && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+    e.preventDefault();
+  }
+});
 </script>
 </body>
 </html>
