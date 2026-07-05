@@ -89,7 +89,7 @@
 
     /* ─── YEAR RANGE ─── */
     .year-range { display: flex; align-items: center; gap: .5rem; }
-    .year-range select { width: 90px; }
+    .year-range select { width: 108px; }
     .year-range span { color: var(--muted); font-size: .9rem; }
 
     /* ─── CHARTS ─── */
@@ -170,7 +170,7 @@
   <div class="container" style="padding:0 1.25rem;">
     <a href="index.html" class="back-link">&#8592; חזרה לדף הראשי</a>
     <h1>דשבורד קרנות פנסיה</h1>
-    <p>השוואת תשואות שנתיות ומצטברות של מסלולי פנסיה בישראל</p>
+    <p>השוואת תשואות חודשיות ומצטברות של מסלולי פנסיה בישראל — עד שנתיים אחורה</p>
   </div>
 </header>
 
@@ -194,11 +194,11 @@
         <input type="hidden" id="filterCompany" value="">
       </div>
       <div class="filter-group">
-        <label>טווח שנים</label>
+        <label>טווח חודשים</label>
         <div class="year-range">
-          <select id="yearFrom"></select>
+          <select id="periodFrom"></select>
           <span>—</span>
-          <select id="yearTo"></select>
+          <select id="periodTo"></select>
         </div>
       </div>
     </div>
@@ -225,7 +225,7 @@
   <!-- CHARTS -->
   <div class="charts-grid" id="chartsArea" style="display: none;">
     <div class="card">
-      <h2>תשואה שנתית</h2>
+      <h2>תשואה חודשית</h2>
       <div class="chart-wrap"><canvas id="chartYearly"></canvas></div>
     </div>
     <div class="card">
@@ -286,20 +286,22 @@ function companyIcon(companyName, size) {
   return '<img src="' + path + '" width="' + size + '" height="' + size + '" style="vertical-align:middle;flex-shrink:0;border-radius:2px;" alt="" onerror="this.style.display=\'none\'">';
 }
 
+const DATA = PENSION_DATA;
+const MONTH_NAMES = ['', 'ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+function periodLabel(p) { return MONTH_NAMES[p % 100] + ' ' + Math.floor(p / 100); }
+
 let selectedCodes = new Set();
 let chartYearly = null, chartCumulative = null;
 let allTracks = [];
+let allPeriods = [];
 
 function init() {
-  // Build unique tracks list
-  const seen = new Set();
-  DATA.forEach(d => {
-    if (!seen.has(d.c)) { seen.add(d.c); allTracks.push({ code: d.c, company: d.m, name: d.t }); }
-  });
+  // Build tracks list from the fund metadata
+  allTracks = PENSION_FUNDS.map(f => ({ code: f.c, company: f.m, name: f.t }));
   allTracks.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'));
 
   // Build company filter (custom dropdown with icons)
-  const companies = [...new Set(DATA.map(d => d.m))].sort();
+  const companies = [...new Set(PENSION_FUNDS.map(f => f.m))].sort();
   const csOptions = document.getElementById('csOptions');
   const csSelected = document.getElementById('csSelected');
   const filterCompany = document.getElementById('filterCompany');
@@ -327,16 +329,16 @@ function init() {
   });
   document.addEventListener('click', () => csOptions.classList.remove('open'));
 
-  // Build year selects
-  const years = [...new Set(DATA.map(d => d.y))].sort();
-  const selFrom = document.getElementById('yearFrom');
-  const selTo = document.getElementById('yearTo');
-  years.forEach(y => {
-    let o1 = document.createElement('option'); o1.value = y; o1.textContent = y; selFrom.appendChild(o1);
-    let o2 = document.createElement('option'); o2.value = y; o2.textContent = y; selTo.appendChild(o2);
+  // Build month/year (period) selects
+  allPeriods = [...new Set(DATA.map(d => d.p))].sort();
+  const selFrom = document.getElementById('periodFrom');
+  const selTo = document.getElementById('periodTo');
+  allPeriods.forEach(p => {
+    let o1 = document.createElement('option'); o1.value = p; o1.textContent = periodLabel(p); selFrom.appendChild(o1);
+    let o2 = document.createElement('option'); o2.value = p; o2.textContent = periodLabel(p); selTo.appendChild(o2);
   });
-  selFrom.value = years.includes(2020) ? 2020 : years[0];
-  selTo.value = years.includes(2025) ? 2025 : years[years.length - 1];
+  selFrom.value = allPeriods[0];
+  selTo.value = allPeriods[allPeriods.length - 1];
 
   // Events — every filter change triggers both chip refresh and render
   document.getElementById('searchInput').addEventListener('input', () => { showMatchingTracks(); render(); });
@@ -437,57 +439,58 @@ function render() {
   empty.style.display = 'none'; kpis.style.display = 'grid';
   charts.style.display = 'grid'; table.style.display = 'block';
 
-  const yFrom = parseInt(document.getElementById('yearFrom').value);
-  const yTo = parseInt(document.getElementById('yearTo').value);
-  const years = [];
-  for (let y = Math.min(yFrom, yTo); y <= Math.max(yFrom, yTo); y++) years.push(y);
+  const pFrom = parseInt(document.getElementById('periodFrom').value);
+  const pTo = parseInt(document.getElementById('periodTo').value);
+  const lo = Math.min(pFrom, pTo), hi = Math.max(pFrom, pTo);
+  const periods = allPeriods.filter(p => p >= lo && p <= hi);
 
   // Build per-track data
   const tracks = [...selectedCodes].map(code => {
     const track = allTracks.find(t => t.code === code);
-    const rows = DATA.filter(d => d.c === code && d.y >= years[0] && d.y <= years[years.length - 1]);
-    const byYear = {};
-    rows.forEach(d => { byYear[d.y] = d; });
+    const rows = DATA.filter(d => d.c === code && d.p >= lo && d.p <= hi);
+    const byPeriod = {};
+    rows.forEach(d => { byPeriod[d.p] = d; });
 
     return {
       code, name: track ? track.name : code,
       company: track ? track.company : '',
-      byYear, cumByYear: {},
+      byPeriod, cumByPeriod: {},
       totalCum: 0
     };
   });
 
-  // Filter out years where NO selected track has data
-  const activeYears = years.filter(y => tracks.some(t => t.byYear[y]));
+  // Filter out periods where NO selected track has data
+  const activePeriods = periods.filter(p => tracks.some(t => t.byPeriod[p]));
 
-  // Compute cumulative returns on activeYears only
+  // Compute cumulative returns on activePeriods only
   tracks.forEach(t => {
     let cum = 1;
-    activeYears.forEach(y => {
-      const r = t.byYear[y] ? t.byYear[y].r : 0;
+    activePeriods.forEach(p => {
+      const r = t.byPeriod[p] ? t.byPeriod[p].r : 0;
       cum *= (1 + r / 100);
-      t.cumByYear[y] = (cum - 1) * 100;
+      t.cumByPeriod[p] = (cum - 1) * 100;
     });
-    t.totalCum = activeYears.length ? t.cumByYear[activeYears[activeYears.length - 1]] || 0 : 0;
+    t.totalCum = activePeriods.length ? t.cumByPeriod[activePeriods[activePeriods.length - 1]] || 0 : 0;
   });
 
   tracks.sort((a, b) => b.totalCum - a.totalCum);
 
-  updateKPIs(tracks, activeYears);
-  renderYearlyChart(tracks, activeYears);
-  renderCumulativeChart(tracks, activeYears);
-  renderTable(tracks, activeYears);
+  updateKPIs(tracks, activePeriods);
+  renderYearlyChart(tracks, activePeriods);
+  renderCumulativeChart(tracks, activePeriods);
+  renderTable(tracks, activePeriods);
 }
 
 function shortName(name) {
   return (name || '—').length > 40 ? (name || '').substring(0, 38) + '...' : (name || '—');
 }
 
-function updateKPIs(tracks, years) {
+function updateKPIs(tracks, periods) {
   document.getElementById('kpiCount').textContent = tracks.length;
   const avgCum = tracks.reduce((s, t) => s + t.totalCum, 0) / tracks.length;
   document.getElementById('kpiAvgCum').textContent = avgCum.toFixed(1) + '%';
-  document.getElementById('kpiAvgCumSub').textContent = years[0] + '–' + years[years.length - 1];
+  document.getElementById('kpiAvgCumSub').textContent = periods.length
+    ? periodLabel(periods[0]) + '–' + periodLabel(periods[periods.length - 1]) : '';
 
   const best = tracks[0];
   const worst = tracks[tracks.length - 1];
@@ -497,13 +500,13 @@ function updateKPIs(tracks, years) {
   document.getElementById('kpiWorstSub').textContent = shortName(worst.name);
 }
 
-function renderYearlyChart(tracks, years) {
+function renderYearlyChart(tracks, periods) {
   const ctx = document.getElementById('chartYearly').getContext('2d');
   if (chartYearly) chartYearly.destroy();
 
   const datasets = tracks.map((t, i) => ({
     label: shortName(t.name),
-    data: years.map(y => t.byYear[y] ? t.byYear[y].r : null),
+    data: periods.map(p => t.byPeriod[p] ? t.byPeriod[p].r : null),
     borderColor: COLORS[i % COLORS.length],
     backgroundColor: COLORS[i % COLORS.length] + '99',
     borderWidth: 1, borderRadius: 3,
@@ -511,7 +514,7 @@ function renderYearlyChart(tracks, years) {
 
   chartYearly = new Chart(ctx, {
     type: 'bar',
-    data: { labels: years, datasets },
+    data: { labels: periods.map(periodLabel), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
@@ -527,13 +530,13 @@ function renderYearlyChart(tracks, years) {
   });
 }
 
-function renderCumulativeChart(tracks, years) {
+function renderCumulativeChart(tracks, periods) {
   const ctx = document.getElementById('chartCumulative').getContext('2d');
   if (chartCumulative) chartCumulative.destroy();
 
   const datasets = tracks.map((t, i) => ({
     label: shortName(t.name),
-    data: years.map(y => t.cumByYear[y]),
+    data: periods.map(p => t.cumByPeriod[p]),
     borderColor: COLORS[i % COLORS.length],
     backgroundColor: COLORS[i % COLORS.length] + '18',
     fill: false, borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.3,
@@ -541,7 +544,7 @@ function renderCumulativeChart(tracks, years) {
 
   chartCumulative = new Chart(ctx, {
     type: 'line',
-    data: { labels: years, datasets },
+    data: { labels: periods.map(periodLabel), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
@@ -557,40 +560,31 @@ function renderCumulativeChart(tracks, years) {
   });
 }
 
-function renderTable(tracks, years) {
-  // Header
+function renderTable(tracks, periods) {
+  // Header — one monthly return column per period, plus summary columns
   let header = '<tr><th>מסלול</th>';
-  years.forEach(y => {
-    header += '<th>' + y + '<br><small>תשואה</small></th>';
-    header += '<th>' + y + '<br><small>איזון</small></th>';
+  periods.forEach(p => {
+    header += '<th>' + MONTH_NAMES[p % 100] + '<br><small>' + Math.floor(p / 100) + '</small></th>';
   });
   header += '<th>מצטברת</th><th>איזון<br><small>ממוצע</small></th></tr>';
   document.getElementById('tableHead').innerHTML = header;
 
-  // Find winners and losers per year (highest/lowest return, highest/lowest actuarial)
-  const winReturn = {}, loseReturn = {}, winActuarial = {}, loseActuarial = {};
-  years.forEach(y => {
-    let bestR = -Infinity, worstR = Infinity, bestA = -Infinity, worstA = Infinity;
-    let bestRCode = null, worstRCode = null, bestACode = null, worstACode = null;
-    let rCount = 0, aCount = 0;
+  // Winners/losers per period (by monthly return)
+  const winReturn = {}, loseReturn = {};
+  periods.forEach(p => {
+    let bestR = -Infinity, worstR = Infinity, bestRCode = null, worstRCode = null, rCount = 0;
     tracks.forEach(t => {
-      const d = t.byYear[y];
+      const d = t.byPeriod[p];
       if (d && d.r != null) {
         rCount++;
         if (d.r > bestR) { bestR = d.r; bestRCode = t.code; }
         if (d.r < worstR) { worstR = d.r; worstRCode = t.code; }
       }
-      if (d && d.a != null) {
-        aCount++;
-        if (d.a > bestA) { bestA = d.a; bestACode = t.code; }
-        if (d.a < worstA) { worstA = d.a; worstACode = t.code; }
-      }
     });
-    winReturn[y] = rCount > 1 ? bestRCode : null;
-    loseReturn[y] = rCount > 1 ? worstRCode : null;
-    winActuarial[y] = aCount > 1 ? bestACode : null;
-    loseActuarial[y] = aCount > 1 ? worstACode : null;
+    winReturn[p] = rCount > 1 ? bestRCode : null;
+    loseReturn[p] = rCount > 1 ? worstRCode : null;
   });
+
   let bestCum = -Infinity, bestCumCode = null, worstCum = Infinity, worstCumCode = null;
   tracks.forEach(t => {
     if (t.totalCum > bestCum) { bestCum = t.totalCum; bestCumCode = t.code; }
@@ -598,11 +592,11 @@ function renderTable(tracks, years) {
   });
   if (tracks.length <= 1) { bestCumCode = null; worstCumCode = null; }
 
-  // Compute average actuarial per track and find winner/loser
+  // Average actuarial adjustment per track across the period range
   tracks.forEach(t => {
     let sum = 0, cnt = 0;
-    years.forEach(y => {
-      const d = t.byYear[y];
+    periods.forEach(p => {
+      const d = t.byPeriod[p];
       if (d && d.a != null) { sum += d.a; cnt++; }
     });
     t.avgActuarial = cnt > 0 ? sum / cnt : null;
@@ -621,23 +615,13 @@ function renderTable(tracks, years) {
     const color = COLORS[i % COLORS.length];
     body += '<tr>';
     body += '<td class="track-name-col" style="border-right: 3px solid ' + color + ';">' + companyIcon(t.company, 18) + ' ' + (t.name || '—') + '</td>';
-    years.forEach(y => {
-      const d = t.byYear[y];
+    periods.forEach(p => {
+      const d = t.byPeriod[p];
       const ret = d ? d.r : null;
-      const act = d ? d.a : null;
-      // Return cell
       if (ret !== null) {
         const cls = ret >= 0 ? 'v-green' : 'v-red';
-        const hl = winReturn[y] === t.code ? ' winner' : loseReturn[y] === t.code ? ' loser' : '';
+        const hl = winReturn[p] === t.code ? ' winner' : loseReturn[p] === t.code ? ' loser' : '';
         body += '<td class="' + cls + hl + '">' + ret.toFixed(2) + '%</td>';
-      } else {
-        body += '<td class="v-muted">—</td>';
-      }
-      // Actuarial cell
-      if (act !== null) {
-        const cls2 = act > 0 ? 'v-green' : act < 0 ? 'v-red' : 'v-muted';
-        const hl2 = winActuarial[y] === t.code ? ' winner' : loseActuarial[y] === t.code ? ' loser' : '';
-        body += '<td class="' + cls2 + hl2 + '">' + act.toFixed(2) + '%</td>';
       } else {
         body += '<td class="v-muted">—</td>';
       }
