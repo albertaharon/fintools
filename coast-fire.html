@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>מחשבון COAST FIRE — פרישה בשיטת קוסט | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --blue:      #2563eb;
+      --purple:    #7c3aed;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .grid { min-width: 0; }
+    .grid > * { min-width: 0; }
+    canvas, img { max-width: 100%; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff;
+      padding: 2.4rem 0 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative;
+    }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      color: rgba(255,255,255,0.85); text-decoration: none;
+      font-size: 0.88rem; position: relative; margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem; margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem; font-weight: 700; color: var(--green-dk);
+      margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt);
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    .field input, .field select {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border);
+      border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: .95rem;
+      color: var(--text); background: var(--bg); transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input { border-color: var(--green); background: var(--green-lt); }
+    .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+
+    /* segmented toggle */
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: .25rem; margin-bottom: 1rem; }
+    .seg button {
+      font-family: 'Heebo', sans-serif; font-size: .84rem; font-weight: 600; color: var(--muted);
+      background: transparent; border: none; border-radius: 7px; padding: .5rem .3rem; cursor: pointer; transition: all .15s;
+    }
+    .seg button.active { background: var(--green); color: #fff; box-shadow: var(--shadow); }
+
+    .formula-box { margin-top: .25rem; font-size: .8rem; color: var(--muted); background: var(--green-lt); border-radius: 8px; padding: .7rem .8rem; line-height: 1.5; }
+    .formula-box strong { color: var(--green-dk); }
+
+    .btn-calc {
+      width: 100%; padding: .75rem; background: linear-gradient(135deg, var(--green-dk), var(--green));
+      color: #fff; font-family: 'Heebo', sans-serif; font-size: 1rem; font-weight: 700; border: none;
+      border-radius: 10px; cursor: pointer; margin-top: .4rem; transition: opacity .18s, transform .12s;
+    }
+    .btn-calc:hover { opacity: .9; transform: translateY(-1px); }
+
+    /* verdict banner */
+    .verdict { border-radius: var(--radius); padding: 1.1rem 1.3rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .verdict.ok  { background: var(--green-lt); border-color: var(--green); }
+    .verdict.no  { background: var(--amber-lt); border-color: var(--amber); }
+    .verdict-title { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; }
+    .verdict.ok .verdict-title { color: var(--green-dk); }
+    .verdict.no .verdict-title { color: var(--amber); }
+    .verdict-sub { font-size: .9rem; color: var(--muted); line-height: 1.5; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.1rem; text-align: center; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi.k-fire::before  { background: var(--red); }
+    .kpi.k-coast::before { background: var(--blue); }
+    .kpi.k-age::before   { background: var(--purple); }
+    .kpi-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-weight: 500; }
+    .kpi-value { font-size: 1.5rem; font-weight: 700; line-height: 1.05; }
+    .kpi.k-fire .kpi-value  { color: var(--red); }
+    .kpi.k-coast .kpi-value { color: var(--blue); }
+    .kpi.k-age .kpi-value   { color: var(--purple); }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    .chart-wrap { position: relative; height: 340px; }
+
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    thead th { background: var(--green-dk); color: #fff; padding: .55rem .6rem; text-align: center; font-weight: 500; white-space: nowrap; }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: var(--green-lt); }
+    tbody td { padding: .5rem .6rem; text-align: center; border-bottom: 1px solid #f0f0f0; }
+    .v-green { color: var(--green); font-weight: 700; }
+    .v-amber { color: var(--amber); font-weight: 700; }
+    .v-muted { color: var(--muted); }
+    .v-age { color: var(--green-dk); font-weight: 700; }
+
+    @media (max-width: 600px) {
+      header { padding: 1.5rem 0 1.3rem; }
+      header h1 { font-size: 1.4rem; }
+      .container { padding-left: 1rem; padding-right: 1rem; }
+      .card { padding: 1.1rem 1rem; }
+      .chart-wrap { height: 280px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>מחשבון COAST FIRE</h1>
+    <p>האם צברת מספיק כדי להפסיק לחסוך לפנסיה — ולתת לריבית דריבית לעשות את השאר?</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>נתוני חישוב</h2>
+
+        <div class="row2">
+          <div class="field">
+            <label>גיל נוכחי</label>
+            <input type="number" id="currentAge" value="35" min="18" max="70" class="calc-input">
+          </div>
+          <div class="field">
+            <label>גיל פרישה יעד</label>
+            <input type="number" id="retireAge" value="67" min="45" max="80" class="calc-input">
+          </div>
+        </div>
+
+        <div class="field highlight">
+          <label>צבירה נוכחית לפנסיה (₪)</label>
+          <input type="number" id="current" value="300000" min="0" class="calc-input">
+        </div>
+
+        <div class="field">
+          <label>הפקדה חודשית נוכחית (₪)</label>
+          <input type="number" id="monthly" value="2000" min="0" class="calc-input">
+          <div class="field-hint">ההפקדה שאתה עדיין מפריש לחיסכון (לחישוב גיל ה-Coast).</div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>תשואה נומינלית (%)</label>
+            <input type="number" id="nominal" value="7" step="0.1" class="calc-input">
+          </div>
+          <div class="field">
+            <label>אינפלציה (%)</label>
+            <input type="number" id="inflation" value="2.5" step="0.1" class="calc-input">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>הכנסה חודשית רצויה בפרישה (₪, ריאלי)</label>
+          <input type="number" id="income" value="12000" min="0" class="calc-input">
+        </div>
+
+        <label style="display:block; font-size:.82rem; font-weight:500; color:var(--muted); margin-bottom:.35rem;">שיטת חישוב היעד</label>
+        <div class="seg" id="methodSeg">
+          <button type="button" data-m="swr" class="active">שיעור משיכה</button>
+          <button type="button" data-m="annuity">מקדם המרה</button>
+        </div>
+
+        <div class="field" id="swrField">
+          <label>שיעור משיכה שנתי (%)</label>
+          <input type="number" id="swr" value="4" step="0.1" class="calc-input">
+          <div class="field-hint">כלל 4% הקלאסי. לאופק ארוך שמרני יותר 3%–3.5%.</div>
+        </div>
+
+        <div class="field" id="factorField" style="display:none;">
+          <label>מקדם המרה (קצבה)</label>
+          <input type="number" id="factor" value="200" step="1" class="calc-input">
+          <div class="field-hint">היעד = קצבה חודשית × מקדם. טיפוסי בישראל: 200–220.</div>
+        </div>
+
+        <div class="field">
+          <label>מס במשיכה (%)</label>
+          <input type="number" id="tax" value="0" step="1" min="0" max="50" class="calc-input">
+          <div class="field-hint">0 לאפיקים פטורים/מוטבים (פנסיה, קרן השתלמות). לתיק פרטי חייב: 25% ריאלי.</div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate()">חשב</button>
+        <div class="formula-box" id="realFormula"></div>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+      <div class="verdict" id="verdict"></div>
+
+      <div class="kpi-grid">
+        <div class="kpi k-fire">
+          <div class="kpi-label">מספר ה-FIRE (בפרישה)</div>
+          <div class="kpi-value" id="resFire">—</div>
+          <div class="kpi-sub" id="resFireSub"></div>
+        </div>
+        <div class="kpi k-coast">
+          <div class="kpi-label">מספר ה-COAST (היום)</div>
+          <div class="kpi-value" id="resCoast">—</div>
+          <div class="kpi-sub" id="resCoastSub"></div>
+        </div>
+        <div class="kpi k-age">
+          <div class="kpi-label">גיל ה-Coast FIRE</div>
+          <div class="kpi-value" id="resAge">—</div>
+          <div class="kpi-sub" id="resAgeSub"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>מסלול הצבירה מול יעד ה-COAST</h2>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>מספר ה-COAST לפי גיל פרישה</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>גיל פרישה</th>
+                <th>שנות צמיחה</th>
+                <th>מספר FIRE (בפרישה)</th>
+                <th>מספר COAST (היום)</th>
+                <th>הפער/עודף מול הצבירה</th>
+                <th>סטטוס</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="field-hint" style="text-align:center; margin-top:.4rem;">
+        כל הערכים ריאליים (שקלים של היום) · ההנחות אינן מובטחות · אין לראות בתוצאות ייעוץ פיננסי.
+      </p>
+    </section>
+  </div>
+</div>
+
+<script>
+let method = 'swr';
+let chart = null;
+const fmtNIS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+
+// method toggle
+document.getElementById('methodSeg').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  method = btn.dataset.m;
+  document.querySelectorAll('#methodSeg button').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('swrField').style.display = method === 'swr' ? '' : 'none';
+  document.getElementById('factorField').style.display = method === 'annuity' ? '' : 'none';
+  calculate();
+});
+
+document.querySelectorAll('.calc-input').forEach(inp => {
+  inp.addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+});
+
+function num(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+
+// FIRE target (real, at retirement) from a desired monthly income, grossed up for tax
+function fireNumber(monthlyIncome, taxPct, swrPct, factor) {
+  const gross = monthlyIncome / (1 - taxPct / 100);       // money that must be withdrawn to net the desired income
+  if (method === 'annuity') return gross * factor;
+  return (gross * 12) / (swrPct / 100);                    // SWR: annual / rate
+}
+
+function calculate() {
+  const currentAge = Math.round(num('currentAge'));
+  const retireAge  = Math.round(num('retireAge'));
+  const current    = num('current');
+  const monthly    = num('monthly');
+  const nominal    = num('nominal');
+  const inflation  = num('inflation');
+  const income     = num('income');
+  const swr         = num('swr');
+  const factor      = num('factor');
+  const tax         = Math.min(num('tax'), 49.9);
+
+  const r  = (1 + nominal / 100) / (1 + inflation / 100) - 1;   // annual real
+  const rm = Math.pow(1 + r, 1 / 12) - 1;                       // monthly real
+  const n  = Math.max(0, retireAge - currentAge);
+
+  document.getElementById('realFormula').innerHTML =
+    `תשואה ריאלית = (1 + ${nominal}%) ÷ (1 + ${inflation}%) − 1 = <strong>${(r * 100).toFixed(2)}%</strong>`;
+
+  const fire = fireNumber(income, tax, swr, factor);
+  const coastToday = fire / Math.pow(1 + r, n);
+  const gap = current - coastToday;   // positive = surplus
+
+  // savings after t years: current grown + monthly contributions (real)
+  function savingsAfter(years) {
+    const grown = current * Math.pow(1 + r, years);
+    const months = years * 12;
+    const contrib = rm > 0 ? monthly * ((Math.pow(1 + rm, months) - 1) / rm) : monthly * months;
+    return grown + contrib;
+  }
+  // coast requirement at a given age = FIRE discounted back to that age
+  function coastReqAtAge(age) { return fire / Math.pow(1 + r, Math.max(0, retireAge - age)); }
+
+  // Coast FIRE age: earliest age where savings >= coast requirement
+  let coastAge = null;
+  if (current >= coastToday) {
+    coastAge = currentAge;
+  } else {
+    for (let age = currentAge; age <= retireAge; age++) {
+      if (savingsAfter(age - currentAge) >= coastReqAtAge(age) - 0.5) { coastAge = age; break; }
+    }
+  }
+
+  // ── KPIs ──
+  document.getElementById('resFire').textContent = fmtNIS.format(fire);
+  document.getElementById('resFireSub').textContent =
+    method === 'annuity' ? `קצבה ${fmtNIS.format(income)} × מקדם ${factor}` : `${swr}% משיכה · ${retireAge} שנים`;
+
+  document.getElementById('resCoast').textContent = fmtNIS.format(coastToday);
+  document.getElementById('resCoastSub').textContent = `דרוש היום כדי לשוט ${n} שנים`;
+
+  const ageEl = document.getElementById('resAge');
+  const ageSub = document.getElementById('resAgeSub');
+  if (coastAge === currentAge) {
+    ageEl.textContent = 'עכשיו'; ageSub.textContent = 'כבר הגעת ל-Coast FIRE';
+  } else if (coastAge === null) {
+    ageEl.textContent = 'לא עד הפרישה'; ageSub.textContent = 'ההפקדה הנוכחית אינה מספיקה';
+  } else {
+    ageEl.textContent = coastAge; ageSub.textContent = `בעוד ${coastAge - currentAge} שנים (בהפקדה הנוכחית)`;
+  }
+
+  // ── verdict banner ──
+  const v = document.getElementById('verdict');
+  if (gap >= 0) {
+    v.className = 'verdict ok';
+    v.innerHTML = `<div class="verdict-title">✅ הגעת ל-Coast FIRE!</div>
+      <div class="verdict-sub">הצבירה הנוכחית שלך (${fmtNIS.format(current)}) כבר עולה על מספר ה-COAST הדרוש (${fmtNIS.format(coastToday)}).
+      עודף של <strong>${fmtNIS.format(gap)}</strong> — אתה יכול להפסיק להפריש לפנסיה, וההשקעות יגיעו ליעד עד גיל ${retireAge}.</div>`;
+  } else {
+    const lump = -gap;
+    v.className = 'verdict no';
+    const ageTxt = coastAge === null
+      ? `בקצב ההפקדה הנוכחי (${fmtNIS.format(monthly)}/חודש) לא תגיע ל-Coast FIRE עד גיל הפרישה — כדאי להגדיל את ההפקדה.`
+      : `בקצב ההפקדה הנוכחי תגיע ל-Coast FIRE בגיל <strong>${coastAge}</strong>.`;
+    v.innerHTML = `<div class="verdict-title">עדיין לא ב-Coast FIRE</div>
+      <div class="verdict-sub">חסרים <strong>${fmtNIS.format(lump)}</strong> כדי לשוט מהיום (סכום חד-פעמי שיביא אותך למספר ה-COAST). ${ageTxt}</div>`;
+  }
+
+  renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, coastAge);
+  renderTable(currentAge, current, income, tax, swr, factor, r);
+}
+
+function renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, coastAge) {
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chart) chart.destroy();
+  const ages = [];
+  for (let a = currentAge; a <= retireAge; a++) ages.push(a);
+  const savings = ages.map(a => savingsAfter(a - currentAge));
+  const coastReq = ages.map(a => coastReqAtAge(a));
+  const marker = ages.map(a => (coastAge !== null && a === coastAge) ? savingsAfter(a - currentAge) : null);
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [
+        { label: 'הצבירה הצפויה', data: savings, borderColor: '#1a7a4a', backgroundColor: 'rgba(26,122,74,0.10)', fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+        { label: 'יעד COAST לפי גיל', data: coastReq, borderColor: '#2563eb', borderDash: [6, 4], fill: false, borderWidth: 2, pointRadius: 0, tension: 0.25 },
+        { label: 'הגעת ל-Coast', data: marker, borderColor: '#7c3aed', backgroundColor: '#7c3aed', pointRadius: 6, pointHoverRadius: 8, showLine: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo' }, filter: i => i.text !== 'הגעת ל-Coast' || true } },
+        tooltip: { callbacks: { title: items => 'גיל ' + items[0].label, label: c => c.parsed.y == null ? null : ' ' + c.dataset.label + ': ' + fmtNIS.format(c.parsed.y) } },
+      },
+      scales: {
+        x: { title: { display: true, text: 'גיל', font: { family: 'Heebo' } }, ticks: { font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v >= 1e6 ? '₪' + (v / 1e6).toFixed(1) + 'M' : '₪' + Math.round(v / 1000) + 'K' }, grid: { color: 'rgba(0,0,0,.05)' } },
+      },
+    },
+  });
+}
+
+function renderTable(currentAge, current, income, tax, swr, factor, r) {
+  const ages = [60, 62, 65, 67, 70].filter(a => a > currentAge);
+  let body = '';
+  ages.forEach(age => {
+    const n = age - currentAge;
+    const fire = fireNumber(income, tax, swr, factor);
+    const coast = fire / Math.pow(1 + r, n);
+    const diff = current - coast;
+    const ok = diff >= 0;
+    body += `<tr>
+      <td class="v-age">${age}</td>
+      <td class="v-muted">${n}</td>
+      <td>${fmtNIS.format(fire)}</td>
+      <td>${fmtNIS.format(coast)}</td>
+      <td class="${ok ? 'v-green' : 'v-amber'}">${(ok ? '+' : '−') + fmtNIS.format(Math.abs(diff)).replace('₪', '₪')}</td>
+      <td class="${ok ? 'v-green' : 'v-amber'}">${ok ? '✅ Coast' : 'חסר'}</td>
+    </tr>`;
+  });
+  document.getElementById('tableBody').innerHTML = body || '<tr><td colspan="6" class="v-muted">גיל הפרישה מוקדם מהגיל הנוכחי</td></tr>';
+}
+
+window.onload = calculate;
+</script>
+<script>
+/* data-noscroll-guard: prevent mouse-wheel from changing number inputs */
+document.addEventListener("wheel", function (e) {
+  var el = e.target;
+  if (el instanceof HTMLInputElement && el.type === "number" && el === document.activeElement) {
+    el.blur();
+  }
+}, { passive: true });
+document.addEventListener("keydown", function (e) {
+  var el = e.target;
+  if (el instanceof HTMLInputElement && el.type === "number" && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
