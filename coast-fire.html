@@ -406,7 +406,7 @@ function calculate() {
   }
 
   renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, coastAge);
-  renderTable(currentAge, current, income, tax, swr, factor, r);
+  renderTable(currentAge, retireAge, current, income, tax, swr, factor, r);
 }
 
 function renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, coastAge) {
@@ -443,8 +443,13 @@ function renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, c
   });
 }
 
-function renderTable(currentAge, current, income, tax, swr, factor, r) {
-  const ages = [60, 62, 65, 67, 70].filter(a => a > currentAge);
+function renderTable(currentAge, retireAge, current, income, tax, swr, factor, r) {
+  // start at the target retirement age, then up to 5 ages spaced 5 years apart
+  const ages = [];
+  for (let i = 0; i < 5; i++) {
+    const a = retireAge + i * 5;
+    if (a > currentAge && a <= 90) ages.push(a);
+  }
   let body = '';
   ages.forEach(age => {
     const n = age - currentAge;
