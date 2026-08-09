@@ -379,17 +379,30 @@ function getMekaDam(age, factor60, factor67) {
 
 document.querySelectorAll('.calc-input').forEach(input => {
   input.addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+  // recalculate when the value is committed, so results never go stale
+  input.addEventListener('change', calculate);
 });
 
 function calculate() {
   const currentAge = parseFloat(document.getElementById('currentAge').value) || 0;
-  const balance    = parseFloat(document.getElementById('balance').value) || 0;
+  const balance    = Math.max(0, parseFloat(document.getElementById('balance').value) || 0);
   const nominal    = parseFloat(document.getElementById('nominal').value) || 0;
   const inflation  = parseFloat(document.getElementById('inflation').value) || 0;
   const factor60   = parseFloat(document.getElementById('factor60').value) || 0;
   const factor67   = parseFloat(document.getElementById('factor67').value) || 0;
 
   const realReturn = (1 + nominal / 100) / (1 + inflation / 100) - 1;
+
+  // a zero/negative conversion factor would divide by zero and show ∞
+  if (factor60 <= 0 || factor67 <= 0) {
+    document.getElementById('realFormula').innerHTML =
+      '<strong style="color:#c0392b;">מקדמי ההמרה חייבים להיות גדולים מאפס.</strong>';
+    ['resReal', 'resPension', 'resLife'].forEach(id => { document.getElementById(id).textContent = '—'; });
+    ['resPensionSub', 'resLifeSub'].forEach(id => { document.getElementById(id).textContent = ''; });
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="v-muted">—</td></tr>';
+    if (myChart) { myChart.destroy(); myChart = null; }
+    return;
+  }
 
   document.getElementById('realFormula').innerHTML =
     `תשואה ריאלית = (1 + ${nominal}%) ÷ (1 + ${inflation}%) − 1 = <strong>${(realReturn * 100).toFixed(2)}%</strong>`;

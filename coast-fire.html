@@ -119,9 +119,13 @@
     .verdict { border-radius: var(--radius); padding: 1.1rem 1.3rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
     .verdict.ok  { background: var(--green-lt); border-color: var(--green); }
     .verdict.no  { background: var(--amber-lt); border-color: var(--amber); }
+    .verdict.warn { background: var(--red-lt); border-color: var(--red); }
     .verdict-title { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; }
     .verdict.ok .verdict-title { color: var(--green-dk); }
     .verdict.no .verdict-title { color: var(--amber); }
+    .verdict.warn .verdict-title { color: var(--red); }
+    .verdict-sub ul { margin: .35rem .9rem 0 0; }
+    .verdict-sub li { margin-bottom: .15rem; }
     .verdict-sub { font-size: .9rem; color: var(--muted); line-height: 1.5; }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
@@ -316,9 +320,23 @@ document.getElementById('methodSeg').addEventListener('click', e => {
 
 document.querySelectorAll('.calc-input').forEach(inp => {
   inp.addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+  // recalculate when the field loses focus / value committed, so results never go stale
+  inp.addEventListener('change', calculate);
 });
 
 function num(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+
+function showProblems(list) {
+  const v = document.getElementById('verdict');
+  v.className = 'verdict warn';
+  v.innerHTML = '<div class="verdict-title">בדוק את הנתונים</div><div class="verdict-sub"><ul>' +
+    list.map(t => '<li>' + t + '</li>').join('') + '</ul></div>';
+  ['resFire', 'resCoast', 'resAge'].forEach(id => { document.getElementById(id).textContent = '—'; });
+  ['resFireSub', 'resCoastSub', 'resAgeSub'].forEach(id => { document.getElementById(id).textContent = ''; });
+  document.getElementById('tableBody').innerHTML =
+    '<tr><td colspan="6" class="v-muted">—</td></tr>';
+  if (chart) { chart.destroy(); chart = null; }
+}
 
 // FIRE target (real, at retirement) from a desired monthly income, grossed up for tax
 function fireNumber(monthlyIncome, taxPct, swrPct, factor) {
@@ -330,21 +348,36 @@ function fireNumber(monthlyIncome, taxPct, swrPct, factor) {
 function calculate() {
   const currentAge = Math.round(num('currentAge'));
   const retireAge  = Math.round(num('retireAge'));
-  const current    = num('current');
-  const monthly    = num('monthly');
+  const current    = Math.max(0, num('current'));    // negative savings are meaningless
+  const monthly    = Math.max(0, num('monthly'));
   const nominal    = num('nominal');
   const inflation  = num('inflation');
   const income     = num('income');
   const swr         = num('swr');
   const factor      = num('factor');
-  const tax         = Math.min(num('tax'), 49.9);
+
+  // tax must stay in 0–49.9 (100% tax would make the target infinite) — clamp visibly
+  let tax = num('tax');
+  if (tax < 0 || tax > 49.9) {
+    tax = Math.min(Math.max(tax, 0), 49.9);
+    document.getElementById('tax').value = String(tax);
+  }
 
   const r  = (1 + nominal / 100) / (1 + inflation / 100) - 1;   // annual real
   const rm = Math.pow(1 + r, 1 / 12) - 1;                       // monthly real
-  const n  = Math.max(0, retireAge - currentAge);
+  const n  = retireAge - currentAge;
 
   document.getElementById('realFormula').innerHTML =
     `תשואה ריאלית = (1 + ${nominal}%) ÷ (1 + ${inflation}%) − 1 = <strong>${(r * 100).toFixed(2)}%</strong>`;
+
+  // ── input validation: fail loudly instead of showing ∞ / false positives ──
+  const problems = [];
+  if (n <= 0) problems.push('גיל הפרישה חייב להיות גדול מהגיל הנוכחי.');
+  if (income <= 0) problems.push('יש להזין הכנסה חודשית רצויה בפרישה (גדולה מאפס).');
+  if (method === 'swr' && swr <= 0) problems.push('שיעור המשיכה חייב להיות גדול מאפס.');
+  if (method === 'annuity' && factor <= 0) problems.push('מקדם ההמרה חייב להיות גדול מאפס.');
+  if (1 + r <= 0) problems.push('שילוב התשואה והאינפלציה אינו תקין.');
+  if (problems.length) { showProblems(problems); return; }
 
   const fire = fireNumber(income, tax, swr, factor);
   const coastToday = fire / Math.pow(1 + r, n);
@@ -354,7 +387,11 @@ function calculate() {
   function savingsAfter(years) {
     const grown = current * Math.pow(1 + r, years);
     const months = years * 12;
-    const contrib = rm > 0 ? monthly * ((Math.pow(1 + rm, months) - 1) / rm) : monthly * months;
+    // annuity-due-less future value; the closed form is valid for negative rm too,
+    // only the exactly-zero case needs the linear fallback
+    const contrib = Math.abs(rm) > 1e-12
+      ? monthly * ((Math.pow(1 + rm, months) - 1) / rm)
+      : monthly * months;
     return grown + contrib;
   }
   // coast requirement at a given age = FIRE discounted back to that age
@@ -432,12 +469,25 @@ function renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, c
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { family: 'Heebo' }, filter: i => i.text !== 'הגעת ל-Coast' || true } },
-        tooltip: { callbacks: { title: items => 'גיל ' + items[0].label, label: c => c.parsed.y == null ? null : ' ' + c.dataset.label + ': ' + fmtNIS.format(c.parsed.y) } },
+        legend: {
+          position: 'top',
+          labels: {
+            font: { family: 'Heebo' },
+            // hide the marker entry when there is no coast point to show
+            filter: item => item.text !== 'הגעת ל-Coast' || coastAge !== null,
+          },
+        },
+        tooltip: {
+          filter: c => c.parsed.y != null,
+          callbacks: {
+            title: items => 'גיל ' + items[0].label,
+            label: c => ' ' + c.dataset.label + ': ' + fmtNIS.format(c.parsed.y),
+          },
+        },
       },
       scales: {
         x: { title: { display: true, text: 'גיל', font: { family: 'Heebo' } }, ticks: { font: { family: 'Heebo', size: 11 } }, grid: { color: 'rgba(0,0,0,.04)' } },
-        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v >= 1e6 ? '₪' + (v / 1e6).toFixed(1) + 'M' : '₪' + Math.round(v / 1000) + 'K' }, grid: { color: 'rgba(0,0,0,.05)' } },
+        y: { ticks: { font: { family: 'Heebo', size: 11 }, callback: v => v >= 1e6 ? '₪' + (v / 1e6).toFixed(1) + 'M' : v >= 1000 ? '₪' + Math.round(v / 1000) + 'K' : '₪' + Math.round(v) }, grid: { color: 'rgba(0,0,0,.05)' } },
       },
     },
   });
@@ -462,7 +512,7 @@ function renderTable(currentAge, retireAge, current, income, tax, swr, factor, r
       <td class="v-muted">${n}</td>
       <td>${fmtNIS.format(fire)}</td>
       <td>${fmtNIS.format(coast)}</td>
-      <td class="${ok ? 'v-green' : 'v-amber'}">${(ok ? '+' : '−') + fmtNIS.format(Math.abs(diff)).replace('₪', '₪')}</td>
+      <td class="${ok ? 'v-green' : 'v-amber'}">${(ok ? '+' : '−') + fmtNIS.format(Math.abs(diff))}</td>
       <td class="${ok ? 'v-green' : 'v-amber'}">${ok ? '✅ Coast' : 'חסר'}</td>
     </tr>`;
   });
