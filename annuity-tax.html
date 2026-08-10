@@ -37,6 +37,7 @@
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    input[inputmode="decimal"] { direction: ltr; text-align: right; }
     body { background: var(--bg); font-family: 'Heebo', sans-serif; color: var(--text); min-height: 100vh; }
 
     header {
@@ -154,23 +155,23 @@
 
         <div class="field">
           <label>סכום התחלתי / צבירה (₪)</label>
-          <input type="number" id="capital" value="2000000" min="0">
+          <input type="text" inputmode="decimal" id="capital" value="2000000" min="0">
         </div>
 
         <div class="field highlight">
           <label>משיכה שנתית נטו רצויה (₪)</label>
-          <input type="number" id="netWithdrawal" value="120000" min="1">
+          <input type="text" inputmode="decimal" id="netWithdrawal" value="120000" min="1">
           <div class="field-hint">צמוד למדד — ערכו הריאלי נשמר לאורך כל התקופה</div>
         </div>
 
         <div class="row2">
           <div class="field">
             <label>תשואה שנתית (%)</label>
-            <input type="number" id="returnRate" value="5" step="0.1" min="0">
+            <input type="text" inputmode="decimal" id="returnRate" value="5" step="0.1" min="0">
           </div>
           <div class="field">
             <label>אינפלציה (%)</label>
-            <input type="number" id="inflation" value="2.5" step="0.1" min="0">
+            <input type="text" inputmode="decimal" id="inflation" value="2.5" step="0.1" min="0">
           </div>
         </div>
 
@@ -179,13 +180,13 @@
 
         <div class="field">
           <label>אחוז רווח נוכחי בצבירה (%)</label>
-          <input type="number" id="initialProfitPerc" value="40" min="0" max="100">
+          <input type="text" inputmode="decimal" id="initialProfitPerc" value="40" min="0" max="100">
           <div class="field-hint">אם הצבירה 2,000,000 ₪ והפקדת 1,200,000 ₪ — הרווח הוא 800,000, כלומר 40%</div>
         </div>
 
         <div class="field">
           <label>נקודות זיכוי</label>
-          <input type="number" id="creditPoints" value="2.25" step="0.25" min="0">
+          <input type="text" inputmode="decimal" id="creditPoints" value="2.25" step="0.25" min="0">
           <div class="field-hint">תושב ישראל זכאי ל-2.25 נקודות. כל נקודה שווה <span id="cfgPointVal">2,904</span> ₪ לשנה</div>
         </div>
 
@@ -413,19 +414,21 @@ window.onload = () => {
 };
 </script>
 <script>
-/* data-noscroll-guard: prevent mouse-wheel from changing number inputs */
-document.addEventListener("wheel", function (e) {
-  var el = e.target;
-  if (el instanceof HTMLInputElement && el.type === "number" && el === document.activeElement) {
-    el.blur();
-  }
-}, { passive: true });
-document.addEventListener("keydown", function (e) {
-  var el = e.target;
-  if (el instanceof HTMLInputElement && el.type === "number" && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
-    e.preventDefault();
-  }
+/* data-noscroll-guard: numeric fields are text inputs (inputmode="decimal"), so the mouse
+   wheel and arrow keys can never change their value and normal text selection works.
+   These guards only keep the typed content numeric. */
+function isNumField(el) {
+  return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal";
+}
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
 });
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
 </script>
 </body>
 </html>

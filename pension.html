@@ -646,19 +646,21 @@ function renderTable(tracks, periods) {
 init();
 </script>
 <script>
-/* data-noscroll-guard: prevent mouse-wheel from changing number inputs */
-document.addEventListener("wheel", function (e) {
-  var el = e.target;
-  if (el instanceof HTMLInputElement && el.type === "number" && el === document.activeElement) {
-    el.blur();
-  }
-}, { passive: true });
-document.addEventListener("keydown", function (e) {
-  var el = e.target;
-  if (el instanceof HTMLInputElement && el.type === "number" && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
-    e.preventDefault();
-  }
+/* data-noscroll-guard: numeric fields are text inputs (inputmode="decimal"), so the mouse
+   wheel and arrow keys can never change their value and normal text selection works.
+   These guards only keep the typed content numeric. */
+function isNumField(el) {
+  return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal";
+}
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
 });
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
 </script>
 </body>
 </html>
