@@ -222,20 +222,20 @@
 
         <label style="display:block; font-size:.82rem; font-weight:500; color:var(--muted); margin-bottom:.35rem;">שיטת חישוב היעד</label>
         <div class="seg" id="methodSeg">
-          <button type="button" data-m="swr" class="active">שיעור משיכה</button>
-          <button type="button" data-m="annuity">מקדם המרה</button>
+          <button type="button" data-m="swr">שיעור משיכה</button>
+          <button type="button" data-m="annuity" class="active">מקדם המרה</button>
         </div>
 
-        <div class="field" id="swrField">
+        <div class="field" id="swrField" style="display:none;">
           <label>שיעור משיכה שנתי (%)</label>
           <input type="number" id="swr" value="4" step="0.1" class="calc-input">
           <div class="field-hint">כלל 4% הקלאסי. לאופק ארוך שמרני יותר 3%–3.5%.</div>
         </div>
 
-        <div class="field" id="factorField" style="display:none;">
-          <label>מקדם המרה (קצבה)</label>
-          <input type="number" id="factor" value="200" step="1" class="calc-input">
-          <div class="field-hint">היעד = קצבה חודשית × מקדם. טיפוסי בישראל: 200–220.</div>
+        <div class="field" id="factorField">
+          <label>מקדם המרה (מספר חודשי קצבה)</label>
+          <input type="number" id="factor" value="240" step="1" class="calc-input">
+          <div class="field-hint">היעד = קצבה חודשית × מקדם. טיפוסי בישראל: 200–240 (נמוך יותר ככל שפורשים מאוחר).</div>
         </div>
 
         <div class="field">
@@ -303,7 +303,7 @@
 </div>
 
 <script>
-let method = 'swr';
+let method = 'annuity';
 let chart = null;
 const fmtNIS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
 
