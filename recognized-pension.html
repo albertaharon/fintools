@@ -82,6 +82,7 @@
     .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
     .field.highlight label { color: var(--green); font-weight: 700; }
     .field.highlight input { border-color: var(--green); background: var(--green-lt); }
+    .field input.locked { background: #eef1ef; color: var(--muted); cursor: not-allowed; border-style: dashed; }
     .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
     .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .6rem; }
 
@@ -172,11 +173,15 @@
             <input type="text" inputmode="decimal" id="rateEr" value="6.5" class="calc-input">
           </div>
           <div class="field">
-            <label style="font-size:.72rem;">פיצויים</label>
-            <input type="text" inputmode="decimal" id="rateSev" value="8.33" class="calc-input">
+            <label style="font-size:.72rem;">פיצויים 🔒</label>
+            <input type="text" inputmode="decimal" id="rateSev" value="8.33" readonly class="locked">
           </div>
         </div>
-        <div class="field-hint">ברירת המחדל היא שיעורי חובת הפנסיה: 6% / 6.5% / 8.33%.</div>
+        <div class="field-hint">
+          ברירת המחדל היא שיעורי חובת הפנסיה: 6% / 6.5% / 8.33%.
+          <br><strong>שיעור הפיצויים נעול על 8.33%</strong> — תקרת הפיצויים חד-משמעית רק בשיעור הזה,
+          שהוא בדיוק 1/12. בכל שיעור אחר לא ברור אם התקרה חלה על השכר או על ההפקדה, והתוצאה הייתה עלולה להטעות.
+        </div>
       </div>
     </aside>
 
@@ -262,6 +267,7 @@ const YEARS = {
 };
 const MAX_EMP_RATE = 7;    // המרבי לפי סעיף 22
 const MAX_ER_RATE  = 7.5;  // מעליו ההפקדה נזקפת כהכנסה
+const SEV_RATE     = 8.33; // נעול: רק ב-8.33% (=1/12) תקרת הפיצויים חד-משמעית
 
 const nis  = n => '₪' + Math.round(n).toLocaleString('he-IL');
 const nis1 = n => '₪' + n.toLocaleString('he-IL', { maximumFractionDigits: 0 });
@@ -285,9 +291,19 @@ function calculate() {
   const year = ySel.value;
   const Y = YEARS[year];
   const salary  = Math.max(0, num('salary'));
-  const rateEmp = Math.max(0, num('rateEmp'));
   const rateEr  = Math.max(0, num('rateEr'));
-  const rateSev = Math.max(0, num('rateSev'));
+  // הפיצויים נעולים על 8.33% (=1/12): רק בשיעור הזה תקרת הפיצויים חד-משמעית.
+  const rateSev = SEV_RATE;
+  document.getElementById('rateSev').value = String(SEV_RATE);
+
+  // סעיף 22 מגביל את הפקדת העובד ל-7%; שיעור גבוה מזה אינו אפשרי, אז נחתוך בגלוי
+  let rateEmp = Math.max(0, num('rateEmp'));
+  let clamped = '';
+  if (rateEmp > MAX_EMP_RATE) {
+    rateEmp = MAX_EMP_RATE;
+    document.getElementById('rateEmp').value = String(MAX_EMP_RATE);
+    clamped = 'שיעור הפקדת העובד הוגבל ל-' + MAX_EMP_RATE + '% — המרבי לפי סעיף 22 לחוק קופות גמל.';
+  }
 
   const warn = document.getElementById('warn');
   if (salary <= 0) {
@@ -295,10 +311,10 @@ function calculate() {
     document.getElementById('resultTitle').textContent = '—';
     document.getElementById('mainBody').innerHTML = '';
     document.getElementById('note').textContent = '';
-    renderCeilings(year, Y);
+    renderCeilings(year, Y, salary);
     return;
   }
-  warn.innerHTML = '';
+  warn.innerHTML = clamped ? '<div class="warn-box">' + clamped + '</div>' : '';
 
   // ── תגמולי עובד: פטור עד 7% מהנמוך שבין השכר לשכר הממוצע ──
   // הפטור מוגבל גם לגובה ההפקדה עצמה: כשהשיעור בפועל נמוך מ-7% ההפקדה כולה פטורה,
@@ -335,19 +351,23 @@ function calculate() {
       dep: sevDep, exempt: sevExempt, cross: sevCross },
   ];
 
+  // מעגלים כל שורה פעם אחת ומסכמים את הערכים המעוגלים, כדי שמה שמוצג יסתכם בפועל:
+  // חיבור השורות שעל המסך חייב לתת בדיוק את שורת "סך הכל", ובכל שורה הפקדה־פטור=מוכרת.
   let tDep = 0, tExempt = 0, tMuk = 0, body = '';
   rows.forEach(r => {
-    const muk = Math.max(0, r.dep - r.exempt);
-    tDep += r.dep; tExempt += r.exempt; tMuk += muk;
+    const dep = Math.round(r.dep);
+    const exempt = Math.round(r.exempt);   // exempt <= dep תמיד, והעיגול שומר על היחס
+    const muk = dep - exempt;
+    tDep += dep; tExempt += exempt; tMuk += muk;
     const crossTxt = r.cross === null ? 'אין תקרה'
                    : r.cross === 0 ? 'כבר נחצה'
                    : !isFinite(r.cross) ? '—'
                    : nis(r.cross);
     body += '<tr class="comp">' +
       '<td><div class="comp-name">' + r.name + '</div><div class="comp-rule">' + r.rule + '</div></td>' +
-      '<td class="num">' + nis(r.dep) + '</td>' +
-      '<td class="num">' + nis(r.exempt) + '</td>' +
-      '<td class="num ' + (muk > 0.5 ? 'v-mukeret' : 'v-zero') + '">' + (muk > 0.5 ? nis(muk) : '0') + '</td>' +
+      '<td class="num">' + nis(dep) + '</td>' +
+      '<td class="num">' + nis(exempt) + '</td>' +
+      '<td class="num ' + (muk > 0 ? 'v-mukeret' : 'v-zero') + '">' + (muk > 0 ? nis(muk) : '0') + '</td>' +
       '<td class="num">' + crossTxt + '</td>' +
       '</tr>';
   });
@@ -355,7 +375,7 @@ function calculate() {
     '<td>סך הכל</td>' +
     '<td class="num">' + nis(tDep) + '</td>' +
     '<td class="num">' + nis(tExempt) + '</td>' +
-    '<td class="num ' + (tMuk > 0.5 ? 'v-mukeret' : 'v-zero') + '">' + (tMuk > 0.5 ? nis(tMuk) : '0') + '</td>' +
+    '<td class="num ' + (tMuk > 0 ? 'v-mukeret' : 'v-zero') + '">' + (tMuk > 0 ? nis(tMuk) : '0') + '</td>' +
     '<td></td></tr>';
 
   document.getElementById('resultTitle').textContent =
@@ -363,19 +383,25 @@ function calculate() {
   document.getElementById('mainBody').innerHTML = body;
 
   const pct = tDep > 0 ? (tMuk / tDep * 100) : 0;
-  document.getElementById('note').innerHTML = tMuk > 0.5
+  document.getElementById('note').innerHTML = tMuk > 0
     ? 'בשכר הזה נוצרת קצבה מוכרת של <strong>' + nis(tMuk) + '</strong> לחודש, שהם <strong>' +
-      pct.toFixed(1) + '%</strong> מסך ההפקדה. הכסף הזה ממוסה כבר היום, ובפרישה הקצבה שנובעת ממנו פטורה ממס מגיל 60.'
+      pct.toFixed(1) + '%</strong> מסך ההפקדה. הכסף הזה ממוסה כבר היום, ובפרישה הקצבה שנובעת ממנו פטורה ממס מגיל 60. ' +
+      'כל הסכום נשאר בקופה — "מוכרת" הוא סיווג לצורך מס, לא משיכה.'
     : 'בשכר הזה <strong>לא נוצרת קצבה מוכרת</strong> — כל ההפקדה נמצאת מתחת לתקרות ולכן פטורה ממס במועד ההפקדה.';
 
-  renderCeilings(year, Y);
+  renderCeilings(year, Y, salary);
 }
 
-function renderCeilings(year, Y) {
+function renderCeilings(year, Y, salary) {
   document.getElementById('ceilYear').textContent = year;
+  // הסף של העובד אינו קבוע שנתי טהור: בשכר מתחת לממוצע הוא 7% מהשכר.
+  // בלי ההבהרה הזו הטבלה הכריזה על ₪964 בזמן שהחישוב שמעליה השתמש בסכום נמוך יותר.
+  const empBelowAvg = salary > 0 && salary < Y.avg;
+  const empRule = MAX_EMP_RATE + '% מהנמוך מבין השכר לבין השכר הממוצע'
+    + (empBelowAvg ? ' — בשכר הנוכחי הסף הוא ' + nis(MAX_EMP_RATE / 100 * salary) : '');
   const rows = [
     ['שכר ממוצע במשק', 'הבסיס לתקרת העובד ולתקרת המעסיק', Y.avg, 'סעיף 2(ב) לחוק הביטוח הלאומי'],
-    ['סף תשלומים פטורים, עובד', MAX_EMP_RATE + '% מהשכר הממוצע (בשכר מעל הממוצע)', MAX_EMP_RATE / 100 * Y.avg, 'סעיף 9(א)(1)(ב)'],
+    ['סף תשלומים פטורים, עובד', empRule, MAX_EMP_RATE / 100 * Y.avg, 'סעיף 9(א)(1)(ב)'],
     ['תקרת המשכורת, מעסיק', 'פעמיים וחצי השכר הממוצע', Y.ceil, 'סעיף 3(ה3)(2), "סכום התקרה"'],
     ['הפקדת מעסיק פטורה מרבית', MAX_ER_RATE + '% מתקרת המשכורת', MAX_ER_RATE / 100 * Y.ceil, 'סעיף 9(א)(1)(א)'],
     Y.sev != null
