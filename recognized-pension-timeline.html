@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>קצבה מוכרת — צבירה לאורך זמן | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:     #1a7a4a;
+      --green-lt:  #e8f5ee;
+      --green-dk:  #0f5233;
+      --teal:      #17a589;
+      --red:       #c0392b;
+      --red-lt:    #fdecea;
+      --amber:     #d68910;
+      --amber-lt:  #fef9e7;
+      --blue:      #2563eb;
+      --purple:    #7c3aed;
+      --bg:        #f4f6f5;
+      --surface:   #ffffff;
+      --border:    #d8e2dc;
+      --text:      #1c2b22;
+      --muted:     #607060;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .grid { min-width: 0; }
+    .grid > * { min-width: 0; }
+    input[inputmode="decimal"] { direction: ltr; text-align: right; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 60%, var(--teal) 100%);
+      color: #fff; padding: 2.4rem 0 2rem; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.5px; position: relative; }
+    header p { margin-top: .5rem; opacity: .85; font-size: .95rem; font-weight: 300; position: relative; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      color: rgba(255,255,255,0.85); text-decoration: none;
+      font-size: 0.88rem; position: relative; margin-bottom: 0.3rem;
+    }
+    .back-link:hover { color: #fff; text-decoration: underline; }
+
+    .container { max-width: 1220px; margin: 0 auto; padding: 0 1.25rem 2rem; }
+    .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; margin-top: 1.75rem; }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem; margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 1rem; font-weight: 700; color: var(--green-dk);
+      margin-bottom: 1.1rem; padding-bottom: .6rem; border-bottom: 2px solid var(--green-lt);
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+    .field input, .field select {
+      width: 100%; padding: .55rem .85rem; border: 1.5px solid var(--border);
+      border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: .95rem;
+      color: var(--text); background: var(--bg); transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,.12); background: #fff; }
+    .field.highlight label { color: var(--green); font-weight: 700; }
+    .field.highlight input { border-color: var(--green); background: var(--green-lt); }
+    .field input.locked { background: #eef1ef; color: var(--muted); cursor: not-allowed; border-style: dashed; }
+    .field-hint { font-size: .76rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .6rem; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .sub-label { display: block; font-size: .82rem; font-weight: 500; color: var(--muted); margin-bottom: .35rem; }
+
+    /* ─── SALARY UPDATES ─── */
+    .raise {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: .6rem .65rem .3rem; margin-bottom: .6rem; background: #fbfdfc;
+    }
+    .raise-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: .45rem; }
+    .raise-hd span { font-size: .74rem; font-weight: 700; color: var(--muted); letter-spacing: .03em; }
+    .raise-rm {
+      border: none; background: none; color: var(--red); cursor: pointer;
+      font-size: .95rem; line-height: 1; padding: .1rem .3rem; border-radius: 5px;
+    }
+    .raise-rm:hover { background: var(--red-lt); }
+    .raise .field { margin-bottom: .55rem; }
+    .raise select, .raise input { padding: .42rem .55rem; font-size: .88rem; }
+    .empty-raises { font-size: .8rem; color: var(--muted); padding: .5rem 0 .8rem; line-height: 1.5; }
+
+    .btn {
+      background: var(--green); color: #fff; border: none; padding: .6rem 1.05rem;
+      border-radius: 8px; cursor: pointer; font-family: 'Heebo', sans-serif;
+      font-size: .88rem; font-weight: 600; transition: background .18s;
+    }
+    .btn:hover { background: var(--green-dk); }
+    .btn-sec { background: #fff; color: var(--green); border: 1.5px solid var(--green); }
+    .btn-sec:hover { background: var(--green-lt); }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: .4rem .75rem; font-size: .8rem; }
+
+    .warn-box { background: var(--amber-lt); border: 1px solid var(--amber); color: #8a5a00;
+      border-radius: 10px; padding: .7rem .8rem; font-size: .82rem; font-weight: 500;
+      margin-bottom: 1rem; line-height: 1.55; }
+    .warn-box.err { background: var(--red-lt); border-color: var(--red); color: var(--red); font-weight: 600; }
+    .warn-box ul { margin: .3rem .9rem 0 0; }
+
+    /* ─── KPIs ─── */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem; margin-bottom: 1.4rem; }
+    @media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    .kpi { background: var(--green-lt); border: 1px solid #cfe6da; border-radius: 12px; padding: .85rem .9rem; }
+    .kpi .k-lbl { font-size: .74rem; color: var(--muted); font-weight: 500; margin-bottom: .25rem; line-height: 1.3; }
+    .kpi .k-val { font-size: 1.3rem; font-weight: 700; color: var(--green-dk);
+      font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+    .kpi .k-sub { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+    .kpi.alt { background: #f4f6f5; border-color: var(--border); }
+    .kpi.alt .k-val { color: var(--text); }
+
+    /* ─── TABLES ─── */
+    .result-title { font-size: 1.05rem; font-weight: 700; color: var(--green-dk); margin-bottom: 1rem; }
+    .tbl-actions { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: .9rem; align-items: center; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead th {
+      background: #1c2b22; color: #fff; padding: .65rem .6rem;
+      text-align: right; font-weight: 600; white-space: nowrap; font-size: .78rem;
+    }
+    thead th.grp { background: #2b3f33; text-align: center; font-size: .74rem; letter-spacing: .02em; }
+    tbody td { padding: .55rem .6rem; border-bottom: 1px solid #eef1ef; text-align: right; }
+    .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .v-mukeret { color: var(--green); font-weight: 700; }
+    .v-zero { color: #b3bdb3; }
+
+    tr.yr { cursor: pointer; background: #f0f5f2; }
+    tr.yr:hover { background: var(--green-lt); }
+    tr.yr td { font-weight: 700; border-bottom: 1px solid var(--border); }
+    tr.yr .caret { display: inline-block; width: 1em; color: var(--green); font-weight: 700; }
+    tr.mo td { color: var(--muted); font-weight: 400; }
+    tr.mo td:first-child { padding-right: 1.9rem; }
+    tr.mo:nth-child(odd) { background: #fcfdfc; }
+    tr.gtotal td { background: #1c2b22; color: #fff; font-weight: 700; border-bottom: none; }
+    tr.gtotal td.num.v-mukeret { color: #7ee2b0; }
+
+    .note {
+      font-size: .84rem; color: var(--muted); line-height: 1.6;
+      margin-top: .9rem; padding: .8rem .9rem; background: var(--green-lt); border-radius: 10px;
+    }
+    .note strong { color: var(--green-dk); }
+
+    .ceil-title { font-size: .82rem; font-weight: 700; color: var(--muted); letter-spacing: .04em;
+      margin: 1.75rem 0 .7rem; }
+    table.ceilings { font-size: .8rem; }
+    table.ceilings td { padding: .5rem .6rem; font-variant-numeric: tabular-nums; }
+    table.ceilings td.yr-c { font-weight: 700; }
+
+    footer { text-align: center; padding: 1.2rem 1rem; color: var(--muted); font-size: .78rem; }
+
+    .assump { margin-top: 1.75rem; padding: 1.1rem 1.2rem; background: #fafbfa;
+      border: 1px solid var(--border); border-radius: 10px; }
+    .assump h3 { font-size: .82rem; font-weight: 700; color: var(--muted);
+      letter-spacing: .04em; margin-bottom: .7rem; }
+    .assump p { font-size: .8rem; color: var(--muted); line-height: 1.65; margin-bottom: .6rem; }
+    .assump p:last-child { margin-bottom: 0; }
+    .assump strong { color: var(--text); }
+    .assump .disclaimer { margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--border);
+      color: var(--red); }
+
+    @media (max-width: 600px) {
+      header { padding: 1.5rem 0 1.3rem; }
+      header h1 { font-size: 1.3rem; }
+      .container { padding-left: 1rem; padding-right: 1rem; }
+      .card { padding: 1.1rem 1rem; }
+      table { font-size: .78rem; }
+      .kpi .k-val { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>קצבה מוכרת — צבירה לאורך זמן</h1>
+    <p>כמה קצבה מוכרת נצברה לאורך שנות העבודה, חודש אחר חודש, לפי תגמולי עובד, תגמולי מעסיק ופיצויים</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>תקופת העבודה</h2>
+
+        <div class="field">
+          <label>תחילת עבודה</label>
+          <div class="row2">
+            <select id="startM"></select>
+            <select id="startY"></select>
+          </div>
+        </div>
+
+        <div class="field highlight">
+          <label>שכר חודשי ברוטו בתחילה (₪)</label>
+          <input type="text" inputmode="decimal" id="startSalary" value="15000" class="calc-input">
+        </div>
+
+        <div class="field">
+          <label>סוף התקופה המחושבת</label>
+          <div class="row2">
+            <select id="endM"></select>
+            <select id="endY"></select>
+          </div>
+          <div class="field-hint">החישוב אפשרי רק בטווח <strong>01/2016 – 12/2026</strong>, שבו התקרות מאומתות.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>עדכוני שכר</h2>
+        <div id="raises"></div>
+        <div class="empty-raises" id="raisesEmpty">
+          אין עדכוני שכר — השכר ההתחלתי יחול על כל התקופה.
+        </div>
+        <button class="btn btn-sec btn-full" id="addRaise" type="button">+ הוסף עדכון שכר</button>
+        <div class="field-hint" style="margin-top:.6rem;">
+          כל עדכון חל <strong>מהחודש שנבחר ואילך</strong> (כולל), עד לעדכון הבא.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>שיעורי הפקדה</h2>
+        <div class="row3">
+          <div class="field">
+            <label style="font-size:.72rem;">תגמולי עובד</label>
+            <input type="text" inputmode="decimal" id="rateEmp" value="6" class="calc-input">
+          </div>
+          <div class="field">
+            <label style="font-size:.72rem;">תגמולי מעסיק</label>
+            <input type="text" inputmode="decimal" id="rateEr" value="6.5" class="calc-input">
+          </div>
+          <div class="field">
+            <label style="font-size:.72rem;">פיצויים 🔒</label>
+            <input type="text" inputmode="decimal" id="rateSev" value="8.33" readonly class="locked">
+          </div>
+        </div>
+        <div class="field-hint">
+          השיעורים גלובליים וחלים על <strong>כל</strong> חודשי התקופה.
+          ברירת המחדל היא שיעורי חובת הפנסיה: 6% / 6.5% / 8.33%.
+          <br><strong>שיעור הפיצויים נעול על 8.33%</strong> — השיעור המלא (1/12). הפטור נקבע לפי השיעור
+          הסטטוטורי ולא לפי מה שמופקד בפועל.
+        </div>
+        <button class="btn btn-full" id="calcBtn" type="button" style="margin-top:.4rem;">חשב</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+      <div class="card">
+        <div id="warn"></div>
+        <div class="result-title" id="resultTitle">—</div>
+
+        <div class="kpis" id="kpis"></div>
+
+        <div class="tbl-actions">
+          <button class="btn btn-sec btn-sm" id="expandAll" type="button">הרחב הכל</button>
+          <button class="btn btn-sec btn-sm" id="collapseAll" type="button">כווץ הכל</button>
+          <button class="btn btn-sm" id="exportXlsx" type="button">⬇ ייצוא ל-Excel</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:15%;">תקופה</th>
+                <th rowspan="2">שכר ברוטו</th>
+                <th colspan="3" class="grp">קצבה מוכרת שנוצרה</th>
+                <th rowspan="2">סה״כ מוכרת</th>
+                <th rowspan="2">סה״כ הפקדה</th>
+                <th rowspan="2">% מוכרת</th>
+              </tr>
+              <tr>
+                <th>תגמולי עובד</th>
+                <th>תגמולי מעסיק</th>
+                <th>פיצויים</th>
+              </tr>
+            </thead>
+            <tbody id="mainBody"></tbody>
+          </table>
+        </div>
+
+        <div class="note" id="note"></div>
+
+        <div class="ceil-title">התקרות ששימשו לחישוב, לפי שנה</div>
+        <div class="table-wrap">
+          <table class="ceilings">
+            <thead>
+              <tr>
+                <th style="width:12%;">שנה</th>
+                <th>שכר ממוצע במשק</th>
+                <th>סף פטור לעובד (7%)</th>
+                <th>תקרת משכורת למעסיק</th>
+                <th>הפקדת מעסיק פטורה (7.5%)</th>
+                <th>תקרת שכר לפיצויים</th>
+              </tr>
+            </thead>
+            <tbody id="ceilBody"></tbody>
+          </table>
+        </div>
+
+        <div class="assump">
+          <h3>הנחות, מגבלות ומקורות</h3>
+
+          <p><strong>הסכומים נומינליים ואינם צמודים.</strong> הטבלה מסכמת שקלים של שנים שונות זה לצד זה,
+          בדיוק כפי שרשות המסים והקופה עוקבות אחרי יתרת "התשלומים הפטורים" — לפי סכום ההפקדה הנומינלי.
+          הרווחים שנצברו על הכסף נספחים לרכיב בנפרד ואינם מחושבים כאן.</p>
+
+          <p><strong>המחשבון מראה מה <em>אמור</em> להיות מסווג כקצבה מוכרת — לא בהכרח מה שדווח בפועל.</strong>
+          הסיווג נקבע במערכת השכר של המעסיק ומדווח לקופה דרך <em>ממשק מעסיקים</em>, בשדות "תשלומים פטורים"
+          ו"תשלומים שאינם פטורים". תת-דיווח הוא כשל מוכר ונפוץ, במיוחד היסטורית ואצל מעסיקים קטנים. כדי לוודא —
+          השוו את טופס 106 מול הדוח השנתי של הקופה וחפשו יתרת "תשלומים פטורים". אם ההפקדות חצו את הסף והיתרה
+          אפס, יש פער שניתן לתקן רטרואקטיבית מול הקופה.</p>
+
+          <p><strong>⚠️ אובדן כושר עבודה חולק את אותה תקרה.</strong> הפטור של 7.5% מתקרת המשכורת חל על תגמולי
+          המעסיק <em>ועל ביטוח אובדן כושר עבודה יחד</em>. המחשבון מניח שכל הקצבה מנוצלת לתגמולים; אם המעסיק
+          משלם פרמיית אכ"ע בנפרד — נפוץ בביטוח מנהלים — <strong>הזקיפה בפועל תהיה גבוהה מזו שמוצגת כאן</strong>.</p>
+
+          <p><strong>הפטור מחושב לפי השיעורים הסטטוטוריים, לא לפי מה שמופקד בפועל.</strong> סעיף 3(ה3)(2)
+          מגדיר "שיעור ההפקדה" כשיעור הקבוע בסעיף 22 לחוק קופות גמל — ולכן מעסיק שמפקיד 6.5% נהנה מהפטור
+          המלא של 7.5%. "תקרת הפיצויים" מוגדרת שם כ"משכורת העובד ביום ההפקדה או הסכום הנקוב, לפי הנמוך",
+          כלומר תקרת <em>שכר</em>. ב-2016 טרם הייתה תקרת פיצויים — סעיף 3(ה3)(1א) נוסף בתיקון 232 וחל מ-2017.</p>
+
+          <p><strong>מה לא נכלל:</strong> תקופות ללא העסקה או ללא הפקדה · שינוי שיעורי הפקדה באמצע התקופה ·
+          החלפת מעסיק ומקבילות בין קופות · ביטוח לאומי ומס בריאות על הזקיפה · קרן השתלמות · עצמאים ובעלי
+          שליטה. "קצבה מוכרת" הוא סיווג לצורכי מס — הכסף נשאר בקופה.</p>
+
+          <p><strong>מקורות:</strong> נוסח סעיף 3(ה3) לפקודת מס הכנסה · השכר הממוצע לפי סעיף 2(ב) לחוק הביטוח
+          הלאומי (btl.gov.il) · מסמכי ריכוז התקרות השנתיים של כלל ביטוח · כל-זכות. כל תקרה אומתה מול ארבעה
+          מקורות בלתי תלויים.</p>
+
+          <p class="disclaimer">איני יועץ מס, רואה חשבון או יועץ פנסיוני. הכלי מסביר מנגנון ואינו מחליף ייעוץ
+          אישי — למקרה קונקרטי כדאי לאמת מול איש מקצוע ומול התלושים עצמם.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>כלים פיננסיים — לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי</footer>
+
+<script>
+/* ── Verified ceilings, 2016–2026 ───────────────────────────────────────────
+   Identical table to recognized-pension.html — see that file for the full
+   four-source verification note. Keep the two in sync.
+     avg  = השכר הממוצע במשק לפי סעיף 2(ב) לחוק הביטוח הלאומי
+     ceil = תקרת המשכורת למעסיק — פעמיים וחצי השכר הממוצע (סעיף 3(ה3))
+     sev  = תקרת שכר לפיצויים, סעיף 3(ה3)(1א); null = לא הייתה תקרה באותה שנה */
+const YEARS = {
+  2016: { avg:  9464, ceil: 23660, sev: null  },
+  2017: { avg:  9673, ceil: 24183, sev: 32000 },
+  2018: { avg:  9906, ceil: 24765, sev: 32800 },
+  2019: { avg: 10273, ceil: 25683, sev: 34000 },
+  2020: { avg: 10551, ceil: 26378, sev: 34900 },
+  2021: { avg: 10551, ceil: 26378, sev: 34900 },
+  2022: { avg: 10551, ceil: 26378, sev: 34900 },
+  2023: { avg: 11870, ceil: 29675, sev: 39300 },
+  2024: { avg: 12536, ceil: 31340, sev: 41500 },
+  2025: { avg: 13316, ceil: 33290, sev: 44100 },
+  2026: { avg: 13769, ceil: 34423, sev: 45600 },
+};
+const MAX_EMP_RATE = 7;    // המרבי לפי סעיף 22
+const MAX_ER_RATE  = 7.5;  // מעליו ההפקדה נזקפת כהכנסה
+const SEV_RATE     = 8.33; // נעול
+
+const Y_MIN = 2016, Y_MAX = 2026;
+const MONTHS_LONG  = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const MONTHS_SHORT = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
+
+const nis = n => '₪' + Math.round(n).toLocaleString('he-IL');
+const idx = (y, m) => y * 12 + (m - 1);              // absolute month index
+const per = (y, m) => String(m).padStart(2, '0') + '/' + y;
+
+function num(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function el(id)  { return document.getElementById(id); }
+
+/* ─────────────── month / year pickers ─────────────── */
+function fillMonth(sel) {
+  MONTHS_LONG.forEach((name, i) => {
+    const o = document.createElement('option');
+    o.value = String(i + 1); o.textContent = name;
+    sel.appendChild(o);
+  });
+}
+function fillYear(sel) {
+  for (let y = Y_MIN; y <= Y_MAX; y++) {
+    const o = document.createElement('option');
+    o.value = String(y); o.textContent = String(y);
+    sel.appendChild(o);
+  }
+}
+['startM', 'endM'].forEach(id => fillMonth(el(id)));
+['startY', 'endY'].forEach(id => fillYear(el(id)));
+
+// defaults: a period that is meaningful out of the box, ending at the current month
+const now = new Date();
+const curIdx = Math.min(idx(now.getFullYear(), now.getMonth() + 1), idx(Y_MAX, 12));
+el('startM').value = '1';   el('startY').value = '2020';
+el('endM').value = String(curIdx % 12 + 1);
+el('endY').value = String(Math.floor(curIdx / 12));
+el('startSalary').value = '15000';
+
+/* ─────────────── salary updates (repeater) ─────────────── */
+let raiseSeq = 0;
+
+function addRaiseRow(m, y, salary) {
+  const wrap = document.createElement('div');
+  wrap.className = 'raise';
+  const n = ++raiseSeq;
+  wrap.innerHTML =
+    '<div class="raise-hd"><span>עדכון שכר</span>' +
+    '<button type="button" class="raise-rm" title="הסר">✕</button></div>' +
+    '<div class="row2"><div class="field"><select class="r-m"></select></div>' +
+    '<div class="field"><select class="r-y"></select></div></div>' +
+    '<div class="field" style="margin-bottom:.5rem;">' +
+    '<input type="text" inputmode="decimal" class="r-s calc-input" placeholder="שכר חדש (₪)"></div>';
+  const ms = wrap.querySelector('.r-m'), ys = wrap.querySelector('.r-y');
+  fillMonth(ms); fillYear(ys);
+  ms.value = String(m); ys.value = String(y);
+  wrap.querySelector('.r-s').value = salary == null ? '' : String(salary);
+  wrap.querySelector('.raise-rm').addEventListener('click', () => { wrap.remove(); syncRaises(); calculate(); });
+  // .r-s carries .calc-input and is already covered by the delegated change handler
+  [ms, ys].forEach(c => c.addEventListener('change', calculate));
+  el('raises').appendChild(wrap);
+  syncRaises();
+}
+
+function syncRaises() {
+  const rows = el('raises').querySelectorAll('.raise');
+  el('raisesEmpty').style.display = rows.length ? 'none' : 'block';
+  rows.forEach((r, i) => { r.querySelector('.raise-hd span').textContent = 'עדכון שכר #' + (i + 1); });
+}
+
+function readRaises() {
+  return Array.from(el('raises').querySelectorAll('.raise')).map(r => {
+    const s = parseFloat(r.querySelector('.r-s').value);
+    return {
+      m: parseInt(r.querySelector('.r-m').value, 10),
+      y: parseInt(r.querySelector('.r-y').value, 10),
+      salary: isNaN(s) ? null : s,
+    };
+  });
+}
+
+el('addRaise').addEventListener('click', () => {
+  // seed the new row just after the last existing one, with that salary as a starting point
+  const existing = readRaises();
+  const last = existing.length ? existing[existing.length - 1] : null;
+  const base = last ? idx(last.y, last.m) : idx(+el('startY').value, +el('startM').value);
+  const seed = Math.min(base + 12, idx(Y_MAX, 12));
+  const prevSal = last && last.salary != null ? last.salary : Math.max(0, num('startSalary'));
+  addRaiseRow(seed % 12 + 1, Math.floor(seed / 12), Math.round(prevSal * 1.1 / 100) * 100);
+  calculate();
+});
+
+// one example raise so the page is immediately illustrative
+addRaiseRow(1, 2023, 20000);
+
+/* ─────────────── recalculation triggers ─────────────── */
+['startM', 'startY', 'endM', 'endY'].forEach(id => el(id).addEventListener('change', calculate));
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+document.addEventListener('change', e => {
+  if (e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+el('calcBtn').addEventListener('click', calculate);
+
+/* ─────────────── the calculation ─────────────── */
+let LAST = null;   // the last computed model, for the Excel export
+
+function monthRow(y, m, salary, rEmp, rEr, rSev) {
+  const Y = YEARS[y];
+
+  // תגמולי עובד: פטור עד 7% מהנמוך שבין השכר לשכר הממוצע, ולעולם לא מעל ההפקדה עצמה
+  const empDep    = rEmp / 100 * salary;
+  const empExempt = Math.min(empDep, MAX_EMP_RATE / 100 * Math.min(salary, Y.avg));
+
+  // תגמולי מעסיק: הקצבה היא 7.5% הסטטוטוריים מהנמוך שבין השכר לתקרה — לא השיעור בפועל
+  const erDep    = rEr / 100 * salary;
+  const erExempt = Math.min(erDep, MAX_ER_RATE / 100 * Math.min(salary, Y.ceil));
+
+  // פיצויים: תקרת שכר; עד 2016 לא הייתה תקרה כזו
+  const sevDep    = rSev / 100 * salary;
+  const sevExempt = Y.sev == null ? sevDep : Math.min(sevDep, rSev / 100 * Math.min(salary, Y.sev));
+
+  // מעגלים כל רכיב פעם אחת ומסכמים מעוגלים, כדי שהשורות יסתכמו בדיוק לסך הכל
+  const eD = Math.round(empDep), eE = Math.round(empExempt);
+  const rD = Math.round(erDep),  rE = Math.round(erExempt);
+  const sD = Math.round(sevDep), sE = Math.round(sevExempt);
+
+  return {
+    y: y, m: m, salary: Math.round(salary),
+    empDep: eD, empExempt: eE, empMuk: eD - eE,
+    erDep:  rD, erExempt:  rE, erMuk:  rD - rE,
+    sevDep: sD, sevExempt: sE, sevMuk: sD - sE,
+    dep: eD + rD + sD, exempt: eE + rE + sE, muk: (eD - eE) + (rD - rE) + (sD - sE),
+  };
+}
+
+function calculate() {
+  const warns = [];
+  let fatal = null;
+
+  // ── rates ──
+  const rSev = SEV_RATE;
+  el('rateSev').value = String(SEV_RATE);
+  const rEr = Math.max(0, num('rateEr'));
+  let rEmp = Math.max(0, num('rateEmp'));
+  if (rEmp > MAX_EMP_RATE) {
+    rEmp = MAX_EMP_RATE;
+    el('rateEmp').value = String(MAX_EMP_RATE);
+    warns.push('שיעור הפקדת העובד הוגבל ל-' + MAX_EMP_RATE + '% — המרבי לפי סעיף 22 לחוק קופות גמל.');
+  }
+
+  // ── period ──
+  const sIdx = idx(+el('startY').value, +el('startM').value);
+  const eIdx = idx(+el('endY').value, +el('endM').value);
+  const startSalary = Math.max(0, num('startSalary'));
+
+  if (eIdx < sIdx) fatal = 'סוף התקופה מוקדם מתחילת העבודה. יש לתקן את התאריכים.';
+  else if (startSalary <= 0) fatal = 'יש להזין שכר התחלתי גדול מאפס.';
+
+  // ── salary updates: sort, validate, dedupe ──
+  const raw = readRaises().map(r => ({ i: idx(r.y, r.m), y: r.y, m: r.m, salary: r.salary }));
+  raw.sort((a, b) => a.i - b.i);
+
+  const steps = [];
+  const seen = new Map();
+  raw.forEach(r => {
+    if (r.salary == null || r.salary <= 0) { warns.push('עדכון שכר ב-' + per(r.y, r.m) + ' ללא סכום — התעלמנו ממנו.'); return; }
+    if (r.i <= sIdx) { warns.push('עדכון שכר ב-' + per(r.y, r.m) + ' אינו מאוחר מתחילת העבודה — התעלמנו ממנו.'); return; }
+    if (r.i > eIdx)  { warns.push('עדכון שכר ב-' + per(r.y, r.m) + ' חל אחרי סוף התקופה — התעלמנו ממנו.'); return; }
+    if (seen.has(r.i)) { warns.push('שני עדכונים לאותו חודש (' + per(r.y, r.m) + ') — נלקח האחרון.'); }
+    seen.set(r.i, r);
+  });
+  Array.from(seen.keys()).sort((a, b) => a - b).forEach(k => steps.push(seen.get(k)));
+
+  let prevSal = startSalary;
+  steps.forEach(s => {
+    if (s.salary < prevSal) warns.push('השכר ב-' + per(s.y, s.m) + ' נמוך מהקודם — החישוב מכבד זאת, אך ודא שזה מכוון.');
+    prevSal = s.salary;
+  });
+
+  if (fatal) {
+    el('warn').innerHTML = '<div class="warn-box err">' + fatal + '</div>';
+    el('resultTitle').textContent = '—';
+    el('kpis').innerHTML = ''; el('mainBody').innerHTML = ''; el('note').textContent = '';
+    el('ceilBody').innerHTML = ''; LAST = null;
+    return;
+  }
+
+  // ── walk the months ──
+  const rows = [];
+  let si = 0, salary = startSalary;
+  for (let i = sIdx; i <= eIdx; i++) {
+    while (si < steps.length && steps[si].i <= i) { salary = steps[si].salary; si++; }
+    const y = Math.floor(i / 12), m = i % 12 + 1;
+    rows.push(monthRow(y, m, salary, rEmp, rEr, rSev));
+  }
+
+  // ── group by year ──
+  const years = [];
+  rows.forEach(r => {
+    let g = years.length ? years[years.length - 1] : null;
+    if (!g || g.y !== r.y) {
+      g = { y: r.y, months: [], salMin: Infinity, salMax: -Infinity,
+            empMuk: 0, erMuk: 0, sevMuk: 0, muk: 0, dep: 0, exempt: 0 };
+      years.push(g);
+    }
+    g.months.push(r);
+    g.salMin = Math.min(g.salMin, r.salary); g.salMax = Math.max(g.salMax, r.salary);
+    g.empMuk += r.empMuk; g.erMuk += r.erMuk; g.sevMuk += r.sevMuk;
+    g.muk += r.muk; g.dep += r.dep; g.exempt += r.exempt;
+  });
+
+  const T = { empMuk: 0, erMuk: 0, sevMuk: 0, muk: 0, dep: 0, exempt: 0 };
+  years.forEach(g => { T.empMuk += g.empMuk; T.erMuk += g.erMuk; T.sevMuk += g.sevMuk;
+                       T.muk += g.muk; T.dep += g.dep; T.exempt += g.exempt; });
+
+  LAST = { rows: rows, years: years, T: T, sIdx: sIdx, eIdx: eIdx,
+           rEmp: rEmp, rEr: rEr, rSev: rSev, startSalary: startSalary };
+
+  render(warns);
+}
+
+/* ─────────────── rendering ─────────────── */
+function mukCell(v) {
+  return '<td class="num ' + (v > 0 ? 'v-mukeret' : 'v-zero') + '">' + (v > 0 ? nis(v) : '0') + '</td>';
+}
+
+function render(warns) {
+  const L = LAST, T = L.T;
+
+  el('warn').innerHTML = warns.length
+    ? '<div class="warn-box">' + (warns.length === 1 ? warns[0]
+        : '<strong>שימו לב:</strong><ul><li>' + warns.join('</li><li>') + '</li></ul>') + '</div>'
+    : '';
+
+  const months = L.rows.length;
+  const pct = T.dep > 0 ? T.muk / T.dep * 100 : 0;
+  el('resultTitle').textContent =
+    'מ-' + per(Math.floor(L.sIdx / 12), L.sIdx % 12 + 1) +
+    ' עד ' + per(Math.floor(L.eIdx / 12), L.eIdx % 12 + 1) +
+    ' — ' + months + ' חודשי הפקדה';
+
+  el('kpis').innerHTML =
+    kpi('סה״כ קצבה מוכרת שנצברה', nis(T.muk), 'נומינלי, ללא רווחים') +
+    kpi('סה״כ הפקדות לתקופה', nis(T.dep), 'שלושת הרכיבים יחד', true) +
+    kpi('סה״כ פטור במועד ההפקדה', nis(T.exempt), 'לא ממוסה היום', true) +
+    kpi('שיעור המוכרת מההפקדה', pct.toFixed(1) + '%', 'ממוצע על פני התקופה');
+
+  let body = '';
+  L.years.forEach(g => {
+    const gp = g.dep > 0 ? g.muk / g.dep * 100 : 0;
+    const sal = g.salMin === g.salMax ? nis(g.salMin) : nis(g.salMin) + '–' + nis(g.salMax);
+    body += '<tr class="yr" data-y="' + g.y + '">' +
+      '<td><span class="caret">▸</span>' + g.y + ' <span style="font-weight:400;color:var(--muted);font-size:.8rem;">(' + g.months.length + ' ח׳)</span></td>' +
+      '<td class="num">' + sal + '</td>' +
+      mukCell(g.empMuk) + mukCell(g.erMuk) + mukCell(g.sevMuk) + mukCell(g.muk) +
+      '<td class="num">' + nis(g.dep) + '</td>' +
+      '<td class="num">' + gp.toFixed(1) + '%</td></tr>';
+
+    g.months.forEach(r => {
+      const rp = r.dep > 0 ? r.muk / r.dep * 100 : 0;
+      body += '<tr class="mo y-' + g.y + '" hidden>' +
+        '<td>' + MONTHS_SHORT[r.m - 1] + ' ' + r.y + '</td>' +
+        '<td class="num">' + nis(r.salary) + '</td>' +
+        mukCell(r.empMuk) + mukCell(r.erMuk) + mukCell(r.sevMuk) + mukCell(r.muk) +
+        '<td class="num">' + nis(r.dep) + '</td>' +
+        '<td class="num">' + rp.toFixed(1) + '%</td></tr>';
+    });
+  });
+  body += '<tr class="gtotal"><td>סך הכל</td><td class="num">—</td>' +
+    '<td class="num v-mukeret">' + nis(T.empMuk) + '</td>' +
+    '<td class="num v-mukeret">' + nis(T.erMuk) + '</td>' +
+    '<td class="num v-mukeret">' + nis(T.sevMuk) + '</td>' +
+    '<td class="num v-mukeret">' + nis(T.muk) + '</td>' +
+    '<td class="num">' + nis(T.dep) + '</td>' +
+    '<td class="num">' + (T.dep > 0 ? (T.muk / T.dep * 100).toFixed(1) : '0.0') + '%</td></tr>';
+  el('mainBody').innerHTML = body;
+
+  el('note').innerHTML = T.muk > 0
+    ? 'לאורך התקופה נצברה קצבה מוכרת של <strong>' + nis(T.muk) + '</strong> — ' +
+      nis(T.empMuk) + ' מתגמולי העובד, ' + nis(T.erMuk) + ' מתגמולי המעסיק ו-' + nis(T.sevMuk) + ' מהפיצויים. ' +
+      'זהו סכום ההפקדות הנומינלי שכבר מוסה; הקצבה הנובעת ממנו — כולל הרווחים שנצברו עליו — פטורה ממס מגיל 60. ' +
+      'הכסף כולו נשאר בקופה: "מוכרת" הוא סיווג לצורכי מס, לא משיכה.'
+    : 'בתקופה הזו <strong>לא נוצרה קצבה מוכרת</strong> — כל ההפקדות היו מתחת לתקרות ולכן פטורות ממס במועד ההפקדה.';
+
+  // ceilings actually used
+  const ys = Array.from(new Set(L.rows.map(r => r.y))).sort();
+  el('ceilBody').innerHTML = ys.map(y => {
+    const Y = YEARS[y];
+    return '<tr><td class="yr-c">' + y + '</td>' +
+      '<td>' + nis(Y.avg) + '</td>' +
+      '<td>' + nis(MAX_EMP_RATE / 100 * Y.avg) + '</td>' +
+      '<td>' + nis(Y.ceil) + '</td>' +
+      '<td>' + nis(MAX_ER_RATE / 100 * Y.ceil) + '</td>' +
+      '<td>' + (Y.sev == null ? 'אין תקרה' : nis(Y.sev)) + '</td></tr>';
+  }).join('');
+}
+
+function kpi(label, value, sub, alt) {
+  return '<div class="kpi' + (alt ? ' alt' : '') + '">' +
+    '<div class="k-lbl">' + label + '</div>' +
+    '<div class="k-val">' + value + '</div>' +
+    '<div class="k-sub">' + sub + '</div></div>';
+}
+
+/* ─────────────── expand / collapse ─────────────── */
+function setYear(y, open) {
+  document.querySelectorAll('tr.mo.y-' + y).forEach(tr => { tr.hidden = !open; });
+  const hd = document.querySelector('tr.yr[data-y="' + y + '"] .caret');
+  if (hd) hd.textContent = open ? '▾' : '▸';
+}
+el('mainBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr.yr');
+  if (!tr) return;
+  const y = tr.dataset.y;
+  const open = document.querySelector('tr.mo.y-' + y) && document.querySelector('tr.mo.y-' + y).hidden;
+  setYear(y, open);
+});
+el('expandAll').addEventListener('click', () => {
+  document.querySelectorAll('tr.yr').forEach(tr => setYear(tr.dataset.y, true));
+});
+el('collapseAll').addEventListener('click', () => {
+  document.querySelectorAll('tr.yr').forEach(tr => setYear(tr.dataset.y, false));
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Minimal .xlsx writer — a stored (uncompressed) ZIP of the five OOXML parts.
+   No external library, so nothing to load and nothing to break offline.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function zipStore(files) {
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+
+  files.forEach(f => {
+    const name = enc.encode(f.name);
+    const data = enc.encode(f.data);
+    const crc = crc32(data);
+
+    // local file header (30 bytes + name); flag 0x0800 marks the name as UTF-8
+    const lh = new Uint8Array(30 + name.length);
+    const lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true); lv.setUint16(8, 0, true);
+    lv.setUint16(10, 0, true); lv.setUint16(12, 0x2821, true);   // fixed 2000-01-01 timestamp
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true);
+    lv.setUint16(26, name.length, true); lv.setUint16(28, 0, true);
+    lh.set(name, 30);
+
+    // central directory entry (46 bytes + name)
+    const ch = new Uint8Array(46 + name.length);
+    const cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint16(10, 0, true);
+    cv.setUint16(12, 0, true); cv.setUint16(14, 0x2821, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true);
+    cv.setUint16(28, name.length, true);
+    cv.setUint16(30, 0, true); cv.setUint16(32, 0, true); cv.setUint16(34, 0, true);
+    cv.setUint16(36, 0, true); cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    ch.set(name, 46);
+
+    parts.push(lh, data);
+    central.push(ch);
+    offset += lh.length + data.length;
+  });
+
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true); ev.setUint16(6, 0, true);
+  ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+  ev.setUint16(20, 0, true);
+
+  return new Blob(parts.concat(central, [eocd]), { type:
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+const xesc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                           .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function colRef(i) {                      // 0 -> A, 25 -> Z, 26 -> AA
+  let s = '';
+  for (i = i + 1; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s;
+  return s;
+}
+function sheetRow(rowNum, cells) {
+  const body = cells.map((c, i) => {
+    if (c == null || c === '') return '';
+    const ref = colRef(i) + rowNum;
+    return typeof c === 'number'
+      ? '<c r="' + ref + '" s="' + (c.bold ? 3 : 2) + '"><v>' + c + '</v></c>'
+      : (c.n !== undefined
+          ? '<c r="' + ref + '" s="' + (c.b ? 3 : 2) + '"><v>' + c.n + '</v></c>'
+          : '<c r="' + ref + '" s="' + (c.b ? 1 : 0) + '" t="inlineStr"><is><t>' +
+            xesc(c.t !== undefined ? c.t : c) + '</t></is></c>');
+  }).join('');
+  return '<row r="' + rowNum + '">' + body + '</row>';
+}
+
+function buildXlsx(sheetName, aoa, widths) {
+  const rows = aoa.map((cells, i) => sheetRow(i + 1, cells)).join('');
+  const cols = widths.map((w, i) =>
+    '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('');
+
+  const sheet =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<sheetViews><sheetView rightToLeft="1" tabSelected="1" workbookViewId="0">' +
+    '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>' +
+    '</sheetView></sheetViews>' +
+    '<cols>' + cols + '</cols>' +
+    '<sheetData>' + rows + '</sheetData></worksheet>';
+
+  const styles =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts>' +
+    '<fonts count="2"><font><sz val="11"/><name val="Arial"/></font>' +
+    '<font><b/><sz val="11"/><name val="Arial"/></font></fonts>' +
+    '<fills count="2"><fill><patternFill patternType="none"/></fill>' +
+    '<fill><patternFill patternType="gray125"/></fill></fills>' +
+    '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="4">' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+    '<xf numFmtId="164" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/>' +
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+    '</styleSheet>';
+
+  return zipStore([
+    { name: '[Content_Types].xml', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      '</Types>' },
+    { name: '_rels/.rels', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/workbook.xml', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheets><sheet name="' + xesc(sheetName) + '" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+    { name: 'xl/_rels/workbook.xml.rels', data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '</Relationships>' },
+    { name: 'xl/styles.xml', data: styles },
+    { name: 'xl/worksheets/sheet1.xml', data: sheet },
+  ]);
+}
+
+el('exportXlsx').addEventListener('click', () => {
+  if (!LAST || !LAST.rows.length) { alert('אין נתונים לייצוא — יש לתקן את הקלט תחילה.'); return; }
+  const L = LAST;
+  const H = t => ({ t: t, b: true });
+  const N = n => ({ n: n });
+  const NB = n => ({ n: n, b: true });
+
+  const aoa = [[
+    H('שנה'), H('חודש'), H('תקופה'), H('שכר ברוטו'),
+    H('הפקדת עובד'), H('עובד — פטור'), H('עובד — מוכרת'),
+    H('הפקדת מעסיק'), H('מעסיק — פטור'), H('מעסיק — מוכרת'),
+    H('הפקדת פיצויים'), H('פיצויים — פטור'), H('פיצויים — מוכרת'),
+    H('סה״כ הפקדה'), H('סה״כ פטור'), H('סה״כ מוכרת'),
+  ]];
+
+  L.rows.forEach(r => aoa.push([
+    N(r.y), N(r.m), per(r.y, r.m), N(r.salary),
+    N(r.empDep), N(r.empExempt), N(r.empMuk),
+    N(r.erDep),  N(r.erExempt),  N(r.erMuk),
+    N(r.sevDep), N(r.sevExempt), N(r.sevMuk),
+    N(r.dep), N(r.exempt), N(r.muk),
+  ]));
+
+  const T = L.T;
+  const sum = k => L.rows.reduce((s, r) => s + r[k], 0);
+  aoa.push([
+    H('סך הכל'), '', '', '',
+    NB(sum('empDep')), NB(sum('empExempt')), NB(T.empMuk),
+    NB(sum('erDep')),  NB(sum('erExempt')),  NB(T.erMuk),
+    NB(sum('sevDep')), NB(sum('sevExempt')), NB(T.sevMuk),
+    NB(T.dep), NB(T.exempt), NB(T.muk),
+  ]);
+
+  // the assumptions travel with the file — a bare number sheet invites misreading
+  const p = i => per(Math.floor(i / 12), i % 12 + 1);
+  aoa.push([]);
+  aoa.push([H('נתוני החישוב')]);
+  aoa.push(['תקופה', p(L.sIdx) + ' – ' + p(L.eIdx)]);
+  aoa.push(['שכר התחלתי', N(L.startSalary)]);
+  aoa.push(['שיעורי הפקדה', L.rEmp + '% עובד / ' + L.rEr + '% מעסיק / ' + L.rSev + '% פיצויים']);
+  aoa.push(['הערה', 'סכומים נומינליים בש״ח, ללא הצמדה וללא רווחים. הפטור מחושב לפי השיעורים ' +
+                    'הסטטוטוריים (7% עובד, 7.5% מעסיק) ולא לפי שיעור ההפקדה בפועל.']);
+  aoa.push(['מקור', 'כלים פיננסיים — recognized-pension-timeline.html. אינו ייעוץ מס.']);
+
+  const widths = [8, 8, 10, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 13, 13, 13];
+  const blob = buildXlsx('קצבה מוכרת', aoa, widths);
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kitzba-mukeret_' + p(L.sIdx).replace('/', '-') + '_' + p(L.eIdx).replace('/', '-') + '.xlsx';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+});
+
+window.onload = calculate;
+</script>
+<script>
+/* data-noscroll-guard: numeric fields are text inputs (inputmode="decimal"), so the mouse
+   wheel and arrow keys can never change their value and normal text selection works.
+   These guards only keep the typed content numeric. */
+function isNumField(el) {
+  return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal";
+}
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
+});
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
+</script>
+</body>
+</html>
