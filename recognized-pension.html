@@ -153,7 +153,7 @@
         <div class="field">
           <label>שנת מס</label>
           <select id="year"></select>
-          <div class="field-hint">התקרות מתעדכנות מדי שנה.</div>
+          <div class="field-hint">התקרות מתעדכנות מדי שנה. ב-2016 טרם הייתה תקרת פיצויים.</div>
         </div>
 
         <div class="field highlight">
@@ -225,15 +225,33 @@
 <footer>כלים פיננסיים — לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי</footer>
 
 <script>
-/* ── Verified ceilings, 2020–2026 ───────────────────────────────────────────
+/* ── Verified ceilings, 2016–2026 ───────────────────────────────────────────
    avg  = השכר הממוצע במשק לפי סעיף 2(ב) לחוק הביטוח הלאומי
-   ceil = תקרת המשכורת למעסיק (פעמיים וחצי השכר הממוצע)
-   sev  = תקרת שכר לפיצויים, סעיף 3(ה3)(1א)
-   Every year was taken from the official Clal Insurance annual ceilings
-   document, each of which states the yearly average wage explicitly.
-   Note: the 2020 document misprints the monthly ceiling as 26,337.5 while its
-   own annual figure (316,530 ÷ 12) and the 2021/2022 documents give 26,377.5. */
+   ceil = תקרת המשכורת למעסיק — פעמיים וחצי השכר הממוצע (סעיף 3(ה3))
+   sev  = תקרת שכר לפיצויים, סעיף 3(ה3)(1א); null = לא הייתה תקרה באותה שנה
+
+   Cross-checked against four independent sources:
+     1. ביטוח לאומי (btl.gov.il) — the statutory average wage, every year 2016-2026.
+     2. Clal Insurance annual ceiling documents, 2020-2026 — each states that year's
+        average wage explicitly and both ceilings.
+     3. יובלים פמילי אופיס multi-year table — the severance ceiling for every year,
+        and blank for 2016.
+     4. כל-זכות — the average wage per סעיף 1 vs סעיף 2(ב) (13,566 vs 13,769 for 2026;
+        the calculation uses סעיף 2(ב)).
+   Every ceil equals exactly 2.5 x the official average wage; the 2018 figure (24,765)
+   also appears published as-is, confirming the rule holds before 2020 too.
+
+   2016 has no severance ceiling: סעיף 3(ה3)(1א) was added by תיקון 232 (29.12.2016)
+   and applies only from 2017, so a 2016 severance deposit was never taxed at deposit.
+
+   Beware two published errors found while verifying: the Clal 2020 document misprints
+   its monthly ceiling as 26,337.5 (its own annual 316,530 ÷ 12 gives 26,377.5), and a
+   widely-mirrored table lists the 2026 average wage as 13,796 instead of 13,769. */
 const YEARS = {
+  2016: { avg:  9464, ceil: 23660, sev: null  },
+  2017: { avg:  9673, ceil: 24183, sev: 32000 },
+  2018: { avg:  9906, ceil: 24765, sev: 32800 },
+  2019: { avg: 10273, ceil: 25683, sev: 34000 },
   2020: { avg: 10551, ceil: 26378, sev: 34900 },
   2021: { avg: 10551, ceil: 26378, sev: 34900 },
   2022: { avg: 10551, ceil: 26378, sev: 34900 },
@@ -297,9 +315,11 @@ function calculate() {
   const erCross   = rateEr > MAX_ER_RATE ? 0 : Y.ceil;
 
   // ── פיצויים: פטור לפי השיעור מהנמוך שבין השכר לתקרת הפיצויים ──
+  // עד 2016 לא הייתה תקרה כזו (נוספה בתיקון 232), ולכן ההפקדה כולה פטורה במועד ההפקדה.
+  const hasSev    = Y.sev != null;
   const sevDep    = rateSev / 100 * salary;
-  const sevExempt = Math.min(sevDep, rateSev / 100 * Math.min(salary, Y.sev));
-  const sevCross  = Y.sev;
+  const sevExempt = hasSev ? Math.min(sevDep, rateSev / 100 * Math.min(salary, Y.sev)) : sevDep;
+  const sevCross  = hasSev ? Y.sev : null;
 
   const rows = [
     { name: 'תגמולי עובד ' + rateEmp + '%',
@@ -309,7 +329,9 @@ function calculate() {
       rule: 'השיעור בפועל (עד ' + MAX_ER_RATE + '%) כפול הנמוך מבין השכר לבין תקרת המשכורת ' + nis(Y.ceil),
       dep: erDep, exempt: erExempt, cross: erCross },
     { name: 'פיצויים ' + rateSev + '%',
-      rule: 'אחוז הפיצויים כפול הנמוך מבין השכר לבין תקרת הפיצויים ' + nis(Y.sev),
+      rule: hasSev
+        ? 'אחוז הפיצויים כפול הנמוך מבין השכר לבין תקרת הפיצויים ' + nis(Y.sev)
+        : 'בשנה זו טרם הייתה תקרה — סעיף 3(ה3)(1א) נוסף בתיקון 232 וחל מ-2017, ולכן ההפקדה כולה פטורה במועד ההפקדה',
       dep: sevDep, exempt: sevExempt, cross: sevCross },
   ];
 
@@ -317,7 +339,8 @@ function calculate() {
   rows.forEach(r => {
     const muk = Math.max(0, r.dep - r.exempt);
     tDep += r.dep; tExempt += r.exempt; tMuk += muk;
-    const crossTxt = r.cross === 0 ? 'כבר נחצה'
+    const crossTxt = r.cross === null ? 'אין תקרה'
+                   : r.cross === 0 ? 'כבר נחצה'
                    : !isFinite(r.cross) ? '—'
                    : nis(r.cross);
     body += '<tr class="comp">' +
@@ -355,12 +378,14 @@ function renderCeilings(year, Y) {
     ['סף תשלומים פטורים, עובד', MAX_EMP_RATE + '% מהשכר הממוצע (בשכר מעל הממוצע)', MAX_EMP_RATE / 100 * Y.avg, 'סעיף 9(א)(1)(ב)'],
     ['תקרת המשכורת, מעסיק', 'פעמיים וחצי השכר הממוצע', Y.ceil, 'סעיף 3(ה3)(2), "סכום התקרה"'],
     ['הפקדת מעסיק פטורה מרבית', MAX_ER_RATE + '% מתקרת המשכורת', MAX_ER_RATE / 100 * Y.ceil, 'סעיף 9(א)(1)(א)'],
-    ['תקרת שכר לפיצויים', 'מעליה ההפקדה נזקפת והופכת למוכרת', Y.sev, 'סעיף 3(ה3)(1א)'],
+    Y.sev != null
+      ? ['תקרת שכר לפיצויים', 'מעליה ההפקדה נזקפת והופכת למוכרת', Y.sev, 'סעיף 3(ה3)(1א), מ-2017']
+      : ['תקרת שכר לפיצויים', 'לא הייתה תקרה בשנה זו — נוספה בתיקון 232 החל מ-2017', null, 'סעיף 3(ה3)(1א), מ-2017'],
   ];
   document.getElementById('ceilBody').innerHTML = rows.map(r =>
     '<tr><td><strong>' + r[0] + '</strong></td>' +
     '<td class="ceil-rule">' + r[1] + '</td>' +
-    '<td class="ceil-amount">' + nis(r[2]) + '</td>' +
+    '<td class="ceil-amount">' + (r[2] == null ? '—' : nis(r[2])) + '</td>' +
     '<td class="ceil-src">' + r[3] + '</td></tr>').join('');
 }
 
