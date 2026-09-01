@@ -469,11 +469,13 @@ function addRaiseRow(m, y, salary) {
   const ms = wrap.querySelector('.r-m'), ys = wrap.querySelector('.r-y');
   fillMonth(ms); fillYear(ys);
   ms.value = String(m); ys.value = String(y);
-  wrap.querySelector('.r-s').value = salary == null ? '' : String(salary);
+  const si = wrap.querySelector('.r-s');
+  si.value = salary == null ? '' : String(salary);
   wrap.querySelector('.raise-rm').addEventListener('click', () => { wrap.remove(); syncRaises(); calculate(); });
   [ms, ys].forEach(c => c.addEventListener('change', calculate));
   el('raises').appendChild(wrap);
   syncRaises();
+  return si;   // so the caller can focus a freshly added, still-empty row
 }
 function syncRaises() {
   const rows = el('raises').querySelectorAll('.raise');
@@ -490,10 +492,13 @@ el('addRaise').addEventListener('click', () => {
   const existing = readRaises();
   const last = existing.length ? existing[existing.length - 1] : null;
   const base = last ? idx(last.y, last.m) : idx(+el('startY').value, +el('startM').value);
-  const seed = Math.min(base + 24, idx(Y_MAX, 12));
-  const prevSal = last && last.salary != null ? last.salary : Math.max(0, num('startSalary'));
-  addRaiseRow(seed % 12 + 1, Math.floor(seed / 12), Math.round(prevSal * 1.15 / 100) * 100);
-  calculate();
+  const seed = Math.min(base + 12, idx(Y_MAX, 12));   // same month, next year
+  // Seed the date only — same month, the year after the previous update — and leave the
+  // salary blank so nothing is guessed on the user's behalf. No recalculation here: an
+  // empty row is ignored anyway, and recalculating would flash the "ללא סכום" warning
+  // the instant the row appears.
+  const input = addRaiseRow(seed % 12 + 1, Math.floor(seed / 12), null);
+  if (input) input.focus();
 });
 // a default raise so the demo is immediately illustrative
 addRaiseRow(1, 2021, 26000);
