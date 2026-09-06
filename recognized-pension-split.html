@@ -225,7 +225,7 @@
             <select id="endM"></select>
             <select id="endY"></select>
           </div>
-          <div class="field-hint">החישוב אפשרי רק בטווח <strong>01/2016 – 12/2026</strong>, שבו התקרות מאומתות.</div>
+          <div class="field-hint">החישוב אפשרי רק בטווח <strong>01/2012 – 12/2026</strong>, שבו התקרות מאומתות.</div>
         </div>
       </div>
 
@@ -360,6 +360,16 @@
           חברו את ההפקדות, והשוו את סכום יתרות "התשלומים הפטורים" למה שהעמוד הזה מראה בעמודת
           "קופה אחת". פער משמעותי = דיווח חסר, וניתן לבקש סיווג מחדש רטרואקטיבי.</p>
 
+          <p><strong>2012–2015 — תקרה גבוהה בהרבה.</strong> עד 2015 "סכום התקרה" היה <strong>ארבע
+          פעמים</strong> השכר הממוצע; תיקון 209 הוריד אותו לפעמיים וחצי <strong>מ-1.1.2016</strong>, בחיתוך
+          נקי וללא הוראת מעבר. ההפקדה הפטורה המרבית למעסיק צנחה מ-₪2,778 ב-2015 ל-₪1,775 ב-2016 —
+          כ-36% בין דצמבר לינואר, והגרף מראה את הצוק הזה. כל שאר הכללים זהים — 3(ה3)(1) לא שונה מאז
+          תיקון 173 (2009), 9א(1)(ב) לא שונה מאז תיקון 190 (2012), והשיעורים 7% ו-7.5% לא שונו מאז 2005.</p>
+
+          <p><strong>שיעורי ברירת המחדל אינם אופייניים לשנים 2012–2015.</strong> פנסיית חובה עדיין
+          הייתה בטיפוס באותן שנים (בסביבות 5% עובד ו-5% מעסיק), ולכן 6% / 6.5% / 8.33% מתארים תקופה
+          מאוחרת יותר. לבדיקה היסטורית כדאי להזין את השיעורים שהיו בתלוש בפועל.</p>
+
           <p><strong>מה המחשבון מניח:</strong> אותם שיעורי הפקדה בכל המוצרים · השכר מתחלק בין המוצרים
           לפי האחוזים שהוזנו · כל מוצר מדווח ומעגל בנפרד · סכומים נומינליים, ללא הצמדה וללא רווחים ·
           ב-2016 טרם הייתה תקרת פיצויים. <strong>ההפקדה הכוללת זהה בשני התרחישים</strong> — ההבדל
@@ -382,8 +392,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-/* ── Verified ceilings, 2016–2026 — keep in sync with recognized-pension.html ── */
+/* ── Verified ceilings, 2012–2026 — keep in sync with recognized-pension.html ── */
 const YEARS = {
+  /* 2012-2015: "סכום התקרה" was FOUR times the average wage. תיקון 209 (סעיף 14 לחוק
+     ההתייעלות הכלכלית) cut it to two and a half, with effect from 1.1.2016 — a clean
+     commencement with no transitional rule. Every OTHER rule is identical to 2016+:
+     3(ה3)(1) unchanged since תיקון 173 (2009), 9א(1)(ב) unchanged since תיקון 190 (2012),
+     and the 7% / 7.5% statutory rates unchanged since תק' (מס' 2) תשס"ה-2005.
+     All four ceilings sighted directly, not derived. sev is null — the severance ceiling
+     only arrives with תיקון 232, from 2017. */
+  2012: { avg:  8619, ceil: 34476, sev: null  },
+  2013: { avg:  8828, ceil: 35312, sev: null  },
+  2014: { avg:  9089, ceil: 36356, sev: null  },
+  2015: { avg:  9260, ceil: 37040, sev: null  },
   2016: { avg:  9464, ceil: 23660, sev: null  },
   2017: { avg:  9673, ceil: 24183, sev: 32000 },
   2018: { avg:  9906, ceil: 24765, sev: 32800 },
@@ -402,7 +423,7 @@ const SEV_RATE     = 8.33;
 // 2025 alone published two average wages — 12,536 governs the EMPLOYEE threshold.
 const empAvgOf = Y => Y.empAvg != null ? Y.empAvg : Y.avg;
 
-const Y_MIN = 2016, Y_MAX = 2026;
+const Y_MIN = 2012, Y_MAX = 2026;
 const MONTHS_LONG  = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const MONTHS_SHORT = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
 

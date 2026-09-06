@@ -228,7 +228,7 @@
             <select id="endM"></select>
             <select id="endY"></select>
           </div>
-          <div class="field-hint">החישוב אפשרי רק בטווח <strong>01/2016 – 12/2026</strong>, שבו התקרות מאומתות.</div>
+          <div class="field-hint">החישוב אפשרי רק בטווח <strong>01/2012 – 12/2026</strong>, שבו התקרות מאומתות.</div>
         </div>
       </div>
 
@@ -349,6 +349,16 @@
           תקרת <em>השכר</em> ואינה נוקבת בשיעור, ולכן השאלה פתוחה. <strong>כל עוד השכר מתחת לתקרה אין
           הבדל בין הקריאות</strong>, ולכן רוב החודשים בטבלה אינם מושפעים כלל.</p>
 
+          <p><strong>2012–2015 — תקרה גבוהה בהרבה.</strong> עד 2015 "סכום התקרה" היה <strong>ארבע
+          פעמים</strong> השכר הממוצע; תיקון 209 הוריד אותו לפעמיים וחצי <strong>מ-1.1.2016</strong>, בחיתוך
+          נקי וללא הוראת מעבר. ההפקדה הפטורה המרבית למעסיק צנחה מ-₪2,778 ב-2015 ל-₪1,775 ב-2016 —
+          כ-36% בין דצמבר לינואר, והגרף מראה את הצוק הזה. כל שאר הכללים זהים — 3(ה3)(1) לא שונה מאז
+          תיקון 173 (2009), 9א(1)(ב) לא שונה מאז תיקון 190 (2012), והשיעורים 7% ו-7.5% לא שונו מאז 2005.</p>
+
+          <p><strong>שיעורי ברירת המחדל אינם אופייניים לשנים 2012–2015.</strong> פנסיית חובה עדיין
+          הייתה בטיפוס באותן שנים (בסביבות 5% עובד ו-5% מעסיק), ולכן 6% / 6.5% / 8.33% מתארים תקופה
+          מאוחרת יותר. לבדיקה היסטורית כדאי להזין את השיעורים שהיו בתלוש בפועל.</p>
+
           <p><strong>2025 — שנה עם שני שכרים ממוצעים.</strong> בעקבות תיקון 244 לחוק הביטוח הלאומי פורסמו
           ל-2025 שני סכומים. רשות המסים הורתה להשתמש ב-₪13,316 לתקרת המעסיק ולתקרת הפיצויים, וב-<strong>₪12,536</strong>
           לסף התשלומים הפטורים של העובד (סעיף 9א, פסקה (1)(ב)). המחשבון מיישם את הפיצול, ולכן חודשי 2025
@@ -378,13 +388,24 @@
 <footer>כלים פיננסיים — לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי</footer>
 
 <script>
-/* ── Verified ceilings, 2016–2026 ───────────────────────────────────────────
+/* ── Verified ceilings, 2012–2026 ───────────────────────────────────────────
    Identical table to recognized-pension.html — see that file for the full
    four-source verification note. Keep the two in sync.
      avg  = השכר הממוצע במשק לפי סעיף 2(ב) לחוק הביטוח הלאומי
      ceil = תקרת המשכורת למעסיק — פעמיים וחצי השכר הממוצע (סעיף 3(ה3))
      sev  = תקרת שכר לפיצויים, סעיף 3(ה3)(1א); null = לא הייתה תקרה באותה שנה */
 const YEARS = {
+  /* 2012-2015: "סכום התקרה" was FOUR times the average wage. תיקון 209 (סעיף 14 לחוק
+     ההתייעלות הכלכלית) cut it to two and a half, with effect from 1.1.2016 — a clean
+     commencement with no transitional rule. Every OTHER rule is identical to 2016+:
+     3(ה3)(1) unchanged since תיקון 173 (2009), 9א(1)(ב) unchanged since תיקון 190 (2012),
+     and the 7% / 7.5% statutory rates unchanged since תק' (מס' 2) תשס"ה-2005.
+     All four ceilings sighted directly, not derived. sev is null — the severance ceiling
+     only arrives with תיקון 232, from 2017. */
+  2012: { avg:  8619, ceil: 34476, sev: null  },
+  2013: { avg:  8828, ceil: 35312, sev: null  },
+  2014: { avg:  9089, ceil: 36356, sev: null  },
+  2015: { avg:  9260, ceil: 37040, sev: null  },
   2016: { avg:  9464, ceil: 23660, sev: null  },
   2017: { avg:  9673, ceil: 24183, sev: 32000 },
   2018: { avg:  9906, ceil: 24765, sev: 32800 },
@@ -407,7 +428,7 @@ const SEV_RATE     = 8.33; // נעול
    EMPLOYEE threshold. Keep in sync with recognized-pension.html. */
 const empAvgOf = Y => Y.empAvg != null ? Y.empAvg : Y.avg;
 
-const Y_MIN = 2016, Y_MAX = 2026;
+const Y_MIN = 2012, Y_MAX = 2026;
 const MONTHS_LONG  = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const MONTHS_SHORT = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
 
@@ -700,7 +721,9 @@ function render(warns) {
     return '<tr><td class="yr-c">' + y + '</td>' +
       '<td>' + nis(Y.avg) + (Y.empAvg != null ? ' / ' + nis(eAvg) + ' (עובד)' : '') + '</td>' +
       '<td>' + nis(MAX_EMP_RATE / 100 * eAvg) + '</td>' +
-      '<td>' + nis(Y.ceil) + '</td>' +
+      // the multiple is not constant: ×4 until 2015, ×2.5 from 2016 (תיקון 209)
+      '<td>' + nis(Y.ceil) + ' <span style="color:var(--muted);font-size:.72rem;">' +
+        (y < 2016 ? '(×4)' : '(×2.5)') + '</span></td>' +
       '<td>' + nis(MAX_ER_RATE / 100 * Y.ceil) + '</td>' +
       '<td>' + (Y.sev == null ? 'אין תקרה' : nis(Y.sev)) + '</td></tr>';
   }).join('');
