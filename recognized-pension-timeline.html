@@ -219,7 +219,7 @@
 
         <div class="field highlight">
           <label>שכר חודשי ברוטו בתחילה (₪)</label>
-          <input type="text" inputmode="decimal" id="startSalary" value="15000" class="calc-input">
+          <input type="text" inputmode="decimal" id="startSalary" value="25000" class="calc-input">
         </div>
 
         <div class="field">
@@ -460,10 +460,10 @@ function fillYear(sel) {
 // defaults: a period that is meaningful out of the box, ending at the current month
 const now = new Date();
 const curIdx = Math.min(idx(now.getFullYear(), now.getMonth() + 1), idx(Y_MAX, 12));
-el('startM').value = '1';   el('startY').value = '2020';
+el('startM').value = '1';   el('startY').value = '2016';
 el('endM').value = String(curIdx % 12 + 1);
 el('endY').value = String(Math.floor(curIdx / 12));
-el('startSalary').value = '15000';
+el('startSalary').value = '25000';
 
 /* ─────────────── salary updates (repeater) ─────────────── */
 let raiseSeq = 0;
@@ -519,7 +519,7 @@ el('addRaise').addEventListener('click', () => {
 });
 
 // one example raise so the page is immediately illustrative
-addRaiseRow(1, 2023, 20000);
+addRaiseRow(1, 2020, 35000);
 
 /* ─────────────── recalculation triggers ─────────────── */
 ['startM', 'startY', 'endM', 'endY'].forEach(id => el(id).addEventListener('change', calculate));
