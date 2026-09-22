@@ -190,9 +190,10 @@
           </div>
           <div class="field">
             <label>גיל פרישה יעד</label>
-            <input type="text" inputmode="decimal" id="retireAge" value="60" min="45" max="80" class="calc-input">
+            <input type="text" inputmode="decimal" id="retireAge" value="60" min="45" max="70" class="calc-input">
           </div>
         </div>
+        <div class="field-hint" style="margin-top:-.4rem; margin-bottom:1rem;">גיל הפרישה מוגבל ל-70 — זה גם הגיל שעד אליו נפרשת הטבלה למטה.</div>
 
         <div class="field highlight">
           <label>צבירה נוכחית לפנסיה (₪)</label>
@@ -279,6 +280,9 @@
 
       <div class="card">
         <h2>מספר ה-COAST לפי גיל פרישה</h2>
+        <p style="font-size:.82rem;color:var(--muted);margin:-.6rem 0 .9rem;line-height:1.5;">
+          שנה אחר שנה, מגיל הפרישה שבחרת ועד גיל 70. כל שנה נוספת של צמיחה מקטינה את הסכום
+          שצריך להיות לך <em>היום</em>.</p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -346,9 +350,17 @@ function fireNumber(monthlyIncome, taxPct, swrPct, factor) {
   return (gross * 12) / (swrPct / 100);                    // SWR: annual / rate
 }
 
+const MAX_RETIRE_AGE = 70;   // the age the table runs to, and the hard cap on the input
+
 function calculate() {
   const currentAge = Math.round(num('currentAge'));
-  const retireAge  = Math.round(num('retireAge'));
+
+  // גיל פרישה נעצר ב-70: מעליו הטבלה ריקה ממילא. נחתוך בגלוי כדי שהשדה לא יסתור את התוצאה.
+  let retireAge = Math.round(num('retireAge'));
+  if (retireAge > MAX_RETIRE_AGE) {
+    retireAge = MAX_RETIRE_AGE;
+    document.getElementById('retireAge').value = String(MAX_RETIRE_AGE);
+  }
   const current    = Math.max(0, num('current'));    // negative savings are meaningless
   const monthly    = Math.max(0, num('monthly'));
   const nominal    = num('nominal');
@@ -495,11 +507,10 @@ function renderChart(currentAge, retireAge, savingsAfter, coastReqAtAge, fire, c
 }
 
 function renderTable(currentAge, retireAge, current, income, tax, swr, factor, r) {
-  // start at the target retirement age, then up to 5 ages spaced 5 years apart
+  // one row per year, from the target retirement age through MAX_RETIRE_AGE
   const ages = [];
-  for (let i = 0; i < 5; i++) {
-    const a = retireAge + i * 5;
-    if (a > currentAge && a <= 90) ages.push(a);
+  for (let a = retireAge; a <= MAX_RETIRE_AGE; a++) {
+    if (a > currentAge) ages.push(a);
   }
   let body = '';
   ages.forEach(age => {
