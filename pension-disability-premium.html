@@ -217,6 +217,22 @@
       </div>
 
       <div class="card">
+        <h2>כיול לחיוב בפועל</h2>
+        <div class="chk">
+          <input type="checkbox" id="calib" checked>
+          <label for="calib">החל מקדם כיול
+            <span class="sub">מקדמי נספח ג' נמוכים מהחיוב בפועל במכפיל יציב. בהשוואה לשני דוחות
+              אמיתיים של הפניקס המכפיל יצא 1.375 ו-1.393.</span></label>
+        </div>
+        <div class="field" style="margin-bottom:.2rem;">
+          <label>המכפיל</label>
+          <input type="text" inputmode="decimal" id="calibVal" value="1.38" class="calc-input">
+          <div class="field-hint">בטלו את הסימון כדי לקבל את החישוב היבש לפי התקנון.
+            אם תברר מול הקרן את המקדם האמיתי שלכם — עדכנו כאן.</div>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>רכיב השחרור</h2>
         <div class="field">
           <label>שיעור דמי הגמולים (%)</label>
@@ -243,22 +259,6 @@
     <!-- ═══ RESULTS ═══ -->
     <section>
       <div class="card">
-        <div class="warn-box err" style="line-height:1.65;">
-          ⚠️ <strong>הכלי מתמחר בחסר בכ-28% מול חיוב אמיתי. הכפילו את התוצאה ב-1.38 לאומדן מעשי.</strong>
-          <br><br>
-          <strong>מה שכן אומת:</strong> הנוסחה של סעיף 35(ג) נכונה. מול שני דוחות אמיתיים של הפניקס
-          (שנתי 2025 ורבעוני 1/2026) היא משחזרת <em>לאגורה</em> את שני הסכומים שהקרן מצהירה עליהם —
-          גם קצבת הנכות המבוטחת וגם שחרור ההפקדות. גם הבסיס ודאי: זוהי
-          <strong>"משכורת קובעת לנכות ושאירים"</strong> שמופיעה בסעיף א.3 בדוח השנתי.
-          <br><br>
-          <strong>מה שלא מסתדר:</strong> רמת המקדמים. כדי להגיע לעלות שנגבתה בפועל דרוש מקדם הגבוה
-          פי <strong>1.375–1.393</strong> מזה שבנספח ג' — מכפיל יציב בשני הדוחות ובשני גילים שונים,
-          כלומר הפרש רמה שיטתי ולא טעות נקודתית.
-          <br><br>
-          נבדקו ונשללו: בחירת המסלול (המקדם חסום, שום מסלול לא סוגר את הפער) · בסיס השכר (הקרן
-          מצהירה עליו) · תזמון מהדורות (הרבעון כולו אחרי 1.6.2025). ההשערה שנותרה היא שעל עמיתים
-          ותיקים חלים מקדמים אחרים מאלה שבנספח ג' של המהדורה הנוכחית — לא הצלחתי לאמת אותה מהתקנון.
-        </div>
         <div id="warn"></div>
         <div class="headline" id="headline"></div>
         <div class="kpis" id="kpis"></div>
@@ -278,7 +278,7 @@
             <thead>
               <tr>
                 <th>גיל</th>
-                <th>מקדם נספח ג'</th>
+                <th id="thFactor">מקדם נספח ג'</th>
                 <th>(1) כיסוי הקצבה</th>
                 <th>(2) שחרור</th>
                 <th>פרמיה חודשית</th>
@@ -303,6 +303,16 @@
           <br>(1) ההכנסה הקובעת × שיעור הכיסוי × מקדם/1000 — עלות קצבת הנכות עצמה.
           <br>(2) 94% מדמי הגמולים × מקדם/1000 — עלות המשך ההפקדות לחיסכון בזמן נכות ("שחרור").
           רכיב (2) מוצג בנפרד כי הוא מפתיע רבים — הוא כ-20% מהפרמיה בברירת המחדל.</p>
+
+          <p><strong>⚠️ מקדמי נספח ג' נמוכים מהחיוב בפועל — ולכן קיים מקדם כיול.</strong>
+          הנוסחה עצמה אומתה מול שני דוחות אמיתיים של הפניקס (שנתי 2025 ורבעוני 1/2026) והיא משחזרת
+          <em>לאגורה</em> את שני הסכומים שהקרן מצהירה עליהם — קצבת הנכות המבוטחת ושחרור ההפקדות.
+          גם הבסיס ודאי. אבל כדי להגיע לעלות שנגבתה בפועל נדרש מקדם גבוה פי <strong>1.375–1.393</strong>
+          מזה שבנספח ג' — מכפיל יציב בשני הדוחות ובשני גילים, כלומר הפרש רמה שיטתי.
+          נבדקו ונשללו: בחירת המסלול, בסיס השכר ותזמון המהדורות. ההשערה שנותרה היא שעל עמיתים ותיקים
+          חלים מקדמים אחרים. <strong>כשהכיול מסומן התוצאה מכוילת לחיוב אמיתי; כשהוא מבוטל זהו החישוב
+          היבש לפי לשון התקנון.</strong> המכפיל נמדד על מקרה אחד — אם תבררו מול הקרן את המקדם שלכם,
+          עדכנו אותו.</p>
 
           <p><strong>מה המחשבון לא כולל:</strong> כיסוי <em>שאירים</em>, שמתומחר בנספחים ד' ו-ה' לפי מקדמים
           אחרים לגמרי · דמי ניהול · תקופת אכשרה וחיתום רפואי · ביטוח כפל מול קרן אחרת.
@@ -358,11 +368,13 @@ function factorAt(sex, dev, dbl, endAge, age) {
 
 /* ── הפרמיה החודשית לגיל אחד ── */
 function premiumAt(age, p) {
-  const f = factorAt(p.sex, p.dev, p.dbl, p.endAge, age);
-  if (f === null) return null;
+  const raw = factorAt(p.sex, p.dev, p.dbl, p.endAge, age);
+  if (raw === null) return null;
+  // הכיול מוחל על המקדם עצמו, ולכן שני הרכיבים נגררים אחריו באופן עקבי
+  const f = raw * p.mult;
   const comp1 = p.salary * (p.cover / 100) * (f / 1000);          // סעיף 35(ג)(1)
   const comp2 = 0.94 * p.contribAmt * (f / 1000);                  // סעיף 35(ג)(2) — שחרור
-  return { age: age, f: f, comp1: comp1, comp2: comp2, total: comp1 + comp2 };
+  return { age: age, f: f, raw: raw, comp1: comp1, comp2: comp2, total: comp1 + comp2 };
 }
 
 /* ── בוררי מין ── */
@@ -378,7 +390,7 @@ document.querySelectorAll('.seg button').forEach(b => {
   });
 });
 
-['endAge', 'dev', 'dbl'].forEach(id => el(id).addEventListener('change', calculate));
+['endAge', 'dev', 'dbl', 'calib'].forEach(id => el(id).addEventListener('change', calculate));
 document.addEventListener('keypress', e => {
   if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
 });
@@ -413,7 +425,9 @@ function calculate() {
   if (salary <= 0) fatal = 'יש להזין הכנסה קובעת גדולה מאפס.';
   else if (cover <= 0) fatal = 'יש להזין שיעור כיסוי גדול מאפס.';
 
-  const p = { sex: SEX, dev: dev, dbl: dbl, endAge: endAge, salary: salary, cover: cover, contribAmt: contribAmt };
+  const mult = el('calib').checked ? Math.max(0, num('calibVal')) : 1;
+  const p = { sex: SEX, dev: dev, dbl: dbl, endAge: endAge, salary: salary, cover: cover,
+              contribAmt: contribAmt, mult: mult };
   const nowRow = fatal ? null : premiumAt(age, p);
 
   if (!fatal && nowRow === null) {
@@ -477,13 +491,18 @@ function render() {
   el('kpis').innerHTML =
     kpi('(1) כיסוי קצבת הנכות', nis2(n.comp1), (n.total > 0 ? (n.comp1 / n.total * 100).toFixed(0) : 0) + '% מהפרמיה') +
     kpi('(2) שחרור — המשך הפקדות', nis2(n.comp2), (n.total > 0 ? (n.comp2 / n.total * 100).toFixed(0) : 0) + '% מהפרמיה') +
-    kpi('מקדם נספח ג\'', n.f.toFixed(4), 'לגיל ' + L.age + ', ' + sexTxt);
+    kpi(p.mult === 1 ? 'מקדם נספח ג\'' : 'מקדם מכויל', n.f.toFixed(4),
+        p.mult === 1 ? 'לגיל ' + L.age + ', ' + sexTxt
+                     : 'נספח ג\' ' + n.raw.toFixed(4) + ' \u00d7 ' + p.mult + ' \u00b7 גיל ' + L.age);
 
+  const fTxt = p.mult === 1 ? n.f.toFixed(4) : n.raw.toFixed(4) + '\u00d7' + p.mult;
   el('formula').innerHTML =
-    '<div class="ln"><span>(1) ' + nis(p.salary) + ' × ' + p.cover + '% × ' + n.f.toFixed(4) + ' ÷ 1000</span><b>' + nis2(n.comp1) + '</b></div>' +
-    '<div class="ln"><span>(2) 94% × ' + nis(L.contribAmt) + ' (' + L.contribPct + '% דמי גמולים) × ' + n.f.toFixed(4) + ' ÷ 1000</span><b>' + nis2(n.comp2) + '</b></div>' +
+    '<div class="ln"><span>(1) ' + nis(p.salary) + ' × ' + p.cover + '% × ' + fTxt + ' ÷ 1000</span><b>' + nis2(n.comp1) + '</b></div>' +
+    '<div class="ln"><span>(2) 94% × ' + nis(L.contribAmt) + ' (' + L.contribPct + '% דמי גמולים) × ' + fTxt + ' ÷ 1000</span><b>' + nis2(n.comp2) + '</b></div>' +
     '<div class="ln tot"><span>פרמיה חודשית</span><b>' + nis2(n.total) + '</b></div>';
 
+  const th = document.getElementById('thFactor');
+  if (th) th.textContent = p.mult === 1 ? "מקדם נספח ג'" : 'מקדם מכויל';
   let body = '';
   let sumYear = 0;
   L.rows.forEach(r => {
@@ -576,6 +595,7 @@ el('exportCsv').addEventListener('click', () => {
   rows.push(['נכות מתפתחת', p.dev ? 'כן' : 'לא']);
   rows.push(['נכות כפולה', p.dbl ? 'כן' : 'לא']);
   rows.push(['שיעור דמי גמולים', L.contribPct + '%']);
+  rows.push(['מקדם כיול', p.mult === 1 ? 'לא הוחל - חישוב יבש לפי התקנון' : 'x' + p.mult]);
   rows.push(['מקור', 'תקנון הפניקס פנסיה משלימה 1.12.2025, סעיף 35(ג) ונספח ג\'']);
   const csv = '﻿' + rows.map(r => r.map(c => {
     const s = String(c);
