@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>פרמיית ביטוח נכות — פנסיה משלימה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:#1a7a4a; --green-lt:#e8f5ee; --green-dk:#0f5233; --teal:#17a589;
+      --red:#c0392b; --red-lt:#fdecea; --amber:#d68910; --amber-lt:#fef9e7;
+      --blue:#2563eb; --purple:#7c3aed; --bg:#f4f6f5; --surface:#fff;
+      --border:#d8e2dc; --text:#1c2b22; --muted:#607060;
+      --shadow:0 2px 12px rgba(0,0,0,.07); --radius:14px;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body { max-width:100%; overflow-x:hidden; }
+    .grid { min-width:0; } .grid > * { min-width:0; }
+    input[inputmode="decimal"] { direction:ltr; text-align:right; }
+    body { background:var(--bg); font-family:'Heebo',sans-serif; color:var(--text); min-height:100vh; }
+
+    header {
+      background:linear-gradient(135deg,var(--green-dk) 0%,var(--green) 60%,var(--teal) 100%);
+      color:#fff; padding:2.4rem 0 2rem; text-align:center; position:relative; overflow:hidden;
+    }
+    header::before {
+      content:''; position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family:'Frank Ruhl Libre',serif; font-size:2rem; font-weight:700; letter-spacing:-.5px; position:relative; }
+    header p { margin-top:.5rem; opacity:.85; font-size:.95rem; font-weight:300; position:relative; }
+    .back-link { display:inline-flex; align-items:center; gap:.4rem; color:rgba(255,255,255,.85);
+      text-decoration:none; font-size:.88rem; position:relative; margin-bottom:.3rem; }
+    .back-link:hover { color:#fff; text-decoration:underline; }
+
+    .container { max-width:1220px; margin:0 auto; padding:0 1.25rem 2rem; }
+    .grid { display:grid; grid-template-columns:340px 1fr; gap:1.5rem; margin-top:1.75rem; }
+    @media (max-width:980px) { .grid { grid-template-columns:1fr; } }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:1.4rem 1.5rem; margin-bottom:1.25rem; }
+    .card h2 { font-size:1rem; font-weight:700; color:var(--green-dk); margin-bottom:1.1rem;
+      padding-bottom:.6rem; border-bottom:2px solid var(--green-lt); }
+
+    .field { margin-bottom:1rem; }
+    .field label { display:block; font-size:.82rem; font-weight:500; color:var(--muted); margin-bottom:.35rem; }
+    .field input, .field select { width:100%; padding:.55rem .85rem; border:1.5px solid var(--border);
+      border-radius:8px; font-family:'Heebo',sans-serif; font-size:.95rem; color:var(--text);
+      background:var(--bg); transition:border-color .18s,box-shadow .18s; outline:none; }
+    .field input:focus, .field select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(26,122,74,.12); background:#fff; }
+    .field.highlight label { color:var(--green); font-weight:700; }
+    .field.highlight input { border-color:var(--green); background:var(--green-lt); }
+    .field-hint { font-size:.76rem; color:var(--muted); margin-top:.3rem; line-height:1.4; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+
+    .seg { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+    .seg button { padding:.55rem .5rem; border:1.5px solid var(--border); background:#fff; color:var(--muted);
+      border-radius:8px; font-family:'Heebo',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer;
+      transition:all .15s; }
+    .seg button.on { background:var(--green); border-color:var(--green); color:#fff; }
+
+    .chk { display:flex; align-items:flex-start; gap:.55rem; margin-bottom:.75rem; }
+    .chk input { width:17px; height:17px; margin-top:.15rem; accent-color:var(--green); cursor:pointer; flex:none; }
+    .chk label { font-size:.85rem; color:var(--text); cursor:pointer; line-height:1.45; }
+    .chk .sub { display:block; font-size:.74rem; color:var(--muted); margin-top:.1rem; }
+
+    .btn { background:var(--green); color:#fff; border:none; padding:.6rem 1.05rem; border-radius:8px;
+      cursor:pointer; font-family:'Heebo',sans-serif; font-size:.88rem; font-weight:600; transition:background .18s; }
+    .btn:hover { background:var(--green-dk); }
+    .btn-sec { background:#fff; color:var(--green); border:1.5px solid var(--green); }
+    .btn-sec:hover { background:var(--green-lt); }
+    .btn-full { width:100%; }
+    .btn-sm { padding:.4rem .75rem; font-size:.8rem; }
+
+    .warn-box { background:var(--amber-lt); border:1px solid var(--amber); color:#8a5a00; border-radius:10px;
+      padding:.7rem .8rem; font-size:.82rem; font-weight:500; margin-bottom:1rem; line-height:1.55; }
+    .warn-box.err { background:var(--red-lt); border-color:var(--red); color:var(--red); font-weight:600; }
+    .warn-box ul { margin:.3rem .9rem 0 0; }
+
+    .headline { background:linear-gradient(135deg,var(--green-lt) 0%,#f3faf6 100%); border:1px solid #bfe0cf;
+      border-radius:12px; padding:1.1rem 1.2rem; margin-bottom:1.3rem; }
+    .headline .hl-top { font-size:.84rem; color:var(--muted); font-weight:500; margin-bottom:.4rem; }
+    .headline .hl-big { font-size:1.95rem; font-weight:700; color:var(--green-dk);
+      font-variant-numeric:tabular-nums; letter-spacing:-1px; line-height:1.1; }
+    .headline .hl-sub { font-size:.85rem; color:var(--text); margin-top:.5rem; line-height:1.6; }
+    .headline .hl-sub strong { color:var(--green-dk); }
+
+    .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; margin-bottom:1.4rem; }
+    @media (max-width:760px) { .kpis { grid-template-columns:1fr; } }
+    .kpi { border-radius:12px; padding:.85rem .9rem; border:1px solid var(--border); background:#f4f6f5; }
+    .kpi .k-lbl { font-size:.74rem; color:var(--muted); font-weight:500; margin-bottom:.25rem; line-height:1.3; }
+    .kpi .k-val { font-size:1.3rem; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+    .kpi .k-sub { font-size:.72rem; color:var(--muted); margin-top:.2rem; }
+
+    .chart-wrap { position:relative; height:300px; margin:1.2rem 0 .4rem; }
+    @media (max-width:600px) { .chart-wrap { height:240px; } }
+
+    .sec-title { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.04em; margin:1.75rem 0 .7rem; }
+    .tbl-actions { display:flex; gap:.55rem; flex-wrap:wrap; margin-bottom:.9rem; align-items:center; }
+    .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    thead th { background:#1c2b22; color:#fff; padding:.65rem .6rem; text-align:right; font-weight:600;
+      white-space:nowrap; font-size:.78rem; }
+    tbody td { padding:.55rem .6rem; border-bottom:1px solid #eef1ef; text-align:right; }
+    tbody tr:nth-child(odd) { background:#fbfdfc; }
+    tbody tr.now { background:var(--green-lt); font-weight:700; }
+    tbody tr.now td { border-bottom-color:#bfe0cf; }
+    .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .v-main { color:var(--green-dk); font-weight:700; }
+    tr.gtotal td { background:#1c2b22; color:#fff; font-weight:700; border-bottom:none; }
+    tr.gtotal td.v-main { color:#7ee2b0; }
+
+    .formula { background:#fafbfa; border:1px solid var(--border); border-radius:10px; padding:.9rem 1rem;
+      font-size:.84rem; line-height:1.9; color:var(--muted); margin-top:.3rem; }
+    .formula .ln { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .formula .ln b { color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .formula .tot { border-top:1px solid var(--border); margin-top:.5rem; padding-top:.5rem; }
+    .formula .tot b { color:var(--green-dk); font-size:1rem; }
+
+    .note { font-size:.84rem; color:var(--muted); line-height:1.6; margin-top:.9rem; padding:.8rem .9rem;
+      background:var(--green-lt); border-radius:10px; }
+    .note strong { color:var(--green-dk); }
+
+    footer { text-align:center; padding:1.2rem 1rem; color:var(--muted); font-size:.78rem; }
+
+    .assump { margin-top:1.75rem; padding:1.1rem 1.2rem; background:#fafbfa; border:1px solid var(--border); border-radius:10px; }
+    .assump h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.04em; margin-bottom:.7rem; }
+    .assump p { font-size:.8rem; color:var(--muted); line-height:1.65; margin-bottom:.6rem; }
+    .assump p:last-child { margin-bottom:0; }
+    .assump strong { color:var(--text); }
+    .assump .disclaimer { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--border); color:var(--red); }
+
+    @media (max-width:600px) {
+      header { padding:1.5rem 0 1.3rem; } header h1 { font-size:1.25rem; }
+      .container { padding-left:1rem; padding-right:1rem; }
+      .card { padding:1.1rem 1rem; } table { font-size:.78rem; }
+      .headline .hl-big { font-size:1.55rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>פרמיית ביטוח נכות — פנסיה משלימה</h1>
+    <p>עלות הכיסוי הביטוחי לנכות בקרן פנסיה משלימה, לפי מקדמי נספח ג' בתקנון הפניקס</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>פרטי המבוטח</h2>
+
+        <div class="field">
+          <label>מין</label>
+          <div class="seg">
+            <button type="button" id="segM" class="on" data-sex="m">גבר</button>
+            <button type="button" id="segF" data-sex="f">אישה</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>גיל</label>
+          <input type="text" inputmode="decimal" id="age" value="40" class="calc-input">
+          <div class="field-hint">טווח המקדמים בתקנון: 18–66.</div>
+        </div>
+
+        <div class="field highlight">
+          <label>הכנסה קובעת / שכר מבוטח (₪)</label>
+          <input type="text" inputmode="decimal" id="salary" value="10000" class="calc-input">
+        </div>
+
+        <div class="field">
+          <label>שיעור הכיסוי לנכות (%)</label>
+          <input type="text" inputmode="decimal" id="cover" value="75" class="calc-input">
+          <div class="field-hint">המרבי במסלולי נספח ב' הוא <strong>75%</strong>; מסלולים מופחתים נפוצים: 37.5%.</div>
+        </div>
+
+        <div class="field">
+          <label>גיל תום תקופת הביטוח</label>
+          <select id="endAge">
+            <option value="60">60</option>
+            <option value="62">62</option>
+            <option value="64">64</option>
+            <option value="67" selected>67</option>
+          </select>
+          <div class="field-hint">בחירת העמית לפי סעיף 22 — <strong>רק 60 / 62 / 64 / 67</strong>. זהו הגיל שבו
+            הכיסוי נגמר, ולא גיל הפרישה הסטטוטורי.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>הרחבות</h2>
+        <div class="chk">
+          <input type="checkbox" id="dev">
+          <label for="dev">נכות מתפתחת
+            <span class="sub">הקצבה גדלה עם השנים. מייקר את הפרמיה.</span></label>
+        </div>
+        <div class="chk" style="margin-bottom:.2rem;">
+          <input type="checkbox" id="dbl">
+          <label for="dbl">נכות כפולה
+            <span class="sub">כיסוי מוגדל לנכות מלאה. מייקר את הפרמיה.</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>רכיב השחרור</h2>
+        <div class="field">
+          <label>שיעור דמי הגמולים (%)</label>
+          <input type="text" inputmode="decimal" id="contrib" value="20.83" class="calc-input">
+          <div class="field-hint">
+            תגמולי עובד + מעסיק + פיצויים. ברירת המחדל 6 + 6.5 + 8.33 = 20.83%.
+            משמש לרכיב (2) — המשך ההפקדות בזמן נכות.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>צפי לאורך השנים</h2>
+        <div class="field">
+          <label>בנה צפי עד גיל</label>
+          <input type="text" inputmode="decimal" id="toAge" value="67" class="calc-input">
+          <div class="field-hint" id="toAgeHint">ברירת המחדל: 67 לגבר, 65 לאישה. הצפי נעצר בגיל תום הביטוח
+            גם אם תזין גיל גבוה יותר.</div>
+        </div>
+        <button class="btn btn-full" id="calcBtn" type="button">חשב</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+      <div class="card">
+        <div id="warn"></div>
+        <div class="headline" id="headline"></div>
+        <div class="kpis" id="kpis"></div>
+
+        <div class="sec-title">איך זה מחושב</div>
+        <div class="formula" id="formula"></div>
+
+        <div class="sec-title">הפרמיה לאורך השנים</div>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="note" id="note"></div>
+
+        <div class="tbl-actions">
+          <button class="btn btn-sm" id="exportCsv" type="button">⬇ ייצוא ל-Excel</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>גיל</th>
+                <th>מקדם נספח ג'</th>
+                <th>(1) כיסוי הקצבה</th>
+                <th>(2) שחרור</th>
+                <th>פרמיה חודשית</th>
+                <th>% מהשכר</th>
+                <th>% מדמי הגמולים</th>
+                <th>סה״כ שנתי</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="assump">
+          <h3>הנחות, מקורות ומגבלות</h3>
+
+          <p><strong>המקור:</strong> תקנון הפניקס פנסיה משלימה, מהדורת 1 בדצמבר 2025. הנוסחה היא
+          <strong>סעיף 35(ג)</strong>, והמקדמים הם <strong>נספח ג'</strong> (עמ' 117–120) — ארבע טבלאות
+          לפי מין ולפי נכות מתפתחת, כל אחת עם ארבע עמודות גיל תום ביטוח ושתי גרסאות נכות כפולה.
+          כל 1,568 המקדמים חולצו מהתקנון ואומתו מול תמונות העמודים שורה־שורה.</p>
+
+          <p><strong>הפרמיה היא סכום של שני רכיבים,</strong> ושניהם מוכפלים באותו מקדם:
+          <br>(1) ההכנסה הקובעת × שיעור הכיסוי × מקדם/1000 — עלות קצבת הנכות עצמה.
+          <br>(2) 94% מדמי הגמולים × מקדם/1000 — עלות המשך ההפקדות לחיסכון בזמן נכות ("שחרור").
+          רכיב (2) מוצג בנפרד כי הוא מפתיע רבים — הוא כ-20% מהפרמיה בברירת המחדל.</p>
+
+          <p><strong>מה המחשבון לא כולל:</strong> כיסוי <em>שאירים</em>, שמתומחר בנספחים ד' ו-ה' לפי מקדמים
+          אחרים לגמרי · דמי ניהול · תקופת אכשרה וחיתום רפואי · ביטוח כפל מול קרן אחרת.
+          <strong>השכר מוחזק קבוע לאורך הצפי</strong> — אין הצמדה ואין עליות שכר, כדי שהעלייה שתראו
+          תהיה כולה אפקט הגיל.</p>
+
+          <p><strong>תקרת עלות הכיסוי:</strong> סעיף 36 מגביל את <em>סך כל</em> הכיסויים הביטוחיים ל-35%
+          מדמי הגמולים. העמודה "% מדמי הגמולים" מראה כמה הנכות לבדה תופסת מהתקרה הזו — שאירים ייכנסו
+          לאותה תקרה ולא נספרים כאן.</p>
+
+          <p><strong>גיל תום תקופת הביטוח אינו גיל הפרישה.</strong> לפי סעיף 22 העמית בוחר אותו מתוך
+          60 / 62 / 64 / 67 בלבד. בחירה נמוכה מוזילה את הפרמיה אך מקצרת את הכיסוי — ובטבלת המקדמים
+          פשוט אין ערכים לגיל שכבר עבר את תום הביטוח, ולכן הצפי נעצר שם מעצמו.</p>
+
+          <p class="disclaimer">איני סוכן פנסיוני, יועץ פנסיוני או אקטואר. הכלי מיישם את נוסחת התקנון על
+          מקדמי התקנון ואינו הצעת ביטוח — הפרמיה בפועל נקבעת על ידי הקרן ועשויה להיות שונה. התקנון
+          מתעדכן מעת לעת; ודאו מול המהדורה העדכנית.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>כלים פיננסיים — לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי או פנסיוני</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ── נספח ג' — מקדמי תעריף קצבת נכות, תקנון הפניקס פנסיה משלימה, 1.12.2025 (עמ' 117–120) ──
+   FACTORS[מין][נכות מתפתחת][נכות כפולה][גיל תום ביטוח] = מערך לפי גיל, מאינדקס 0 = גיל 18.
+   null = אין מקדם לשילוב הזה (הגיל כבר הגיע לתום תקופת הביטוח).
+   חולץ מהתקנון ואומת מול תמונות העמודים. אין לשנות ידנית. */
+const FACTORS={m:{std:{single:{60:[2.861,2.7779,2.7431,2.7527,2.8027,2.8896,3.0345,3.2124,3.3939,3.6012,3.8322,4.0852,4.4255,4.7224,5.0382,5.3726,5.7256,6.0484,6.494,6.9684,7.4733,8.0104,8.3166,8.9827,9.6182,10.2902,10.9973,11.736,12.5306,13.3337,14.2413,15.1283,15.1766,15.9274,16.4107,16.6814,16.5277,15.9808,15.1036,13.4648,10.7193,6.1542,null,null,null,null,null,null,null],62:[2.8657,2.7831,2.7492,2.7598,2.811,2.8995,3.0465,3.227,3.4117,3.6228,3.8584,4.117,4.4649,4.7702,5.0961,5.4427,5.8101,6.1493,6.6152,7.1138,7.6478,8.2199,8.5382,9.2527,9.9447,10.6854,11.476,12.3164,13.248,14.2182,15.338,16.4844,16.658,17.7667,18.6694,19.4467,19.8758,20.0277,20.0657,19.6191,18.4913,16.4123,12.8177,7.2767,null,null,null,null,null],64:[2.8694,2.7874,2.7541,2.7655,2.8178,2.9075,3.0563,3.2389,3.4261,3.6404,3.88,4.1433,4.4974,4.8097,5.1442,5.5009,5.8805,6.2336,6.7165,7.2355,7.7939,8.3955,8.7217,9.4764,10.2154,11.0132,11.8735,12.7987,13.8465,14.9593,16.2606,17.63,17.8909,19.3036,20.5647,21.7766,22.7081,23.4588,24.2377,24.6987,24.7136,24.1108,22.3749,19.7676,15.5103,8.696,null,null,null],67:[2.8737,2.7923,2.7597,2.7721,2.8256,2.9169,3.0676,3.2528,3.4431,3.6611,3.9053,4.1742,4.5359,4.8567,5.2013,5.5703,5.9648,6.3348,6.8381,7.3817,7.9697,8.6068,8.9393,9.742,10.5371,11.4033,12.3468,13.3736,14.5637,15.8518,17.3774,19.0236,19.3634,21.1485,22.8513,24.6018,26.1601,27.6618,29.353,30.9214,32.2789,33.3122,33.4646,33.3954,32.453,30.3166,26.5623,17.5644,3.7998]},dbl:{60:[2.9839,2.8958,2.8583,2.8669,2.9177,3.0068,3.1563,3.34,3.5274,3.7414,3.98,4.2413,4.5908,4.8974,5.2237,5.5692,5.9341,6.2678,6.727,7.2159,7.7364,8.2904,8.6154,9.3041,9.9615,10.6576,11.3912,12.159,12.9856,13.824,14.7748,15.7096,15.806,16.6153,17.1573,17.4926,17.4031,16.9258,16.1327,14.586,11.941,7.4855,null,null,null,null,null,null,null],62:[2.9886,2.9011,2.8643,2.874,2.926,3.0167,3.1683,3.3546,3.5451,3.763,4.0062,4.2732,4.6302,4.9452,5.2816,5.6393,6.0186,6.3688,6.8481,7.3613,7.9109,8.4999,8.837,9.5741,10.288,11.0528,11.8699,12.7394,13.703,14.7086,15.8715,17.0658,17.2875,18.4545,19.416,20.258,20.7511,20.9728,21.0949,20.7403,19.7131,17.7437,14.2558,8.8436,null,null,null,null,null],64:[2.9924,2.9054,2.8692,2.8797,2.9328,3.0248,3.1781,3.3665,3.5596,3.7806,4.0278,4.2994,4.6627,4.9847,5.3296,5.6975,6.0891,6.4531,6.9494,7.483,8.0571,8.6755,9.0204,9.7977,10.5587,11.3807,12.2674,13.2217,14.3016,15.4496,16.7941,18.2114,18.5204,19.9914,21.3113,22.5878,23.5835,24.4039,25.2669,25.8199,25.9353,25.4422,23.813,21.3345,17.217,10.5543,null,null,null],67:[2.9966,2.9102,2.8749,2.8863,2.9406,3.0341,3.1894,3.3804,3.5765,3.8013,4.0531,4.3304,4.7011,5.0317,5.3867,5.7669,6.1733,6.5542,7.071,7.6292,8.2328,8.8868,9.238,10.0633,10.8804,11.7708,12.7407,13.7966,15.0187,16.3421,17.9109,19.605,19.9928,21.8363,23.5979,25.4131,27.0354,28.6069,30.3822,32.0426,33.5006,34.6436,34.9028,34.9623,34.1597,32.175,28.5848,19.4415,4.6026]}},dev:{single:{60:[3.3248,3.231,3.1931,3.2063,3.2662,3.3686,3.5382,3.7456,3.9566,4.1966,4.463,4.7536,5.1452,5.4829,5.8403,6.2163,6.6104,6.9661,7.4574,7.9769,8.5258,9.1052,9.3789,10.0912,10.7606,11.4622,12.1929,12.9478,13.7586,14.5647,15.4696,16.3352,16.2557,16.9515,17.3487,17.5111,17.2232,16.5276,15.4993,13.7071,10.8211,6.1542,null,null,null,null,null,null,null],62:[3.3356,3.243,3.2066,3.2217,3.284,3.3894,3.5629,3.7751,3.9916,4.2384,4.5129,4.813,5.2172,5.5686,5.9421,6.337,6.7532,7.1333,7.6542,8.2085,8.7982,9.4258,9.7113,10.4882,11.2314,12.0208,12.8563,13.7364,14.7142,15.7199,16.8738,18.0376,18.0789,19.1706,20.0205,20.718,21.0298,21.0385,20.9216,20.2998,18.9826,16.7118,12.941,7.2767,null,null,null,null,null],64:[3.3446,3.2531,3.218,3.2347,3.2991,3.407,3.5838,3.8002,4.0214,4.274,4.5555,4.864,5.2791,5.6424,6.0299,6.4413,6.877,7.2786,7.8254,8.41,9.0355,9.7052,9.9975,10.8304,11.6375,12.503,13.4294,14.4182,15.5438,16.7268,18.1028,19.5337,19.6574,21.0998,22.3529,23.529,24.3801,25.0176,25.665,25.9618,25.782,24.9588,22.9773,20.133,15.6613,8.696,null,null,null],67:[3.3555,3.2652,3.2316,3.2504,3.3173,3.4284,3.6094,3.8308,4.0581,4.3179,4.6081,4.927,5.3559,5.7343,6.1396,6.572,7.0324,7.4616,8.0411,8.6643,9.3352,10.0586,10.3542,11.2571,12.1443,13.1054,14.1461,15.2716,16.5875,18.0002,19.6649,21.445,21.637,23.5316,25.3078,27.1086,28.6681,30.1361,31.7725,33.2459,34.464,35.3113,35.2088,34.8672,33.6169,31.1493,27.0631,17.7387,3.7998]},dbl:{60:[3.4477,3.349,3.3082,3.3205,3.3812,3.4858,3.66,3.8732,4.09,4.3368,4.6108,4.9097,5.3104,5.6579,6.0257,6.4129,6.819,7.1855,7.6904,8.2244,8.7889,9.3852,9.6776,10.4125,11.104,11.8296,12.5868,13.3708,14.2136,15.055,16.0031,16.9166,16.8852,17.6394,18.0953,18.3223,18.0986,17.4726,16.5285,14.8283,12.0428,7.4855,null,null,null,null,null,null,null],62:[3.4585,3.361,3.3218,3.336,3.399,3.5067,3.6847,3.9027,4.1251,4.3786,4.6607,4.9692,5.3824,5.7436,6.1275,6.5336,6.9617,7.3527,7.8872,8.456,9.0613,9.7058,10.0101,10.8096,11.5748,12.3882,13.2502,14.1594,15.1692,16.2102,17.4073,18.619,18.7083,19.8584,20.7671,21.5293,21.9051,21.9836,21.9508,21.421,20.2044,18.0431,14.3791,8.8436,null,null,null,null,null],64:[3.4676,3.371,3.3331,3.3489,3.4141,3.5243,3.7056,3.9278,4.1549,4.4142,4.7033,5.0201,5.4443,5.8174,6.2154,6.6379,7.0855,7.498,8.0583,8.6575,9.2986,9.9852,10.2963,11.1518,11.9808,12.8704,13.8233,14.8412,15.9988,17.2172,18.6363,20.1151,20.2868,21.7876,23.0995,24.3403,25.2555,25.9627,26.6942,27.083,27.0037,26.2902,24.4155,21.6999,17.3681,10.5543,null,null,null],67:[3.4784,3.3831,3.3468,3.3646,3.4323,3.5457,3.7312,3.9584,4.1915,4.4581,4.7559,5.0832,5.5211,5.9093,6.325,6.7686,7.2409,7.681,8.2741,8.9118,9.5983,10.3386,10.653,11.5785,12.4876,13.4728,14.5399,15.6945,17.0425,18.4905,20.1984,22.0264,22.2664,24.2194,26.0545,27.9198,29.5434,31.0812,32.8017,34.3671,35.6858,36.6427,36.6469,36.4341,35.3236,33.0077,29.0856,19.6158,4.6026]}}},f:{std:{single:{60:[1.0245,1.1515,1.2941,1.4542,1.634,1.8356,2.0477,2.4595,2.9137,3.3927,3.839,4.2892,4.7776,5.2281,5.7582,6.2965,6.7403,7.1731,7.7802,8.4019,9.0377,9.6136,10.3473,10.9328,11.6086,12.2926,12.9813,13.5631,14.2733,14.9566,15.5957,16.1683,16.6462,16.9938,17.1669,17.1114,16.7612,16.0292,14.8708,13.0137,10.1606,5.7184,null,null,null,null,null,null,null],62:[1.0258,1.1533,1.2964,1.4573,1.638,1.8409,2.0545,2.469,2.9267,3.4101,3.8616,4.3183,4.8147,5.2745,5.8166,6.3693,6.829,7.2803,7.9109,8.5605,9.2296,9.8433,10.626,11.2646,12.0063,12.7687,13.5509,14.2388,15.096,15.955,16.8034,17.6249,18.398,19.0948,19.6798,20.1087,20.3266,20.2664,19.9418,19.1599,17.7539,15.4931,11.9816,5.6801,null,null,null,null,null],64:[1.0269,1.1547,1.2983,1.4598,1.6413,1.8451,2.06,2.4767,2.9372,3.4242,3.88,4.3419,4.845,5.3125,5.8644,6.4291,6.902,7.3689,8.0189,8.6917,9.3884,10.0335,10.8569,11.5399,12.3365,13.1644,14.0245,14.8012,15.7835,16.7927,17.8209,18.8573,19.8862,20.887,21.8322,22.6866,23.4056,23.9335,24.2941,24.3362,23.9528,23.0007,21.1887,15.6792,8.6883,3.3658,null,null,null],67:[1.0281,1.1563,1.3005,1.4626,1.6449,1.85,2.0663,2.4855,2.9493,3.4405,3.9014,4.3694,4.8803,5.3569,5.9206,6.4994,6.9882,7.4736,8.1468,8.8472,9.5768,10.2595,11.1315,11.8675,12.7298,13.636,14.5897,15.4728,16.6088,17.8034,19.0549,20.3593,21.7093,23.0937,24.4959,25.893,27.2547,28.5412,29.7678,30.8407,31.6839,32.2012,32.1351,26.8953,18.5111,11.9944,9.6051,6.7944,3.4075]},dbl:{60:[1.0704,1.2025,1.3508,1.5173,1.704,1.9135,2.1336,2.5617,3.0336,3.5308,3.9938,4.4607,4.9641,5.4306,5.9797,6.5372,6.9967,7.4447,8.0713,8.7129,9.3691,9.9633,10.7162,11.3209,12.0199,12.7283,13.4429,14.0485,14.7881,15.5029,16.1761,16.7857,17.3038,17.6951,17.916,17.9126,17.6193,16.9496,15.8592,14.0764,11.3044,6.9507,null,null,null,null,null,null,null],62:[1.0718,1.2043,1.3532,1.5204,1.7081,1.9188,2.1405,2.5712,3.0465,3.5482,4.0165,4.4897,5.0012,5.4771,6.0381,6.61,7.0853,7.5519,8.202,8.8715,9.561,10.193,10.9949,11.6528,12.4176,13.2045,14.0125,14.7243,15.6108,16.5013,17.3838,18.2423,19.0556,19.7962,20.4289,20.91,21.1848,21.1867,20.9302,20.2226,18.8977,16.7253,13.3092,6.8984,null,null,null,null,null],64:[1.0729,1.2058,1.3551,1.5229,1.7113,1.923,2.146,2.5788,3.057,3.5623,4.0349,4.5133,5.0315,5.515,6.086,6.6698,7.1583,7.6405,8.31,9.0027,9.7198,10.3832,11.2258,11.9281,12.7479,13.6001,14.4862,15.2866,16.2983,17.339,18.4014,19.4747,20.5438,21.5884,22.5813,23.4878,24.2637,24.8538,25.2825,25.3989,25.0966,24.233,22.5163,16.8975,9.6323,4.0822,null,null,null],67:[1.0741,1.2074,1.3572,1.5257,1.715,1.9279,2.1523,2.5876,3.0691,3.5786,4.0562,4.5408,5.0668,5.5595,6.1421,6.7401,7.2445,7.7452,8.4379,9.1582,9.9082,10.6091,11.5004,12.2557,13.1411,14.0717,15.0513,15.9583,17.1236,18.3497,19.6353,20.9767,22.3669,23.7951,25.245,26.6943,28.1129,29.4615,30.7562,31.9034,32.8277,33.4334,33.4627,28.1135,19.4552,12.7108,10.3217,7.5113,4.1246]}},dev:{single:{60:[1.181,1.3286,1.4944,1.6806,1.8894,2.1235,2.3696,2.8466,3.3721,3.9255,4.4401,4.9577,5.5186,6.0323,6.6349,7.2435,7.7395,8.2186,8.8908,9.5738,10.2664,10.884,11.6736,12.2863,12.9918,13.6966,14.3963,14.9671,15.6753,16.3404,16.9433,17.4605,17.8627,18.1139,18.1704,17.9797,17.4792,16.5865,15.2659,13.2508,10.258,5.7184,null,null,null,null,null,null,null],62:[1.1842,1.3327,1.4997,1.6873,1.8981,2.1346,2.3836,2.8657,3.3978,3.9593,4.4832,5.0118,5.5864,6.1155,6.7375,7.3689,7.8892,8.3962,9.1031,9.8263,10.5659,11.2354,12.0916,12.7744,13.5653,14.3697,15.1857,15.8852,16.7713,17.6442,18.4896,19.289,20.0186,20.6489,21.143,21.4559,21.5331,21.3097,20.8075,19.8351,18.2322,15.7792,12.0979,5.6801,null,null,null,null,null],64:[1.1868,1.3361,1.504,1.6929,1.9053,2.1439,2.3954,2.8818,3.4194,3.9878,4.5196,5.0577,5.644,6.1863,6.8251,7.4761,8.0176,8.5488,9.2855,10.0436,10.8238,11.5383,12.4521,13.1956,14.0606,14.9516,15.8687,16.6801,17.7241,18.7824,19.8451,20.8984,21.9241,22.8987,23.792,24.5663,25.1754,25.5627,25.7562,25.6052,25.0064,23.8222,21.7671,15.9726,8.7737,3.3658,null,null,null],67:[1.1899,1.3401,1.5092,1.6996,1.9139,2.155,2.4096,2.9012,3.4456,4.0223,4.5639,5.1137,5.7146,6.2733,6.9328,7.6085,8.1766,8.7383,9.5124,10.3141,11.145,11.9159,12.902,13.7219,14.6801,15.68,16.7243,17.6771,18.9251,20.2245,21.5712,22.9583,24.3755,25.8077,27.2346,28.6293,29.9573,31.1749,32.2925,33.2202,33.8799,34.175,33.8421,28.1008,19.185,12.3283,9.7883,6.8624,3.4075]},dbl:{60:[1.227,1.3797,1.5512,1.7436,1.9595,2.2014,2.4555,2.9487,3.492,4.0637,4.5949,5.1291,5.7051,6.2348,6.8564,7.4842,7.9958,8.4902,9.1819,9.8848,10.5978,11.2337,12.0425,12.6744,13.4031,14.1324,14.858,15.4525,16.1901,16.8867,17.5237,18.0779,18.5203,18.8152,18.9195,18.7809,18.3373,17.5068,16.2543,14.3135,11.4018,6.9507,null,null,null,null,null,null,null],62:[1.2301,1.3838,1.5564,1.7504,1.9681,2.2125,2.4696,2.9679,3.5176,4.0974,4.638,5.1833,5.7729,6.318,6.959,7.6096,8.1456,8.6678,9.3942,10.1373,10.8972,11.5851,12.4605,13.1625,13.9766,14.8055,15.6474,16.3706,17.286,18.1905,19.07,19.9064,20.6762,21.3503,21.8921,22.2571,22.3913,22.23,21.7959,20.8978,19.376,17.0115,13.4255,6.8984,null,null,null,null,null],64:[1.2327,1.3872,1.5608,1.756,1.9754,2.2218,2.4814,2.9839,3.5392,4.1259,4.6744,5.2291,5.8305,6.3889,7.0466,7.7168,8.2739,8.8204,9.5766,10.3546,11.1551,11.8879,12.821,13.5838,14.472,15.3873,16.3303,17.1656,18.2388,19.3287,20.4255,21.5158,22.5817,23.6,24.5411,25.3675,26.0335,26.483,26.7446,26.6679,26.1502,25.0544,23.0947,17.1908,9.7177,4.0822,null,null,null],67:[1.2358,1.3912,1.566,1.7627,1.984,2.2329,2.4955,3.0033,3.5654,4.1605,4.7187,5.2851,5.9011,6.4759,7.1544,7.8492,8.4329,9.0099,9.8035,10.6251,11.4764,12.2656,13.2709,14.1101,15.0915,16.1157,17.186,18.1625,19.4398,20.7708,22.1516,23.5758,25.0331,26.509,27.9837,29.4305,30.8154,32.0952,33.2809,34.2829,35.0237,35.4073,35.1697,29.3191,20.1291,13.0447,10.5049,7.5793,4.1246]}}}};
+
+const AGE_MIN = 18, AGE_MAX = 66;
+const END_AGES = [60, 62, 64, 67];
+
+const nis  = n => '₪' + Math.round(n).toLocaleString('he-IL');
+const nis2 = n => '₪' + n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const el   = id => document.getElementById(id);
+function num(id) { const v = parseFloat(el(id).value); return isNaN(v) ? 0 : v; }
+
+let SEX = 'm';
+let LAST = null;
+
+/* ── מקדם לגיל נתון, או null אם השילוב אינו קיים ── */
+function factorAt(sex, dev, dbl, endAge, age) {
+  if (age < AGE_MIN || age > AGE_MAX) return null;
+  const series = FACTORS[sex][dev ? 'dev' : 'std'][dbl ? 'dbl' : 'single'][endAge];
+  if (!series) return null;
+  const v = series[age - AGE_MIN];
+  return (v === null || v === undefined) ? null : v;
+}
+
+/* ── הפרמיה החודשית לגיל אחד ── */
+function premiumAt(age, p) {
+  const f = factorAt(p.sex, p.dev, p.dbl, p.endAge, age);
+  if (f === null) return null;
+  const comp1 = p.salary * (p.cover / 100) * (f / 1000);          // סעיף 35(ג)(1)
+  const comp2 = 0.94 * p.contribAmt * (f / 1000);                  // סעיף 35(ג)(2) — שחרור
+  return { age: age, f: f, comp1: comp1, comp2: comp2, total: comp1 + comp2 };
+}
+
+/* ── בוררי מין ── */
+document.querySelectorAll('.seg button').forEach(b => {
+  b.addEventListener('click', () => {
+    const prevDefault = SEX === 'm' ? 67 : 65;
+    SEX = b.dataset.sex;
+    el('segM').classList.toggle('on', SEX === 'm');
+    el('segF').classList.toggle('on', SEX === 'f');
+    // ברירת המחדל של גיל הצפי נגזרת מהמין — אך לא נדרוס בחירה מפורשת של המשתמש
+    if (Math.round(num('toAge')) === prevDefault) el('toAge').value = String(SEX === 'm' ? 67 : 65);
+    calculate();
+  });
+});
+
+['endAge', 'dev', 'dbl'].forEach(id => el(id).addEventListener('change', calculate));
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+document.addEventListener('change', e => {
+  if (e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+el('calcBtn').addEventListener('click', calculate);
+
+/* ═══════════════ החישוב ═══════════════ */
+function calculate() {
+  const warns = [];
+  let fatal = null;
+
+  const dev = el('dev').checked, dbl = el('dbl').checked;
+  const endAge = parseInt(el('endAge').value, 10);
+
+  // גיל — נחתך בגלוי לטווח המקדמים שבתקנון
+  let age = Math.round(num('age'));
+  if (age < AGE_MIN || age > AGE_MAX) {
+    const c = Math.min(Math.max(age, AGE_MIN), AGE_MAX);
+    warns.push('הגיל הוגבל ל-' + c + ' — טבלת המקדמים בנספח ג\' מכסה גילים ' + AGE_MIN + '–' + AGE_MAX + ' בלבד.');
+    age = c; el('age').value = String(c);
+  }
+
+  const salary = Math.max(0, num('salary'));
+  let cover = Math.max(0, num('cover'));
+  if (cover > 100) { cover = 100; el('cover').value = '100'; warns.push('שיעור הכיסוי הוגבל ל-100%.'); }
+  const contribPct = Math.max(0, num('contrib'));
+  const contribAmt = salary * contribPct / 100;
+  let toAge = Math.round(num('toAge'));
+
+  if (salary <= 0) fatal = 'יש להזין הכנסה קובעת גדולה מאפס.';
+  else if (cover <= 0) fatal = 'יש להזין שיעור כיסוי גדול מאפס.';
+
+  const p = { sex: SEX, dev: dev, dbl: dbl, endAge: endAge, salary: salary, cover: cover, contribAmt: contribAmt };
+  const nowRow = fatal ? null : premiumAt(age, p);
+
+  if (!fatal && nowRow === null) {
+    fatal = 'בגיל ' + age + ' אין מקדם לתום ביטוח בגיל ' + endAge +
+            ' — הכיסוי כבר הסתיים. בחרו גיל תום ביטוח גבוה יותר.';
+  }
+
+  if (fatal) {
+    el('warn').innerHTML = '<div class="warn-box err">' + fatal + '</div>';
+    el('headline').innerHTML = ''; el('kpis').innerHTML = ''; el('formula').innerHTML = '';
+    el('tableBody').innerHTML = ''; el('note').textContent = '';
+    LAST = null; drawChart([]);
+    return;
+  }
+
+  // הצפי: מהגיל הנוכחי עד הגיל שנבחר, אך המקדמים נגמרים בתום תקופת הביטוח
+  if (toAge < age) { warns.push('גיל סיום הצפי נמוך מהגיל הנוכחי — הוצג הגיל הנוכחי בלבד.'); toAge = age; }
+  const rows = [];
+  for (let a = age; a <= Math.min(toAge, AGE_MAX); a++) {
+    const r = premiumAt(a, p);
+    if (r === null) break;      // עברנו את תום תקופת הביטוח
+    rows.push(r);
+  }
+  const lastAge = rows.length ? rows[rows.length - 1].age : age;
+  if (toAge > lastAge) {
+    warns.push('הצפי נעצר בגיל ' + lastAge + ': תקופת הביטוח מסתיימת בגיל ' + endAge +
+               ', ולכן אין מקדמים מעבר לכך.');
+  }
+
+  const totalMonthly = nowRow.total;
+  const capPct = contribAmt > 0 ? totalMonthly / contribAmt * 100 : 0;
+  if (capPct > 35) {
+    warns.push('עלות הנכות לבדה היא ' + capPct.toFixed(1) + '% מדמי הגמולים — מעל תקרת 35% שבסעיף 36, ' +
+               'עוד לפני עלות השאירים.');
+  }
+
+  el('warn').innerHTML = warns.length
+    ? '<div class="warn-box">' + (warns.length === 1 ? warns[0]
+        : '<strong>שימו לב:</strong><ul><li>' + warns.join('</li><li>') + '</li></ul>') + '</div>' : '';
+
+  LAST = { p: p, age: age, now: nowRow, rows: rows, contribPct: contribPct, contribAmt: contribAmt };
+  render();
+}
+
+/* ═══════════════ תצוגה ═══════════════ */
+function render() {
+  const L = LAST, n = L.now, p = L.p;
+  const sexTxt = p.sex === 'm' ? 'גבר' : 'אישה';
+  const pctSalary = p.salary > 0 ? n.total / p.salary * 100 : 0;
+  const pctContrib = L.contribAmt > 0 ? n.total / L.contribAmt * 100 : 0;
+
+  el('headline').innerHTML =
+    '<div class="hl-top">' + sexTxt + ', גיל ' + L.age + ' · כיסוי ' + p.cover + '% מ-' + nis(p.salary) +
+    ' · תום ביטוח בגיל ' + p.endAge + (p.dev ? ' · נכות מתפתחת' : '') + (p.dbl ? ' · נכות כפולה' : '') +
+    '</div>' +
+    '<div class="hl-big">' + nis2(n.total) + ' לחודש</div>' +
+    '<div class="hl-sub">זהו <strong>' + pctSalary.toFixed(2) + '%</strong> מההכנסה הקובעת ו-<strong>' +
+    pctContrib.toFixed(1) + '%</strong> מדמי הגמולים. הקצבה החודשית שתתקבל במקרה נכות מלאה: <strong>' +
+    nis(p.salary * p.cover / 100) + '</strong>.</div>';
+
+  el('kpis').innerHTML =
+    kpi('(1) כיסוי קצבת הנכות', nis2(n.comp1), (n.total > 0 ? (n.comp1 / n.total * 100).toFixed(0) : 0) + '% מהפרמיה') +
+    kpi('(2) שחרור — המשך הפקדות', nis2(n.comp2), (n.total > 0 ? (n.comp2 / n.total * 100).toFixed(0) : 0) + '% מהפרמיה') +
+    kpi('מקדם נספח ג\'', n.f.toFixed(4), 'לגיל ' + L.age + ', ' + sexTxt);
+
+  el('formula').innerHTML =
+    '<div class="ln"><span>(1) ' + nis(p.salary) + ' × ' + p.cover + '% × ' + n.f.toFixed(4) + ' ÷ 1000</span><b>' + nis2(n.comp1) + '</b></div>' +
+    '<div class="ln"><span>(2) 94% × ' + nis(L.contribAmt) + ' (' + L.contribPct + '% דמי גמולים) × ' + n.f.toFixed(4) + ' ÷ 1000</span><b>' + nis2(n.comp2) + '</b></div>' +
+    '<div class="ln tot"><span>פרמיה חודשית</span><b>' + nis2(n.total) + '</b></div>';
+
+  let body = '';
+  let sumYear = 0;
+  L.rows.forEach(r => {
+    const yr = r.total * 12;
+    sumYear += yr;
+    body += '<tr class="' + (r.age === L.age ? 'now' : '') + '">' +
+      '<td class="num">' + r.age + '</td>' +
+      '<td class="num">' + r.f.toFixed(4) + '</td>' +
+      '<td class="num">' + nis2(r.comp1) + '</td>' +
+      '<td class="num">' + nis2(r.comp2) + '</td>' +
+      '<td class="num v-main">' + nis2(r.total) + '</td>' +
+      '<td class="num">' + (p.salary > 0 ? (r.total / p.salary * 100).toFixed(2) : '0') + '%</td>' +
+      '<td class="num">' + (L.contribAmt > 0 ? (r.total / L.contribAmt * 100).toFixed(1) : '0') + '%</td>' +
+      '<td class="num">' + nis(yr) + '</td></tr>';
+  });
+  if (L.rows.length > 1) {
+    body += '<tr class="gtotal"><td colspan="4">סך הכל ' + L.rows.length + ' שנים (גילים ' +
+      L.rows[0].age + '–' + L.rows[L.rows.length - 1].age + ')</td>' +
+      '<td class="num v-main">' + nis(sumYear) + '</td><td></td><td></td>' +
+      '<td class="num">' + nis(sumYear) + '</td></tr>';
+  }
+  el('tableBody').innerHTML = body;
+
+  const first = L.rows[0], last = L.rows[L.rows.length - 1];
+  el('note').innerHTML = L.rows.length > 1
+    ? 'הפרמיה מטפסת מ-<strong>' + nis2(first.total) + '</strong> בגיל ' + first.age + ' ל-<strong>' +
+      nis2(last.total) + '</strong> בגיל ' + last.age + ' — פי <strong>' +
+      (last.total / first.total).toFixed(1) + '</strong>, על אותו שכר ואותו כיסוי בדיוק. ' +
+      'כל העלייה היא אפקט הגיל במקדם. מצטבר על פני התקופה: <strong>' + nis(sumYear) + '</strong>.'
+    : 'הוצגה שנה אחת בלבד. הגדילו את "בנה צפי עד גיל" כדי לראות את מסלול העלייה.';
+
+  drawChart(L.rows);
+}
+
+function kpi(label, value, sub) {
+  return '<div class="kpi"><div class="k-lbl">' + label + '</div>' +
+    '<div class="k-val">' + value + '</div><div class="k-sub">' + sub + '</div></div>';
+}
+
+/* ─────────────── גרף ─────────────── */
+let CHART = null;
+function drawChart(rows) {
+  const ctx = el('chart');
+  if (CHART) { CHART.destroy(); CHART = null; }
+  if (!rows.length) return;
+  CHART = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => String(r.age)),
+      datasets: [
+        { label: '(1) כיסוי הקצבה', data: rows.map(r => +r.comp1.toFixed(2)),
+          backgroundColor: '#1a7a4a', stack: 's', borderRadius: 3 },
+        { label: '(2) שחרור', data: rows.map(r => +r.comp2.toFixed(2)),
+          backgroundColor: '#17a589', stack: 's', borderRadius: 3 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo', size: 12 }, boxWidth: 14, padding: 14 } },
+        tooltip: {
+          bodyFont: { family: 'Heebo' }, titleFont: { family: 'Heebo' }, rtl: true, textDirection: 'rtl',
+          callbacks: { title: c => 'גיל ' + c[0].label, label: c => c.dataset.label + ': ' + nis2(c.parsed.y) },
+        },
+      },
+      scales: {
+        x: { stacked: true, title: { display: true, text: 'גיל', font: { family: 'Heebo', size: 11 } },
+             ticks: { font: { family: 'Heebo', size: 11 } }, grid: { display: false } },
+        y: { stacked: true, position: 'right', beginAtZero: true,
+             ticks: { font: { family: 'Heebo', size: 11 }, callback: v => '₪' + v.toLocaleString('he-IL') },
+             grid: { color: '#eef1ef' } },
+      },
+    },
+  });
+}
+
+/* ─────────────── ייצוא ─────────────── */
+el('exportCsv').addEventListener('click', () => {
+  if (!LAST || !LAST.rows.length) { alert('אין נתונים לייצוא.'); return; }
+  const L = LAST, p = L.p;
+  const rows = [['גיל', 'מקדם נספח ג\'', 'כיסוי הקצבה', 'שחרור', 'פרמיה חודשית', '% מהשכר', '% מדמי גמולים', 'סה"כ שנתי']];
+  L.rows.forEach(r => rows.push([r.age, r.f.toFixed(4), r.comp1.toFixed(2), r.comp2.toFixed(2),
+    r.total.toFixed(2), (r.total / p.salary * 100).toFixed(2), (r.total / L.contribAmt * 100).toFixed(1),
+    (r.total * 12).toFixed(2)]));
+  rows.push([]);
+  rows.push(['מין', p.sex === 'm' ? 'גבר' : 'אישה']);
+  rows.push(['הכנסה קובעת', p.salary]);
+  rows.push(['שיעור כיסוי', p.cover + '%']);
+  rows.push(['גיל תום תקופת הביטוח', p.endAge]);
+  rows.push(['נכות מתפתחת', p.dev ? 'כן' : 'לא']);
+  rows.push(['נכות כפולה', p.dbl ? 'כן' : 'לא']);
+  rows.push(['שיעור דמי גמולים', L.contribPct + '%']);
+  rows.push(['מקור', 'תקנון הפניקס פנסיה משלימה 1.12.2025, סעיף 35(ג) ונספח ג\'']);
+  const csv = '﻿' + rows.map(r => r.map(c => {
+    const s = String(c);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'nechut-premium_' + (p.sex === 'm' ? 'male' : 'female') + '_age' + L.age + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+});
+
+window.onload = calculate;
+</script>
+<script>
+/* numeric fields are text inputs — keep the typed content numeric */
+function isNumField(el) {
+  return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal";
+}
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
+});
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
+</script>
+</body>
+</html>
