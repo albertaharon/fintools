@@ -226,7 +226,9 @@
         <div class="row2">
           <div class="field">
             <label>הפקדה חודשית (₪)</label>
-            <input type="text" inputmode="decimal" id="deposit" value="1042" class="calc-input">
+            <input type="text" id="deposit" value="1042" readonly
+                   style="background:#eef1ef; color:var(--muted); border-style:dashed; cursor:not-allowed;
+                          direction:ltr; text-align:right;">
             <div class="field-hint" id="depHint"></div>
           </div>
           <div class="field">
@@ -305,6 +307,11 @@
           ראו <a href="pension-disability-premium.html" style="color:var(--green);">מחשבון פרמיית הנכות</a> ·
           קצבת הורה נתמך · דמי ניהול · תקופת אכשרה וחיתום רפואי. הצפי מניח שהמשכורת הקובעת ושיעור הכיסוי
           נשארים קבועים, ושהיתרה גדלה לפי ההפקדה והתשואה שהוזנו.</p>
+
+          <p><strong>ההפקדה החודשית בצפי נגזרת מהמשכורת הקובעת</strong> בשיעור 20.83% (6 + 6.5 + 8.33).
+          בדוחות אמיתיים ההפקדה נלקחת למעשה מ<em>בסיס ההפקדה</em>, שעשוי להיות נמוך מהמשכורת הקובעת
+          בכמה אחוזים — ולכן הצבירה בצפי עשויה לגדול מעט מהר מדי, והפרמיה לרדת מעט מוקדם מדי.
+          ההשפעה על הפרמיה בשנה הנוכחית היא אפס; היא נוגעת רק למסלול העתידי.</p>
 
           <p class="disclaimer">איני סוכן פנסיוני, יועץ פנסיוני או אקטואר. הכלי מיישם את נוסחת התקנון על
           מקדמי התקנון ואינו הצעת ביטוח — הפרמיה בפועל נקבעת על ידי הקרן. התקנון מתעדכן מעת לעת; ודאו מול
@@ -397,16 +404,10 @@ document.querySelectorAll('.seg button').forEach(b => {
 });
 ['birthM', 'birthY', 'waive', 'calib'].forEach(id => el(id).addEventListener('change', calculate));
 
-/* ההפקדה עוקבת אחרי המשכורת הקובעת כברירת מחדל, עד שהמשתמש קובע אותה בעצמו.
-   לא גוזרים אותה בכוח: בדוחות אמיתיים בסיס ההפקדה נמוך מהמשכורת הקובעת בכ-4%-7%,
-   ולכן 20.83% מהמשכורת הקובעת הוא קירוב גס ולא זהות. */
-const DEFAULT_RATE = 20.83;
-let depositTouched = false;
-el('deposit').addEventListener('input', () => { depositTouched = true; });
+/* ההפקדה החודשית בצפי נגזרת מהמשכורת הקובעת בשיעור קבוע — 6% עובד + 6.5% מעסיק + 8.33% פיצויים. */
+const DEPOSIT_RATE = 20.83;
 function syncDeposit() {
-  if (depositTouched) return;
-  const v = Math.round(Math.max(0, num('salary')) * DEFAULT_RATE / 100);
-  if (String(v) !== el('deposit').value) el('deposit').value = String(v);
+  el('deposit').value = String(Math.round(Math.max(0, num('salary')) * DEPOSIT_RATE / 100));
 }
 document.addEventListener('keypress', e => {
   if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
@@ -471,10 +472,8 @@ function calculate() {
     ? '<div class="warn-box">' + (warns.length === 1 ? warns[0]
         : '<strong>שימו לב:</strong><ul><li>' + warns.join('</li><li>') + '</li></ul>') + '</div>' : '';
 
-  el('depHint').innerHTML = depositTouched
-    ? 'נקבעה ידנית. לאיפוס, הזינו ' + nis(Math.round(salary * DEFAULT_RATE / 100)) + '.'
-    : 'עוקבת אחרי המשכורת הקובעת (' + DEFAULT_RATE + '%). <strong>שימו לב:</strong> בדוחות אמיתיים בסיס ' +
-      'ההפקדה נמוך מהמשכורת הקובעת בכ-4%–7%, אז אם יש לכם את הסכום המדויק — עדיף להזין אותו.';
+  el('depHint').innerHTML = '<strong>' + DEPOSIT_RATE + '%</strong> מהמשכורת הקובעת ' +
+    '(6 + 6.5 + 8.33). מחושב אוטומטית.';
   LAST = { p: p, age: age, now: rows[0], rows: rows, deposit: deposit, ret: ret };
   render();
 }
@@ -611,7 +610,7 @@ el('exportCsv').addEventListener('click', () => {
   rows.push(['שיעור כיסוי שאירים', p.cover + '%']);
   rows.push(['ויתור על כיסוי אלמן/ה', p.waive ? 'כן' : 'לא']);
   rows.push(['מקדם כיול', p.mult === 1 ? 'לא הוחל - חישוב יבש לפי התקנון' : 'x' + p.mult]);
-  rows.push(['הפקדה חודשית בצפי', L.deposit]);
+  rows.push(['הפקדה חודשית בצפי', L.deposit + ' (' + DEPOSIT_RATE + '% מהמשכורת הקובעת)']);
   rows.push(['תשואה שנתית בצפי', L.ret + '%']);
   rows.push(['מקור', 'תקנון הפניקס פנסיה משלימה 1.12.2025, סעיף 35(ד), נספחים ד-ה']);
   const csv = '﻿' + rows.map(r => r.map(c => {
