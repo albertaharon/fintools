@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>פרמיית ביטוח שאירים — פנסיה משלימה | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:#1a7a4a; --green-lt:#e8f5ee; --green-dk:#0f5233; --teal:#17a589;
+      --red:#c0392b; --red-lt:#fdecea; --amber:#d68910; --amber-lt:#fef9e7;
+      --blue:#2563eb; --purple:#7c3aed; --bg:#f4f6f5; --surface:#fff;
+      --border:#d8e2dc; --text:#1c2b22; --muted:#607060;
+      --shadow:0 2px 12px rgba(0,0,0,.07); --radius:14px;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body { max-width:100%; overflow-x:hidden; }
+    .grid { min-width:0; } .grid > * { min-width:0; }
+    input[inputmode="decimal"] { direction:ltr; text-align:right; }
+    body { background:var(--bg); font-family:'Heebo',sans-serif; color:var(--text); min-height:100vh; }
+
+    header {
+      background:linear-gradient(135deg,var(--green-dk) 0%,var(--green) 60%,var(--teal) 100%);
+      color:#fff; padding:2.4rem 0 2rem; text-align:center; position:relative; overflow:hidden;
+    }
+    header::before {
+      content:''; position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    header h1 { font-family:'Frank Ruhl Libre',serif; font-size:2rem; font-weight:700; letter-spacing:-.5px; position:relative; }
+    header p { margin-top:.5rem; opacity:.85; font-size:.95rem; font-weight:300; position:relative; }
+    .back-link { display:inline-flex; align-items:center; gap:.4rem; color:rgba(255,255,255,.85);
+      text-decoration:none; font-size:.88rem; position:relative; margin-bottom:.3rem; }
+    .back-link:hover { color:#fff; text-decoration:underline; }
+
+    .container { max-width:1220px; margin:0 auto; padding:0 1.25rem 2rem; }
+    .grid { display:grid; grid-template-columns:340px 1fr; gap:1.5rem; margin-top:1.75rem; }
+    @media (max-width:980px) { .grid { grid-template-columns:1fr; } }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:1.4rem 1.5rem; margin-bottom:1.25rem; }
+    .card h2 { font-size:1rem; font-weight:700; color:var(--green-dk); margin-bottom:1.1rem;
+      padding-bottom:.6rem; border-bottom:2px solid var(--green-lt); }
+
+    .field { margin-bottom:1rem; }
+    .field label { display:block; font-size:.82rem; font-weight:500; color:var(--muted); margin-bottom:.35rem; }
+    .field input, .field select { width:100%; padding:.55rem .85rem; border:1.5px solid var(--border);
+      border-radius:8px; font-family:'Heebo',sans-serif; font-size:.95rem; color:var(--text);
+      background:var(--bg); transition:border-color .18s,box-shadow .18s; outline:none; }
+    .field input:focus, .field select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(26,122,74,.12); background:#fff; }
+    .field.highlight label { color:var(--green); font-weight:700; }
+    .field.highlight input { border-color:var(--green); background:var(--green-lt); }
+    .field-hint { font-size:.76rem; color:var(--muted); margin-top:.3rem; line-height:1.4; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+
+    .seg { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+    .seg button { padding:.55rem .5rem; border:1.5px solid var(--border); background:#fff; color:var(--muted);
+      border-radius:8px; font-family:'Heebo',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer; transition:all .15s; }
+    .seg button.on { background:var(--green); border-color:var(--green); color:#fff; }
+
+    .chk { display:flex; align-items:flex-start; gap:.55rem; margin-bottom:.75rem; }
+    .chk input { width:17px; height:17px; margin-top:.15rem; accent-color:var(--green); cursor:pointer; flex:none; }
+    .chk label { font-size:.85rem; color:var(--text); cursor:pointer; line-height:1.45; }
+    .chk .sub { display:block; font-size:.74rem; color:var(--muted); margin-top:.1rem; }
+
+    .btn { background:var(--green); color:#fff; border:none; padding:.6rem 1.05rem; border-radius:8px;
+      cursor:pointer; font-family:'Heebo',sans-serif; font-size:.88rem; font-weight:600; transition:background .18s; }
+    .btn:hover { background:var(--green-dk); }
+    .btn-sec { background:#fff; color:var(--green); border:1.5px solid var(--green); }
+    .btn-sec:hover { background:var(--green-lt); }
+    .btn-full { width:100%; }
+    .btn-sm { padding:.4rem .75rem; font-size:.8rem; }
+
+    .warn-box { background:var(--amber-lt); border:1px solid var(--amber); color:#8a5a00; border-radius:10px;
+      padding:.7rem .8rem; font-size:.82rem; font-weight:500; margin-bottom:1rem; line-height:1.55; }
+    .warn-box.err { background:var(--red-lt); border-color:var(--red); color:var(--red); font-weight:600; }
+    .warn-box ul { margin:.3rem .9rem 0 0; }
+
+    .headline { background:linear-gradient(135deg,var(--green-lt) 0%,#f3faf6 100%); border:1px solid #bfe0cf;
+      border-radius:12px; padding:1.1rem 1.2rem; margin-bottom:1.3rem; }
+    .headline .hl-top { font-size:.84rem; color:var(--muted); font-weight:500; margin-bottom:.4rem; }
+    .headline .hl-big { font-size:1.95rem; font-weight:700; color:var(--green-dk);
+      font-variant-numeric:tabular-nums; letter-spacing:-1px; line-height:1.1; }
+    .headline .hl-sub { font-size:.85rem; color:var(--text); margin-top:.5rem; line-height:1.6; }
+    .headline .hl-sub strong { color:var(--green-dk); }
+    .headline.zero { background:linear-gradient(135deg,#e8f5ee 0%,#dff2e7 100%); }
+
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:.9rem; margin-bottom:1.4rem; }
+    @media (max-width:760px) { .kpis { grid-template-columns:repeat(2,1fr); } }
+    .kpi { border-radius:12px; padding:.85rem .9rem; border:1px solid var(--border); background:#f4f6f5; }
+    .kpi .k-lbl { font-size:.74rem; color:var(--muted); font-weight:500; margin-bottom:.25rem; line-height:1.3; }
+    .kpi .k-val { font-size:1.22rem; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+    .kpi .k-sub { font-size:.72rem; color:var(--muted); margin-top:.2rem; }
+    .kpi.off .k-val { color:var(--green-dk); }
+
+    .chart-wrap { position:relative; height:310px; margin:1.2rem 0 .4rem; }
+    @media (max-width:600px) { .chart-wrap { height:250px; } }
+
+    .sec-title { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.04em; margin:1.75rem 0 .7rem; }
+    .tbl-actions { display:flex; gap:.55rem; flex-wrap:wrap; margin-bottom:.9rem; align-items:center; }
+    .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    thead th { background:#1c2b22; color:#fff; padding:.65rem .6rem; text-align:right; font-weight:600;
+      white-space:nowrap; font-size:.78rem; }
+    tbody td { padding:.55rem .6rem; border-bottom:1px solid #eef1ef; text-align:right; }
+    tbody tr:nth-child(odd) { background:#fbfdfc; }
+    tbody tr.now { background:var(--green-lt); font-weight:700; }
+    tbody tr.free td { color:var(--green); font-weight:700; }
+    .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .v-main { color:var(--green-dk); font-weight:700; }
+    .v-zero { color:#b3bdb3; }
+    tr.gtotal td { background:#1c2b22; color:#fff; font-weight:700; border-bottom:none; }
+    tr.gtotal td.v-main { color:#7ee2b0; }
+
+    .formula { background:#fafbfa; border:1px solid var(--border); border-radius:10px; padding:.9rem 1rem;
+      font-size:.84rem; line-height:1.9; color:var(--muted); margin-top:.3rem; }
+    .formula .ln { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .formula .ln b { color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .formula .ln.sub b { color:var(--red); }
+    .formula .tot { border-top:1px solid var(--border); margin-top:.5rem; padding-top:.5rem; }
+    .formula .tot b { color:var(--green-dk); font-size:1rem; }
+
+    .note { font-size:.84rem; color:var(--muted); line-height:1.6; margin-top:.9rem; padding:.8rem .9rem;
+      background:var(--green-lt); border-radius:10px; }
+    .note strong { color:var(--green-dk); }
+
+    footer { text-align:center; padding:1.2rem 1rem; color:var(--muted); font-size:.78rem; }
+
+    .assump { margin-top:1.75rem; padding:1.1rem 1.2rem; background:#fafbfa; border:1px solid var(--border); border-radius:10px; }
+    .assump h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.04em; margin-bottom:.7rem; }
+    .assump p { font-size:.8rem; color:var(--muted); line-height:1.65; margin-bottom:.6rem; }
+    .assump p:last-child { margin-bottom:0; }
+    .assump strong { color:var(--text); }
+    .assump .disclaimer { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--border); color:var(--red); }
+
+    @media (max-width:600px) {
+      header { padding:1.5rem 0 1.3rem; } header h1 { font-size:1.2rem; }
+      .container { padding-left:1rem; padding-right:1rem; }
+      .card { padding:1.1rem 1rem; } table { font-size:.78rem; }
+      .headline .hl-big { font-size:1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>פרמיית ביטוח שאירים — פנסיה משלימה</h1>
+    <p>עלות הכיסוי לשאירים בקרן פנסיה משלימה — ולמה היא <em>יורדת</em> ככל שהחיסכון גדל</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ═══ INPUTS ═══ -->
+    <aside>
+      <div class="card">
+        <h2>פרטי המבוטח</h2>
+
+        <div class="field">
+          <label>מין</label>
+          <div class="seg">
+            <button type="button" id="segM" class="on" data-sex="m">גבר</button>
+            <button type="button" id="segF" data-sex="f">אישה</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>תאריך לידה</label>
+          <div class="row2">
+            <select id="birthM"></select>
+            <select id="birthY"></select>
+          </div>
+          <div class="field-hint" id="ageHint">הגיל נגזר מתאריך הלידה, ומתגבש ב-1 לחודש שאחרי חודש הלידה.</div>
+        </div>
+
+        <div class="field highlight">
+          <label>משכורת קובעת לנכות ושאירים (₪)</label>
+          <input type="text" inputmode="decimal" id="salary" value="18000" class="calc-input">
+          <div class="field-hint">הסכום שמופיע בשם הזה בסעיף <strong>א.3</strong> של הדוח השנתי — לא השכר בתלוש.</div>
+        </div>
+
+        <div class="field">
+          <label>שיעור הכיסוי הביטוחי לשאירים (%)</label>
+          <input type="text" inputmode="decimal" id="cover" value="100" class="calc-input">
+          <div class="field-hint">לפי מסלול הביטוח: 100% ברוב המסלולים, ובחלקם 60% או 40%.</div>
+        </div>
+
+        <div class="field highlight">
+          <label>היתרה הצבורה בקרן (₪)</label>
+          <input type="text" inputmode="decimal" id="balance" value="280000" class="calc-input">
+          <div class="field-hint"><strong>מקוזזת מהסיכון.</strong> ככל שהיא גדולה יותר — הפרמיה נמוכה יותר.</div>
+        </div>
+
+        <div class="chk" style="margin-bottom:.2rem;">
+          <input type="checkbox" id="waive">
+          <label for="waive">ויתור על כיסוי לאלמן/ה
+            <span class="sub">רלוונטי לרווק/ה. מבטל את רכיב האלמנה ומייקר את רכיב היתומים.</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>כיול לחיוב בפועל</h2>
+        <div class="chk">
+          <input type="checkbox" id="calib" checked>
+          <label for="calib">החל מקדם כיול
+            <span class="sub">מול דוח אמיתי של הפניקס התוצאה יצאה נמוכה ב-7.8%.</span></label>
+        </div>
+        <div class="field" style="margin-bottom:.2rem;">
+          <label>המכפיל</label>
+          <input type="text" inputmode="decimal" id="calibVal" value="1.08" class="calc-input">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>צפי לאורך השנים</h2>
+        <div class="field">
+          <label>בנה צפי עד גיל</label>
+          <input type="text" inputmode="decimal" id="toAge" value="66" class="calc-input">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>הפקדה חודשית (₪)</label>
+            <input type="text" inputmode="decimal" id="deposit" value="3600" class="calc-input">
+          </div>
+          <div class="field">
+            <label>תשואה שנתית (%)</label>
+            <input type="text" inputmode="decimal" id="ret" value="7" class="calc-input">
+          </div>
+        </div>
+        <div class="field-hint" style="margin-top:-.4rem; margin-bottom:.8rem;">
+          הצבירה גדלה לאורך הצפי ומקזזת יותר ויותר מהסיכון — לכן הפרמיה יורדת עם השנים,
+          בניגוד גמור לביטוח הנכות.
+        </div>
+        <button class="btn btn-full" id="calcBtn" type="button">חשב</button>
+      </div>
+    </aside>
+
+    <!-- ═══ RESULTS ═══ -->
+    <section>
+      <div class="card">
+        <div id="warn"></div>
+        <div class="headline" id="headline"></div>
+        <div class="kpis" id="kpis"></div>
+
+        <div class="sec-title">איך זה מחושב</div>
+        <div class="formula" id="formula"></div>
+
+        <div class="sec-title">הפרמיה לאורך השנים</div>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="note" id="note"></div>
+
+        <div class="tbl-actions">
+          <button class="btn btn-sm" id="exportCsv" type="button">⬇ ייצוא ל-Excel</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>גיל</th>
+                <th>יתרה צבורה</th>
+                <th>סיכון אלמן/ה</th>
+                <th>סיכון יתומים</th>
+                <th>יתרת סיכון</th>
+                <th>מקדם ה׳</th>
+                <th>פרמיה חודשית</th>
+                <th>סה״כ שנתי</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="assump">
+          <h3>הנחות, מקורות ומגבלות</h3>
+
+          <p><strong>המקור:</strong> תקנון הפניקס פנסיה משלימה, מהדורת 1 בדצמבר 2025. הנוסחה היא
+          <strong>סעיף 35(ד)</strong>, והמקדמים הם <strong>נספח ד'</strong> (סכומים בסיכון, עמ' 121–124)
+          ו<strong>נספח ה'</strong> (מקדמי תעריף ועלות ברות ביטוח, עמ' 125–127). כל הטבלאות חולצו מהתקנון
+          ואומתו מול תמונות העמודים.</p>
+
+          <p><strong>למה הפרמיה יורדת עם הזמן.</strong> הקרן מבטחת רק את <em>ההפרש</em> בין מה שהשאירים
+          אמורים לקבל לבין מה שכבר נצבר. סעיף 35(ד)(3) מורה לנכות את היתרה הצבורה מהסכומים בסיכון, וסעיף
+          35(ד)(4) קובע ש<strong>אם יתרת הסיכון קטנה או שווה לאפס — לא נגבים דמי ביטוח כלל</strong>.
+          זהו ההפך הגמור מביטוח הנכות, שם הפרמיה רק מטפסת עם הגיל.</p>
+
+          <p><strong>שנת הלידה היא ציר אמיתי בטבלאות</strong> — נספחים ד' (אלמן/ה) ו-ה' נתונים לפי גיל
+          <em>וגם</em> לפי שנת לידה, במקטעים של חמש שנים. התא קיים רק לצירופים שהם הווה או עתיד, ולכן
+          הכלי מעגל לשנה הקרובה ביותר ונופל לעמודה התקפה הסמוכה אם המקטע ריק. העמודה שנבחרה בפועל מוצגת
+          בפירוט החישוב. טבלת היתומים, לעומת זאת, אינה תלויה בשנת לידה — רק בגיל, במין ובשאלה אם ויתרתם
+          על כיסוי לבן/בת זוג.</p>
+
+          <p><strong>הכיול.</strong> מול דוח רבעוני אמיתי של הפניקס הנוסחה נתנה תוצאה נמוכה ב-7.8%
+          (₪364 מול ₪392 שנגבו). הפער קטן בהרבה מזה שבמחשבון הנכות (37.5%), מה שמחזק את ההנחה שנוסחת
+          השאירים נכונה במהותה ושהשארית נובעת מפרטי עיתוי ועיגול. מקדם הכיול מופעל כברירת מחדל וניתן
+          לכבותו לקבלת החישוב היבש.</p>
+
+          <p><strong>מה לא נכלל:</strong> כיסוי <em>נכות</em>, שמתומחר בנוסחה ובנספח אחרים לגמרי —
+          ראו <a href="pension-disability-premium.html" style="color:var(--green);">מחשבון פרמיית הנכות</a> ·
+          קצבת הורה נתמך · דמי ניהול · תקופת אכשרה וחיתום רפואי. הצפי מניח שהמשכורת הקובעת ושיעור הכיסוי
+          נשארים קבועים, ושהיתרה גדלה לפי ההפקדה והתשואה שהוזנו.</p>
+
+          <p class="disclaimer">איני סוכן פנסיוני, יועץ פנסיוני או אקטואר. הכלי מיישם את נוסחת התקנון על
+          מקדמי התקנון ואינו הצעת ביטוח — הפרמיה בפועל נקבעת על ידי הקרן. התקנון מתעדכן מעת לעת; ודאו מול
+          המהדורה העדכנית.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>כלים פיננסיים — לשימוש אישי בלבד, אין לראות בתוצאות ייעוץ פיננסי או פנסיוני</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ── נספחים ד' ו-ה', תקנון הפניקס פנסיה משלימה 1.12.2025 (עמ' 121–127) ──
+   D_WIDOW / E_TAR : מערך לפי גיל (0 = גיל 18), וכל איבר מערך לפי SURV_YEARS. null = תא ריק.
+   D_ORPH          : לפי גיל ומין בלבד, מפוצל לפי ויתור על כיסוי אלמן/ה.
+   BRUT            : עלות ברות הביטוח, כאחוז מעלות ריסק השאירים.
+   חולץ מהתקנון ואומת מול תמונות העמודים. אין לשנות ידנית. */
+const SURV_YEARS=[1965,1970,1975,1980,1985,1990,1995,2000,2005,2010];
+const D_WIDOW={m:[[null,null,null,null,null,null,null,null,null,322.72],[null,null,null,null,null,null,null,null,null,321.81],[null,null,null,null,null,null,null,null,320.48,320.87],[null,null,null,null,null,null,null,null,319.5,319.89],[null,null,null,null,null,null,null,null,318.48,318.88],[null,null,null,null,null,null,null,null,317.42,317.83],[null,null,null,null,null,null,null,null,316.32,316.75],[null,null,null,null,null,null,null,314.72,315.19,315.62],[null,null,null,null,null,null,null,313.53,314.01,314.45],[null,null,null,null,null,null,null,312.3,312.79,313.25],[null,null,null,null,null,null,null,311.03,311.53,312],[null,null,null,null,null,null,null,309.71,310.22,310.71],[null,null,null,null,null,null,307.78,308.34,308.87,309.37],[null,null,null,null,null,null,306.35,306.93,307.48,307.99],[null,null,null,null,null,null,304.88,305.47,306.03,306.56],[null,null,null,null,null,null,303.35,303.97,304.54,305.08],[null,null,null,null,null,null,301.78,302.41,303,303.55],[null,null,null,null,null,299.47,300.16,300.81,301.41,301.98],[null,null,null,null,null,297.77,298.48,299.15,299.77,300.35],[null,null,null,null,null,296.02,296.75,297.43,298.07,298.67],[null,null,null,null,null,294.22,294.97,295.66,296.32,296.94],[null,null,null,null,null,292.36,293.12,293.84,294.51,295.15],[null,null,null,null,289.6,290.44,291.22,291.96,292.65,293.3],[null,null,null,null,287.6,288.46,289.26,290.02,290.72,291.39],[null,null,null,null,285.55,286.42,287.24,288.02,288.74,289.42],[null,null,null,null,283.43,284.33,285.17,285.96,286.7,287.4],[null,null,null,null,281.25,282.17,283.03,283.83,284.6,285.31],[null,null,null,278.01,279.01,279.95,280.82,281.65,282.43,283.16],[null,null,null,275.69,276.71,277.66,278.56,279.4,280.2,280.95],[null,null,null,273.31,274.35,275.32,276.23,277.09,277.91,278.67],[null,null,null,270.86,271.92,272.91,273.84,274.72,275.55,276.33],[null,null,null,268.36,269.43,270.44,271.38,272.28,273.12,273.92],[null,null,264.62,265.79,266.88,267.9,268.86,269.77,270.63,271.44],[null,null,261.98,263.16,264.26,265.3,266.27,267.2,268.07,268.89],[null,null,259.27,260.46,261.58,262.63,263.62,264.56,265.44,266.28],[null,null,256.5,257.7,258.83,259.89,260.9,261.85,262.75,263.59],[null,null,253.67,254.88,256.02,257.09,258.11,259.07,259.98,260.83],[null,249.47,250.78,252,253.14,254.23,255.25,256.22,257.14,258],[null,246.52,247.83,249.05,250.2,251.29,252.33,253.3,254.23,255.1],[null,243.5,244.82,246.04,247.2,248.3,249.33,250.32,251.24,252.12],[null,240.43,241.75,242.97,244.13,245.23,246.27,247.25,248.19,249.06],[null,237.33,238.63,239.85,241.01,242.11,243.15,244.13,245.06,245.94],[232.77,234.17,235.46,236.68,237.83,238.92,239.96,240.94,241.87,242.75],[229.6,230.97,232.25,233.45,234.6,235.68,236.71,237.69,238.61,239.49],[226.38,227.73,228.99,230.18,231.31,232.38,233.4,234.37,235.29,236.15],[223.13,224.46,225.69,226.86,227.97,229.03,230.03,230.99,231.89,232.74],[219.86,221.14,222.35,223.49,224.58,225.62,226.61,227.54,228.43,229.27],[216.56,217.81,218.98,220.09,221.15,222.17,223.13,224.04,224.91,225.73],[213.26,214.46,215.59,216.67,217.7,218.68,219.61,220.5,221.34,222.14]],f:[[null,null,null,null,null,null,null,null,null,311.83],[null,null,null,null,null,null,null,null,null,310.59],[null,null,null,null,null,null,null,null,308.7,309.3],[null,null,null,null,null,null,null,null,307.35,307.96],[null,null,null,null,null,null,null,null,305.95,306.58],[null,null,null,null,null,null,null,null,304.5,305.14],[null,null,null,null,null,null,null,null,303,303.65],[null,null,null,null,null,null,null,300.73,301.44,302.11],[null,null,null,null,null,null,null,299.11,299.83,300.52],[null,null,null,null,null,null,null,297.43,298.17,298.87],[null,null,null,null,null,null,null,295.69,296.45,297.17],[null,null,null,null,null,null,null,293.89,294.67,295.41],[null,null,null,null,null,null,291.19,292.03,292.83,293.6],[null,null,null,null,null,null,289.25,290.12,290.94,291.72],[null,null,null,null,null,null,287.25,288.14,288.98,289.78],[null,null,null,null,null,null,285.19,286.1,286.96,287.79],[null,null,null,null,null,null,283.07,284,284.89,285.73],[null,null,null,null,null,279.88,280.89,281.84,282.75,283.61],[null,null,null,null,null,277.62,278.64,279.62,280.54,281.43],[null,null,null,null,null,275.28,276.33,277.33,278.27,279.18],[null,null,null,null,null,272.89,273.96,274.98,275.95,276.88],[null,null,null,null,null,270.45,271.54,272.58,273.57,274.52],[null,null,null,null,266.79,267.96,269.07,270.13,271.14,272.1],[null,null,null,null,264.23,265.42,266.55,267.62,268.65,269.64],[null,null,null,null,261.62,262.83,263.98,265.07,266.11,267.11],[null,null,null,null,258.97,260.19,261.35,262.46,263.52,264.54],[null,null,null,null,256.27,257.51,258.68,259.8,260.87,261.9],[null,null,null,252.2,253.52,254.77,255.95,257.08,258.17,259.21],[null,null,null,249.4,250.73,251.98,253.17,254.31,255.41,256.47],[null,null,null,246.55,247.89,249.14,250.34,251.49,252.6,253.66],[null,null,null,243.66,245,246.26,247.46,248.62,249.73,250.8],[null,null,null,240.73,242.06,243.32,244.53,245.69,246.81,247.88],[null,null,236.33,237.76,239.09,240.34,241.55,242.71,243.83,244.91],[null,null,233.34,234.75,236.07,237.32,238.52,239.68,240.8,241.88],[null,null,230.31,231.7,233.01,234.25,235.45,236.61,237.72,238.79],[null,null,227.25,228.63,229.92,231.15,232.34,233.49,234.59,235.66],[null,null,224.17,225.52,226.79,228.01,229.18,230.32,231.41,232.47],[null,219.64,221.07,222.39,223.64,224.84,225.99,227.11,228.19,229.24],[null,216.57,217.96,219.24,220.46,221.64,222.77,223.87,224.93,225.96],[null,213.5,214.84,216.09,217.27,218.42,219.53,220.6,221.64,222.64],[null,210.56,211.84,213.03,214.18,215.28,216.36,217.4,218.4,219.37],[null,207.61,208.83,209.97,211.06,212.13,213.16,214.16,215.13,216.07],[203.43,204.68,205.83,206.91,207.95,208.97,209.95,210.91,211.84,212.73],[200.61,201.77,202.85,203.87,204.85,205.82,206.75,207.66,208.54,209.39],[197.83,198.91,199.91,200.86,201.79,202.7,203.58,204.43,205.26,206.07],[195.13,196.12,197.04,197.92,198.78,199.63,200.45,201.25,202.02,202.77],[192.52,193.41,194.25,195.06,195.86,196.63,197.39,198.13,198.84,199.54],[187.25,188.16,189.03,189.86,190.68,191.47,192.25,193.01,193.74,194.46],[181.83,182.76,183.64,184.5,185.34,186.16,186.96,187.73,188.49,189.22]]};
+const D_ORPH={keep:{m:[0.04,0.5,2.25,5.44,9.48,15.7,23.54,30.88,38.71,47.23,57.77,67.41,79.43,89.79,99.19,106.39,112.55,117.89,120.6,122.13,127.34,127.72,126.38,124.8,122.56,118.41,114.52,110.17,104.29,98.57,92.22,85.51,77.73,70.91,62.87,55.42,47.96,41.23,34.58,28.57,23.22,18.77,13.89,11.04,8.68,7.18,5.77,4.61,3.86],f:[1.44,4.62,10.97,20.89,31.3,42.47,51.41,61.04,70.84,80.64,90.13,101.16,109.28,117.02,121.75,125.12,127.61,128.62,127.69,126.68,129,126.87,122.65,117.85,112.45,107.04,98.99,91.28,83.17,75.27,66.28,57.54,49.31,41.98,34.58,27.36,21.88,16.22,12.71,9.35,6.84,4.91,3.21,2.2,1.54,1.1,0.75,0.54,0.37]},waive:{m:[178.92,178.34,178.34,177.16,176.56,176.56,175.97,175.37,174.77,173.57,172.96,172.35,171.74,171.13,169.9,168.66,167.42,165.53,164.26,161.7,159.1,156.47,152.45,148.34,144.16,139.16,133.3,128.04,121.88,115.54,109.03,102.33,95.45,89.28,82.95,77.41,71.75,66.94,62.06,58.08,54.06,52.03,48.12,47.81,46.98,48.64,48.85,48.74,51.11],f:[177.75,177.75,177.16,176.56,175.37,174.77,173.57,172.96,171.74,171.13,169.9,169.28,168.66,167.42,165.53,163.62,161.7,159.75,156.47,153.12,149.72,145.56,139.88,134.04,128.04,121.88,114.74,106.54,98.92,91.94,83.87,76.47,69.84,64.02,58.08,52.03,47.92,42.49,39.85,37.29,35.25,34.06,31.78,31.12,31.01,31.78,31.01,32,31.45]}};
+const E_TAR={m:[[null,null,null,null,null,null,null,null,null,1.57],[null,null,null,null,null,null,null,null,null,1.47],[null,null,null,null,null,null,null,null,1.53,1.38],[null,null,null,null,null,null,null,null,1.45,1.32],[null,null,null,null,null,null,null,null,1.39,1.27],[null,null,null,null,null,null,null,null,1.33,1.21],[null,null,null,null,null,null,null,null,1.27,1.16],[null,null,null,null,null,null,null,1.34,1.21,1.11],[null,null,null,null,null,null,null,1.28,1.17,1.07],[null,null,null,null,null,null,null,1.24,1.13,1.04],[null,null,null,null,null,null,null,1.22,1.11,1.02],[null,null,null,null,null,null,null,1.19,1.09,1],[null,null,null,null,null,null,1.29,1.17,1.07,0.98],[null,null,null,null,null,null,1.23,1.13,1.03,0.95],[null,null,null,null,null,null,1.2,1.1,1,0.93],[null,null,null,null,null,null,1.18,1.08,0.99,0.93],[null,null,null,null,null,null,1.18,1.08,0.99,0.93],[null,null,null,null,null,1.34,1.21,1.1,1.02,0.96],[null,null,null,null,null,1.36,1.24,1.13,1.05,0.99],[null,null,null,null,null,1.42,1.29,1.18,1.1,1.03],[null,null,null,null,null,1.48,1.35,1.24,1.16,1.09],[null,null,null,null,null,1.58,1.44,1.33,1.24,1.17],[null,null,null,null,1.86,1.68,1.53,1.42,1.33,1.25],[null,null,null,null,1.98,1.81,1.65,1.53,1.44,1.35],[null,null,null,null,2.17,1.98,1.81,1.69,1.58,1.49],[null,null,null,null,2.36,2.16,1.98,1.85,1.74,1.63],[null,null,null,null,2.61,2.39,2.2,2.06,1.93,1.81],[null,null,null,3.22,2.91,2.66,2.46,2.31,2.17,2.03],[null,null,null,3.53,3.22,2.94,2.73,2.56,2.41,2.26],[null,null,null,3.9,3.56,3.26,3.04,2.85,2.68,2.51],[null,null,null,4.29,3.92,3.59,3.36,3.15,2.96,2.78],[null,null,null,4.69,4.28,3.94,3.69,3.46,3.25,3.05],[null,null,5.66,5.13,4.69,4.33,4.06,3.81,3.58,3.36],[null,null,6.13,5.61,5.12,4.75,4.46,4.19,3.94,3.7],[null,null,6.75,6.17,5.65,5.26,4.94,4.64,4.36,4.09],[null,null,7.49,6.85,6.28,5.87,5.51,5.18,4.86,4.57],[null,null,8.28,7.57,6.97,6.53,6.13,5.76,5.41,5.08],[null,10.12,9.14,8.36,7.73,7.25,6.81,6.39,6,5.64],[null,11.03,10.07,9.21,8.54,8.02,7.53,7.08,6.64,6.24],[null,12.11,11.06,10.13,9.43,8.86,8.32,7.81,7.34,6.89],[null,13.14,12,11.02,10.29,9.67,9.08,8.53,8.01,7.52],[null,14.24,13.01,11.98,11.22,10.53,9.89,9.29,8.73,8.2],[17.01,15.26,13.94,12.88,12.09,11.35,10.66,10.01,9.41,8.84],[18.18,16.49,15.08,13.99,13.14,12.34,11.59,10.89,10.22,9.6],[19.6,17.8,16.3,15.18,14.26,13.39,12.58,11.82,11.1,10.42],[21.12,19.19,17.62,16.46,15.47,14.53,13.65,12.82,12.04,11.31],[22.51,20.48,18.86,17.67,16.59,15.59,14.64,13.75,12.92,12.14],[23.72,21.61,19.97,18.74,17.6,16.54,15.54,14.59,13.71,12.88],[24.96,22.78,21.14,19.85,18.65,17.52,16.46,15.46,14.52,13.64]],f:[[null,null,null,null,null,null,null,null,null,0.48],[null,null,null,null,null,null,null,null,null,0.45],[null,null,null,null,null,null,null,null,0.48,0.43],[null,null,null,null,null,null,null,null,0.43,0.39],[null,null,null,null,null,null,null,null,0.39,0.35],[null,null,null,null,null,null,null,null,0.37,0.33],[null,null,null,null,null,null,null,null,0.36,0.32],[null,null,null,null,null,null,null,0.39,0.35,0.31],[null,null,null,null,null,null,null,0.37,0.33,0.3],[null,null,null,null,null,null,null,0.36,0.33,0.3],[null,null,null,null,null,null,null,0.36,0.32,0.29],[null,null,null,null,null,null,null,0.37,0.33,0.3],[null,null,null,null,null,null,0.44,0.39,0.35,0.32],[null,null,null,null,null,null,0.46,0.42,0.38,0.35],[null,null,null,null,null,null,0.49,0.44,0.4,0.37],[null,null,null,null,null,null,0.52,0.47,0.43,0.39],[null,null,null,null,null,null,0.55,0.5,0.46,0.42],[null,null,null,null,null,0.66,0.59,0.53,0.49,0.45],[null,null,null,null,null,0.68,0.62,0.56,0.51,0.48],[null,null,null,null,null,0.73,0.66,0.6,0.55,0.51],[null,null,null,null,null,0.8,0.72,0.66,0.61,0.56],[null,null,null,null,null,0.86,0.78,0.71,0.66,0.61],[null,null,null,null,1.04,0.93,0.85,0.77,0.72,0.66],[null,null,null,null,1.11,1.01,0.91,0.84,0.78,0.72],[null,null,null,null,1.19,1.08,0.98,0.9,0.83,0.77],[null,null,null,null,1.27,1.15,1.04,0.96,0.89,0.83],[null,null,null,null,1.35,1.22,1.11,1.03,0.96,0.89],[null,null,null,1.6,1.43,1.3,1.19,1.1,1.02,0.94],[null,null,null,1.68,1.52,1.38,1.26,1.17,1.08,1.01],[null,null,null,1.77,1.61,1.46,1.34,1.24,1.15,1.07],[null,null,null,1.9,1.72,1.56,1.44,1.34,1.24,1.15],[null,null,null,2.03,1.84,1.67,1.55,1.44,1.33,1.23],[null,null,2.41,2.17,1.97,1.8,1.66,1.54,1.43,1.33],[null,null,2.56,2.33,2.11,1.94,1.79,1.66,1.54,1.43],[null,null,2.79,2.53,2.29,2.11,1.96,1.82,1.68,1.56],[null,null,3.01,2.73,2.48,2.29,2.13,1.97,1.83,1.69],[null,null,3.22,2.92,2.66,2.46,2.28,2.12,1.96,1.82],[null,3.86,3.46,3.14,2.87,2.66,2.46,2.29,2.12,1.97],[null,4.1,3.72,3.37,3.1,2.87,2.66,2.47,2.29,2.12],[null,4.43,4.02,3.65,3.36,3.12,2.89,2.68,2.49,2.3],[null,4.82,4.37,3.97,3.67,3.4,3.15,2.93,2.71,2.52],[null,5.26,4.77,4.35,4.02,3.73,3.46,3.21,2.98,2.76],[6.47,5.77,5.23,4.79,4.43,4.11,3.81,3.54,3.28,3.04],[7.05,6.36,5.76,5.29,4.9,4.55,4.22,3.91,3.63,3.36],[7.86,7.09,6.44,5.93,5.5,5.1,4.73,4.39,4.07,3.77],[8.79,7.94,7.22,6.67,6.18,5.74,5.32,4.93,4.57,4.24],[9.85,8.9,8.12,7.51,6.97,6.46,5.99,5.56,5.15,4.78],[11.05,10,9.15,8.47,7.86,7.29,6.76,6.27,5.81,5.39],[12.41,11.24,10.32,9.56,8.87,8.23,7.63,7.08,6.56,6.09]]};
+const BRUT={m:[0.5,0.7,0.8,1,1.2,1.3,1.6,1.9,2.3,2.6,2.9,3.1,3.2,3.1,2.9,2.6,2,1.4,1.3,1.2,1.1,0.8,0.5,0.5,0.5,0.4,0.3,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.1,0.1],f:[1,1.3,1.5,1.6,1.8,2.1,2.5,2.9,3.1,3.1,3,2.7,2.6,2.5,2.3,2,1.5,0.9,0.9,0.8,0.7,0.5,0.3,0.2,0.2,0.2,0.2,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0]};
+
+const AGE_MIN = 18, AGE_MAX = 66;
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const WIDOW_SHARE = 0.60, ORPH_SHARE = 0.30;   // סעיף 35(ד)(1) ו-(2)
+
+const nis  = n => '₪' + Math.round(n).toLocaleString('he-IL');
+const nis2 = n => '₪' + n.toLocaleString('he-IL', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const el   = id => document.getElementById(id);
+function num(id) { const v = parseFloat(el(id).value); return isNaN(v) ? 0 : v; }
+
+let SEX = 'm';
+let LAST = null;
+
+/* ── בחירת עמודת שנת לידה: הקרובה ביותר, ואם ריקה — התקפה הסמוכה ── */
+function pickCol(grid, age, birthYear) {
+  const row = grid[age - AGE_MIN];
+  if (!row) return null;
+  const order = SURV_YEARS
+    .map((y, i) => ({ y: y, i: i, d: Math.abs(y - birthYear) }))
+    .sort((a, b) => a.d - b.d || a.y - b.y);
+  for (const o of order) if (row[o.i] !== null && row[o.i] !== undefined) return { v: row[o.i], year: o.y };
+  return null;
+}
+
+/* ── פרמיה חודשית בגיל נתון ── */
+function premiumAt(age, p) {
+  if (age < AGE_MIN || age > AGE_MAX) return null;
+  const w = p.waive ? null : pickCol(D_WIDOW[p.sex], age, p.birthYear);
+  const e = pickCol(E_TAR[p.sex], age, p.birthYear);
+  if (!e) return null;
+  const orphF = D_ORPH[p.waive ? 'waive' : 'keep'][p.sex][age - AGE_MIN];
+  const base  = p.salary * (p.cover / 100);
+  const widowRisk  = w ? base * WIDOW_SHARE * w.v : 0;
+  const orphanRisk = base * ORPH_SHARE * orphF;
+  const net = widowRisk + orphanRisk - p.balance;        // סעיף 35(ד)(3)
+  const brut = 1 + BRUT[p.sex][age - AGE_MIN] / 100;     // עלות ברות הביטוח
+  const prem = net > 0 ? net * e.v / 100000 * brut * p.mult : 0;   // סעיף 35(ד)(4)
+  return { age: age, widowRisk: widowRisk, orphanRisk: orphanRisk, net: net,
+           eFactor: e.v, eYear: e.year, wYear: w ? w.year : null, total: prem };
+}
+
+/* ── בוררים ── */
+MONTHS.forEach((m, i) => {
+  const o = document.createElement('option'); o.value = String(i + 1); o.textContent = m; el('birthM').appendChild(o);
+});
+const NOW = new Date();
+for (let y = NOW.getFullYear() - AGE_MAX; y <= NOW.getFullYear() - AGE_MIN; y++) {
+  const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); el('birthY').appendChild(o);
+}
+el('birthM').value = '9'; el('birthY').value = '1978';
+
+/* גיל לפי התקנון: מתגבש ב-1 לחודש העוקב לחודש הלידה */
+function currentAge() {
+  const by = +el('birthY').value, bm = +el('birthM').value;
+  const months = (NOW.getFullYear() * 12 + NOW.getMonth() + 1) - (by * 12 + bm);
+  return Math.floor(months / 12);
+}
+
+document.querySelectorAll('.seg button').forEach(b => {
+  b.addEventListener('click', () => {
+    SEX = b.dataset.sex;
+    el('segM').classList.toggle('on', SEX === 'm');
+    el('segF').classList.toggle('on', SEX === 'f');
+    calculate();
+  });
+});
+['birthM', 'birthY', 'waive', 'calib'].forEach(id => el(id).addEventListener('change', calculate));
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+document.addEventListener('change', e => {
+  if (e.target.classList && e.target.classList.contains('calc-input')) calculate();
+});
+el('calcBtn').addEventListener('click', calculate);
+
+/* ═══════════════ החישוב ═══════════════ */
+function calculate() {
+  const warns = [];
+  let fatal = null;
+
+  const age = currentAge();
+  el('ageHint').innerHTML = 'הגיל כיום: <strong>' + age + '</strong>. מתגבש ב-1 לחודש שאחרי חודש הלידה.';
+  if (age < AGE_MIN || age > AGE_MAX) {
+    fatal = 'טבלאות התקנון מכסות גילים ' + AGE_MIN + '–' + AGE_MAX + ' בלבד; הגיל שחושב הוא ' + age + '.';
+  }
+
+  const salary  = Math.max(0, num('salary'));
+  let cover     = Math.max(0, num('cover'));
+  if (cover > 100) { cover = 100; el('cover').value = '100'; warns.push('שיעור הכיסוי הוגבל ל-100%.'); }
+  const balance = Math.max(0, num('balance'));
+  const waive   = el('waive').checked;
+  const mult    = el('calib').checked ? Math.max(0, num('calibVal')) : 1;
+  const deposit = Math.max(0, num('deposit'));
+  const ret     = num('ret');
+  let toAge     = Math.round(num('toAge'));
+
+  if (!fatal && salary <= 0) fatal = 'יש להזין משכורת קובעת גדולה מאפס.';
+  else if (!fatal && cover <= 0) fatal = 'יש להזין שיעור כיסוי גדול מאפס.';
+
+  const p = { sex: SEX, birthYear: +el('birthY').value, salary: salary, cover: cover,
+              balance: balance, waive: waive, mult: mult };
+  const now = fatal ? null : premiumAt(age, p);
+  if (!fatal && now === null) fatal = 'אין מקדם בתקנון לשילוב הנתונים שהוזן.';
+
+  if (fatal) {
+    el('warn').innerHTML = '<div class="warn-box err">' + fatal + '</div>';
+    el('headline').innerHTML = ''; el('kpis').innerHTML = ''; el('formula').innerHTML = '';
+    el('tableBody').innerHTML = ''; el('note').textContent = '';
+    LAST = null; drawChart([]);
+    return;
+  }
+
+  if (toAge < age) { warns.push('גיל סיום הצפי נמוך מהגיל הנוכחי — הוצג הגיל הנוכחי בלבד.'); toAge = age; }
+
+  // הצפי: היתרה גדלה לפי ההפקדה והתשואה, ולכן יתרת הסיכון מצטמצמת
+  const rows = [];
+  let bal = balance;
+  for (let a = age; a <= Math.min(toAge, AGE_MAX); a++) {
+    const r = premiumAt(a, Object.assign({}, p, { balance: bal }));
+    if (r === null) break;
+    r.balance = bal;
+    rows.push(r);
+    bal = bal * (1 + ret / 100) + deposit * 12;    // שנה קדימה
+  }
+
+  el('warn').innerHTML = warns.length
+    ? '<div class="warn-box">' + (warns.length === 1 ? warns[0]
+        : '<strong>שימו לב:</strong><ul><li>' + warns.join('</li><li>') + '</li></ul>') + '</div>' : '';
+
+  LAST = { p: p, age: age, now: rows[0], rows: rows, deposit: deposit, ret: ret };
+  render();
+}
+
+/* ═══════════════ תצוגה ═══════════════ */
+function render() {
+  const L = LAST, n = L.now, p = L.p;
+  const sexTxt = p.sex === 'm' ? 'גבר' : 'אישה';
+  const free = n.total <= 0;
+
+  el('headline').className = 'headline' + (free ? ' zero' : '');
+  el('headline').innerHTML =
+    '<div class="hl-top">' + sexTxt + ', גיל ' + L.age + ' · כיסוי שאירים ' + p.cover + '% מ-' + nis(p.salary) +
+    ' · יתרה ' + nis(p.balance) + (p.waive ? ' · ויתור על כיסוי אלמן/ה' : '') + '</div>' +
+    (free
+      ? '<div class="hl-big">אין דמי ביטוח</div>' +
+        '<div class="hl-sub">היתרה הצבורה <strong>מכסה את מלוא הסכום בסיכון</strong>, ולפי סעיף 35(ד)(4) ' +
+        'לא נגבים דמי ביטוח לשאירים כלל.</div>'
+      : '<div class="hl-big">' + nis2(n.total) + ' לחודש</div>' +
+        '<div class="hl-sub">היתרה הצבורה מקזזת <strong>' +
+        (p.balance / (n.widowRisk + n.orphanRisk) * 100).toFixed(1) + '%</strong> מהסכום בסיכון. ' +
+        'ככל שהחיסכון יגדל — הפרמיה תרד.</div>');
+
+  el('kpis').innerHTML =
+    kpi('סיכון אלמן/ה', nis(n.widowRisk), p.waive ? 'ויתור — אין רכיב' : '60% × מקדם נספח ד׳') +
+    kpi('סיכון יתומים', nis(n.orphanRisk), '30% × מקדם נספח ד׳') +
+    kpi('בניכוי היתרה', '−' + nis(p.balance), 'סעיף 35(ד)(3)', 'off') +
+    kpi('יתרת הסכום בסיכון', nis(Math.max(0, n.net)), n.net > 0 ? 'זה מה שמבוטח בפועל' : 'מכוסה במלואה');
+
+  const multTxt = p.mult === 1 ? '' : ' × ' + p.mult;
+  el('formula').innerHTML =
+    (p.waive ? '' : '<div class="ln"><span>סיכון אלמן/ה: ' + nis(p.salary) + ' × ' + p.cover + '% × 60% × ' +
+      (n.widowRisk / (p.salary * p.cover / 100 * WIDOW_SHARE)).toFixed(2) + ' (נספח ד׳, עמודה ' + n.wYear + ')</span><b>' +
+      nis(n.widowRisk) + '</b></div>') +
+    '<div class="ln"><span>סיכון יתומים: ' + nis(p.salary) + ' × ' + p.cover + '% × 30% × ' +
+      (n.orphanRisk / (p.salary * p.cover / 100 * ORPH_SHARE)).toFixed(2) + ' (נספח ד׳)</span><b>' +
+      nis(n.orphanRisk) + '</b></div>' +
+    '<div class="ln sub"><span>בניכוי היתרה הצבורה</span><b>−' + nis(p.balance) + '</b></div>' +
+    '<div class="ln"><span>יתרת הסכום בסיכון</span><b>' + nis(Math.max(0, n.net)) + '</b></div>' +
+    '<div class="ln tot"><span>× מקדם ' + n.eFactor.toFixed(2) + ' (נספח ה׳, עמודה ' + n.eYear + ') ÷ 100,000' +
+      multTxt + '</span><b>' + nis2(n.total) + '</b></div>';
+
+  let body = '', sumYear = 0, freeAge = null;
+  L.rows.forEach(r => {
+    const yr = r.total * 12; sumYear += yr;
+    if (freeAge === null && r.total <= 0) freeAge = r.age;
+    body += '<tr class="' + (r.age === L.age ? 'now' : (r.total <= 0 ? 'free' : '')) + '">' +
+      '<td class="num">' + r.age + '</td>' +
+      '<td class="num">' + nis(r.balance) + '</td>' +
+      '<td class="num">' + nis(r.widowRisk) + '</td>' +
+      '<td class="num">' + nis(r.orphanRisk) + '</td>' +
+      '<td class="num">' + (r.net > 0 ? nis(r.net) : '0') + '</td>' +
+      '<td class="num">' + r.eFactor.toFixed(2) + '</td>' +
+      '<td class="num ' + (r.total > 0 ? 'v-main' : 'v-zero') + '">' + (r.total > 0 ? nis2(r.total) : '—') + '</td>' +
+      '<td class="num">' + (yr > 0 ? nis(yr) : '—') + '</td></tr>';
+  });
+  if (L.rows.length > 1) {
+    body += '<tr class="gtotal"><td colspan="6">סך הכל ' + L.rows.length + ' שנים</td>' +
+      '<td class="num v-main">' + nis(sumYear) + '</td><td class="num">' + nis(sumYear) + '</td></tr>';
+  }
+  el('tableBody').innerHTML = body;
+
+  const first = L.rows[0], last = L.rows[L.rows.length - 1];
+  el('note').innerHTML = freeAge !== null
+    ? 'לפי ההפקדה והתשואה שהוזנו, הצבירה מכסה את מלוא הסכום בסיכון <strong>בגיל ' + freeAge +
+      '</strong> — ומאותו רגע <strong>הביטוח לשאירים חינם</strong>. סך העלות עד אז: <strong>' +
+      nis(sumYear) + '</strong>.'
+    : (L.rows.length > 1
+        ? 'הפרמיה יורדת מ-<strong>' + nis2(first.total) + '</strong> בגיל ' + first.age + ' ל-<strong>' +
+          nis2(last.total) + '</strong> בגיל ' + last.age + ' — לא כי הסיכון קטן, אלא כי <strong>היתרה הצבורה ' +
+          'מקזזת יותר ויותר ממנו</strong>. סך העלות על פני התקופה: <strong>' + nis(sumYear) + '</strong>.'
+        : 'הוצגה שנה אחת בלבד. הגדילו את "בנה צפי עד גיל" כדי לראות את מסלול הירידה.');
+
+  drawChart(L.rows);
+}
+
+function kpi(label, value, sub, cls) {
+  return '<div class="kpi ' + (cls || '') + '"><div class="k-lbl">' + label + '</div>' +
+    '<div class="k-val">' + value + '</div><div class="k-sub">' + sub + '</div></div>';
+}
+
+/* ─────────────── גרף ─────────────── */
+let CHART = null;
+function drawChart(rows) {
+  const ctx = el('chart');
+  if (CHART) { CHART.destroy(); CHART = null; }
+  if (!rows.length) return;
+  CHART = new Chart(ctx, {
+    data: {
+      labels: rows.map(r => String(r.age)),
+      datasets: [
+        { type: 'bar', label: 'פרמיה חודשית', data: rows.map(r => +r.total.toFixed(2)),
+          backgroundColor: '#1a7a4a', borderRadius: 3, yAxisID: 'y', order: 2 },
+        { type: 'line', label: 'יתרת הסכום בסיכון', data: rows.map(r => Math.max(0, Math.round(r.net))),
+          borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,.08)', borderWidth: 2,
+          pointRadius: 0, tension: .25, fill: true, yAxisID: 'y1', order: 1 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Heebo', size: 12 }, boxWidth: 14, padding: 14 } },
+        tooltip: {
+          bodyFont: { family: 'Heebo' }, titleFont: { family: 'Heebo' }, rtl: true, textDirection: 'rtl',
+          callbacks: { title: c => 'גיל ' + c[0].label,
+                       label: c => c.dataset.label + ': ' + (c.datasetIndex === 0 ? nis2(c.parsed.y) : nis(c.parsed.y)) },
+        },
+      },
+      scales: {
+        x: { title: { display: true, text: 'גיל', font: { family: 'Heebo', size: 11 } },
+             ticks: { font: { family: 'Heebo', size: 11 } }, grid: { display: false } },
+        y:  { position: 'right', beginAtZero: true, title: { display: true, text: 'פרמיה', font: { family: 'Heebo', size: 11 } },
+              ticks: { font: { family: 'Heebo', size: 11 }, callback: v => '₪' + v.toLocaleString('he-IL') },
+              grid: { color: '#eef1ef' } },
+        y1: { position: 'left', beginAtZero: true, title: { display: true, text: 'יתרת סיכון', font: { family: 'Heebo', size: 11 } },
+              ticks: { font: { family: 'Heebo', size: 11 }, callback: v => '₪' + (v / 1e6).toFixed(1) + 'M' },
+              grid: { display: false } },
+      },
+    },
+  });
+}
+
+/* ─────────────── ייצוא ─────────────── */
+el('exportCsv').addEventListener('click', () => {
+  if (!LAST || !LAST.rows.length) { alert('אין נתונים לייצוא.'); return; }
+  const L = LAST, p = L.p;
+  const rows = [['גיל','יתרה צבורה','סיכון אלמן/ה','סיכון יתומים','יתרת סיכון','מקדם נספח ה','פרמיה חודשית','סה"כ שנתי']];
+  L.rows.forEach(r => rows.push([r.age, Math.round(r.balance), Math.round(r.widowRisk), Math.round(r.orphanRisk),
+    Math.round(Math.max(0, r.net)), r.eFactor.toFixed(2), r.total.toFixed(2), (r.total * 12).toFixed(2)]));
+  rows.push([]);
+  rows.push(['מין', p.sex === 'm' ? 'גבר' : 'אישה']);
+  rows.push(['שנת לידה', p.birthYear]);
+  rows.push(['משכורת קובעת', p.salary]);
+  rows.push(['שיעור כיסוי שאירים', p.cover + '%']);
+  rows.push(['ויתור על כיסוי אלמן/ה', p.waive ? 'כן' : 'לא']);
+  rows.push(['מקדם כיול', p.mult === 1 ? 'לא הוחל - חישוב יבש לפי התקנון' : 'x' + p.mult]);
+  rows.push(['הפקדה חודשית בצפי', L.deposit]);
+  rows.push(['תשואה שנתית בצפי', L.ret + '%']);
+  rows.push(['מקור', 'תקנון הפניקס פנסיה משלימה 1.12.2025, סעיף 35(ד), נספחים ד-ה']);
+  const csv = '﻿' + rows.map(r => r.map(c => {
+    const s = String(c);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'shearim-premium_' + (p.sex === 'm' ? 'male' : 'female') + '_age' + L.age + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+});
+
+window.onload = calculate;
+</script>
+<script>
+/* numeric fields are text inputs — keep the typed content numeric */
+function isNumField(el) {
+  return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal";
+}
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
+});
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
+</script>
+</body>
+</html>
