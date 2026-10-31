@@ -181,7 +181,7 @@
 
         <div class="field highlight">
           <label>משכורת קובעת לנכות ושאירים (₪)</label>
-          <input type="text" inputmode="decimal" id="salary" value="18000" class="calc-input">
+          <input type="text" inputmode="decimal" id="salary" value="5000" class="calc-input">
           <div class="field-hint">הסכום שמופיע בשם הזה בסעיף <strong>א.3</strong> של הדוח השנתי — לא השכר בתלוש.</div>
         </div>
 
@@ -193,7 +193,7 @@
 
         <div class="field highlight">
           <label>היתרה הצבורה בקרן (₪)</label>
-          <input type="text" inputmode="decimal" id="balance" value="280000" class="calc-input">
+          <input type="text" inputmode="decimal" id="balance" value="100000" class="calc-input">
           <div class="field-hint"><strong>מקוזזת מהסיכון.</strong> ככל שהיא גדולה יותר — הפרמיה נמוכה יותר.</div>
         </div>
 
@@ -226,7 +226,7 @@
         <div class="row2">
           <div class="field">
             <label>הפקדה חודשית (₪)</label>
-            <input type="text" inputmode="decimal" id="deposit" value="3600" class="calc-input">
+            <input type="text" inputmode="decimal" id="deposit" value="1042" class="calc-input">
           </div>
           <div class="field">
             <label>תשואה שנתית (%)</label>
@@ -377,7 +377,7 @@ const NOW = new Date();
 for (let y = NOW.getFullYear() - AGE_MAX; y <= NOW.getFullYear() - AGE_MIN; y++) {
   const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); el('birthY').appendChild(o);
 }
-el('birthM').value = '9'; el('birthY').value = '1978';
+el('birthM').value = '1'; el('birthY').value = '1970';
 
 /* גיל לפי התקנון: מתגבש ב-1 לחודש העוקב לחודש הלידה */
 function currentAge() {
