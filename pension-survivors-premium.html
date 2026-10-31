@@ -227,6 +227,7 @@
           <div class="field">
             <label>הפקדה חודשית (₪)</label>
             <input type="text" inputmode="decimal" id="deposit" value="1042" class="calc-input">
+            <div class="field-hint" id="depHint"></div>
           </div>
           <div class="field">
             <label>תשואה שנתית (%)</label>
@@ -395,6 +396,18 @@ document.querySelectorAll('.seg button').forEach(b => {
   });
 });
 ['birthM', 'birthY', 'waive', 'calib'].forEach(id => el(id).addEventListener('change', calculate));
+
+/* ההפקדה עוקבת אחרי המשכורת הקובעת כברירת מחדל, עד שהמשתמש קובע אותה בעצמו.
+   לא גוזרים אותה בכוח: בדוחות אמיתיים בסיס ההפקדה נמוך מהמשכורת הקובעת בכ-4%-7%,
+   ולכן 20.83% מהמשכורת הקובעת הוא קירוב גס ולא זהות. */
+const DEFAULT_RATE = 20.83;
+let depositTouched = false;
+el('deposit').addEventListener('input', () => { depositTouched = true; });
+function syncDeposit() {
+  if (depositTouched) return;
+  const v = Math.round(Math.max(0, num('salary')) * DEFAULT_RATE / 100);
+  if (String(v) !== el('deposit').value) el('deposit').value = String(v);
+}
 document.addEventListener('keypress', e => {
   if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('calc-input')) calculate();
 });
@@ -420,6 +433,7 @@ function calculate() {
   const balance = Math.max(0, num('balance'));
   const waive   = el('waive').checked;
   const mult    = el('calib').checked ? Math.max(0, num('calibVal')) : 1;
+  syncDeposit();
   const deposit = Math.max(0, num('deposit'));
   const ret     = num('ret');
   let toAge     = Math.round(num('toAge'));
@@ -457,6 +471,10 @@ function calculate() {
     ? '<div class="warn-box">' + (warns.length === 1 ? warns[0]
         : '<strong>שימו לב:</strong><ul><li>' + warns.join('</li><li>') + '</li></ul>') + '</div>' : '';
 
+  el('depHint').innerHTML = depositTouched
+    ? 'נקבעה ידנית. לאיפוס, הזינו ' + nis(Math.round(salary * DEFAULT_RATE / 100)) + '.'
+    : 'עוקבת אחרי המשכורת הקובעת (' + DEFAULT_RATE + '%). <strong>שימו לב:</strong> בדוחות אמיתיים בסיס ' +
+      'ההפקדה נמוך מהמשכורת הקובעת בכ-4%–7%, אז אם יש לכם את הסכום המדויק — עדיף להזין אותו.';
   LAST = { p: p, age: age, now: rows[0], rows: rows, deposit: deposit, ret: ret };
   render();
 }
