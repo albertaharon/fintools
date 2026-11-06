@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download full daily price history (ILS agorot) for the Invesco ETFs listed on TASE.
+"""Download full daily price history (ILS agorot) for the INVESCO and iShares ETFs listed on TASE.
 
 Source: stockanalysis.com  (/api/symbol/a/TLV-IN.FFn/history?type=full&range=10Y)
  plus ?type=chart for the first trading day (the chart series starts one day earlier).
@@ -33,12 +33,15 @@ def fetch(ticker):
     return out
 
 def main():
-    funds = json.load(open(os.path.join(HERE, "tase_funds.json"), encoding="utf-8"))["funds"]
+    funds = json.load(open(os.path.join(HERE, "tase_funds.json"), encoding="utf-8"))["funds"]          # INVESCO
+    funds += json.load(open(os.path.join(HERE, "ishares_map.json"), encoding="utf-8"))["funds"]        # iShares
     res = {}
     for f in funds:
         t = f["ticker"]
+        if not t:                       # newly listed funds that the price source does not carry yet
+            print("skip (no price source yet):", f["sec"]); continue
         rows = fetch(t)
-        if len(rows) < 100:
+        if len(rows) < 3:
             sys.exit("%s: only %d rows - refusing to continue" % (t, len(rows)))
         res[t] = rows
         print("%-9s %5d rows  %s -> %s  last close %s" % (t, len(rows), rows[0][0], rows[-1][0], rows[-1][1]))

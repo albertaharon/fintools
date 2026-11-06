@@ -1,0 +1,32 @@
+{
+  "_comment": "TASE facts for the iShares funds (browser, market.tase.co.il 'נתונים עיקריים', 2026-11-06). last = last price in agorot on that day, used to verify the price series mapping.",
+  "asOf": "2026-11-06",
+  "funds": {
+    "1159250": {"full":"ISHARES CORE S&P 500 UCITS ETF","fee":0.07,"ccy":"USD","ref":"S&P 500 - NTR","cls":"אמריקה- שווקים מפותחים","last":254800},
+    "1159169": {"full":"ISHARES CORE MSCI EM IMI UCITS ETF","fee":0.18,"ccy":"USD","ref":"MSCI Emerging Markets Investable Market Index","cls":"גלובלי- שווקים מתעוררים","last":15600},
+    "1159177": {"full":"ISHARES $ TREASURY BOND 1-3YR UCITS ETF","fee":0.07,"ccy":"USD","ref":"ICE U.S TREASURY 1-3 YEARS TR INDEX","cls":"ממשלתיות חשופת מט\"ח - קצר","last":1922.9},
+    "1159185": {"full":"ISHARES $ CORP BOND UCITS ETF USD ETF","fee":0.2,"ccy":"USD","ref":"IBOXX USD LIQUID INVESTMENT GRADE - GTR","cls":"חברות והמרה חשופת מט\"ח","last":1967.4},
+    "1158989": {"full":"ISHARES J.P. MORGAN $ EM BOND UCITS ETF","fee":0.45,"ccy":"USD","ref":"J.P. Morgan EMBI Global Core Index","cls":"אג\"ח בחו\"ל - אחר","last":2046.89},
+    "1159060": {"full":"ISHARES $ TIPS UCITS ETF","fee":0.1,"ccy":"USD","ref":"Bloomberg Barclays US Government Inflation-Linked Bond Index","cls":"ממשלתיות חשופת מט\"ח","last":82026},
+    "1159078": {"full":"ISHARES $ HIGH YIELD CORP BOND UCITS ETF","fee":0.5,"ccy":"USD","ref":"iBoxx USD Liquid High Yield Capped Index","cls":"בחו\"ל שאינן בדירוג השקעה (High Yield)","last":2360.2},
+    "1159086": {"full":"ISHARES $ FLOATING RATE BOND UCITS ETF","fee":0.1,"ccy":"USD","ref":"Bloomberg US FRN < 5 yrs Total Return Index Value Unhedged USD","cls":"חברות והמרה חשופת מט\"ח - קצר","last":2128.4},
+    "1159094": {"full":"ISHARES CORE MSCI EUROPE UCITS ETF EUR (ACC)","fee":0.12,"ccy":"EUR","ref":"MSCI EUROPE - NTR","cls":"מניות גיאוגרפי - חשופת מט\"ח","last":37460},
+    "1159102": {"full":"ISHARES CORE GLOBAL AGGREGATE BOND UCITS ETF","fee":0.1,"ccy":"USD","ref":"The Bloomberg Global Aggregate Bond Index","cls":"חברות והמרה חשופת מט\"ח","last":1868.19},
+    "1159110": {"full":"ISHARES MSCI CHINA A UCITS ETF","fee":0.4,"ccy":"USD","ref":"MSCI China A - NTR Index","cls":"מניות גיאוגרפי - חשופת מט\"ח","last":1682},
+    "1159128": {"full":"ISHARES HEALTHCARE INNOVATION UCITS ETF","fee":0.4,"ccy":"USD","ref":"iSTOXX FactSet Breakthrough Healthcare Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":3577},
+    "1159136": {"full":"ISHARES DIGITALISATION UCITS ETF","fee":0.4,"ccy":"USD","ref":"iSTOXX FactSet Digitalisation Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":3737},
+    "1159144": {"full":"ISHARES AUTOMATION & ROBOTICS UCITS ETF","fee":0.4,"ccy":"USD","ref":"iSTOXX FactSet Automation & Robotics Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":6105},
+    "1159151": {"full":"ISHARES $ SHORT DURATION CORP BOND UCITS ETF","fee":0.2,"ccy":"USD","ref":"iBoxx USD Liquid Investment Grade 0-5 - GTR","cls":"חברות והמרה חשופת מט\"ח - קצר","last":2026.65},
+    "1159193": {"full":"ISHARES S&P 500 INFORMATION TECHNOLOGY SECTOR UCITS ETF","fee":0.15,"ccy":"USD","ref":"S&P 500 Capped 35/20 Information Technology Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":14990},
+    "1159201": {"full":"ISHARES S&P 500 HEALTH CARE SECTOR UCITS ETF","fee":0.15,"ccy":"USD","ref":"S&P 500 Capped 35/20 Health Care Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":4719},
+    "1159219": {"full":"ISHARES S&P 500 FINANCIALS SECTOR UCITS ETF","fee":0.15,"ccy":"USD","ref":"S&P 500 Capped 35/20 Financials Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":5442},
+    "1159227": {"full":"ISHARES S&P 500 CONSUMER DISCRETIONARY SECTOR UCITS ETF","fee":0.15,"ccy":"USD","ref":"S&P 500 Capped 35/20 Consumer Discretionary Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":5402},
+    "1159235": {"full":"ISHARES MSCI ACWI UCITS ETF","fee":0.2,"ccy":"USD","ref":"MSCI AC WORLD INDEX - NTR","cls":"מניות גלובליות - חשופת מט\"ח","last":37670},
+    "1159243": {"full":"ISHARES NASDAQ 100 UCITS ETF","fee":0.3,"ccy":"USD","ref":"NASDAQ 100 - NTR","cls":"מניות גיאוגרפי - חשופת מט\"ח","last":497000},
+    "1159268": {"full":"ISHARES $ TREASURY BOND 7-10YR UCITS ETF USD","fee":0.07,"ccy":"USD","ref":"ICE U.S. Treasury 7-10 Year Bond Index","cls":"ממשלתיות חשופת מט\"ח - ארוך","last":48946},
+    "1159276": {"full":"ISHARES $ TREASURY BOND 3-7YR UCITS ETF","fee":0.07,"ccy":"USD","ref":"ICE U.S. Treasury 3-7 Year Bond Index","cls":"ממשלתיות חשופת מט\"ח - בינוני","last":45787},
+    "1248368": {"full":"ISHARES S&P 500 ENERGY SECTOR USD UCITS ETF","fee":0.15,"ccy":"USD","ref":"S&P 500 Capped 35/20 Energy Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":4290},
+    "1248376": {"full":"ISHARES MSCI GLOBAL SEMICONDUCTORS USD UCITS ETF","fee":0.35,"ccy":"USD","ref":"MSCI ACWI IMI Semiconductors & Semiconductor Equipment Screened Select Capped Index","cls":"מניות לפי ענפים בחו\"ל - חשופת מט\"ח","last":5015},
+    "1248384": {"full":"ISHARES MSCI INDIA USD UCITS ETF","fee":0.65,"ccy":"USD","ref":"MSCI INDIA - NTR","cls":"מניות גיאוגרפי - חשופת מט\"ח","last":2731}
+  }
+}

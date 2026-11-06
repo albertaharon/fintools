@@ -1,0 +1,321 @@
+{
+ "_comment": "Hand-curated classification. cat = filter chip; region/asset = portfolio composition; group = funds that give the same (exact) or a similar (similar) exposure from the two managers; swap = synthetic replication (Invesco page shows swap counterparties). swap=false for iShares is the fund's own physical holdings.",
+ "groups": {
+  "sp500": "S&P 500",
+  "nasdaq": "נאסד\"ק 100",
+  "em": "שווקים מתעוררים",
+  "europe": "אירופה",
+  "us-tech": "טכנולוגיה ארה\"ב",
+  "us-health": "בריאות ארה\"ב",
+  "us-fin": "פיננסים ארה\"ב",
+  "china": "סין",
+  "globalall": "עולמי (כל המדינות)"
+ },
+ "groupNotes": {
+  "sp500": "אותו מדד (S&P 500 NTR).",
+  "nasdaq": "אותו מדד (Nasdaq-100 NTR).",
+  "em": "MSCI EM (גדולות ובינוניות) מול MSCI EM IMI (כולל גם חברות קטנות).",
+  "europe": "STOXX Europe 600 מול MSCI Europe: שני מדדי מניות אירופיים רחבים, לא אותו מדד.",
+  "us-tech": "מדדי טכנולוגיה של S&P עם כללי תקרת משקל שונים.",
+  "us-health": "מדדי בריאות של S&P עם כללי תקרת משקל שונים.",
+  "us-fin": "מדדי פיננסים של S&P עם כללי תקרת משקל שונים.",
+  "china": "MSCI China All Shares Stock Connect מול MSCI China A: שניהם מניות סיניות, אבל הרכב שונה.",
+  "globalall": "FTSE All-World מול MSCI ACWI: שני מדדי מניות עולמיים רחבים, לא אותו מדד."
+ },
+ "funds": {
+  "1183441": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "group": "sp500",
+   "match": "exact",
+   "swap": true
+  },
+  "1183458": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "swap": true
+  },
+  "1183466": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-fin",
+   "match": "similar",
+   "swap": true
+  },
+  "1183474": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-health",
+   "match": "similar",
+   "swap": true
+  },
+  "1183482": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "swap": true
+  },
+  "1183490": {
+   "cat": "em",
+   "region": "em",
+   "asset": "equity",
+   "group": "em",
+   "match": "similar",
+   "swap": true
+  },
+  "1185164": {
+   "cat": "global",
+   "region": "global",
+   "asset": "equity",
+   "swap": true
+  },
+  "1185172": {
+   "cat": "global",
+   "region": "europe",
+   "asset": "equity",
+   "group": "europe",
+   "match": "similar",
+   "swap": true
+  },
+  "1185180": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-tech",
+   "match": "similar",
+   "swap": true
+  },
+  "1185206": {
+   "cat": "bond",
+   "region": "global",
+   "asset": "bond",
+   "swap": false
+  },
+  "1186055": {
+   "cat": "sector",
+   "region": "global",
+   "asset": "equity",
+   "swap": false
+  },
+  "1186063": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "group": "nasdaq",
+   "match": "exact",
+   "swap": true
+  },
+  "1186071": {
+   "cat": "em",
+   "region": "china",
+   "asset": "equity",
+   "group": "china",
+   "match": "similar",
+   "swap": false
+  },
+  "1207190": {
+   "cat": "global",
+   "region": "europe",
+   "asset": "equity",
+   "swap": true
+  },
+  "1206895": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "swap": true
+  },
+  "1207208": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "swap": false
+  },
+  "1209220": {
+   "cat": "global",
+   "region": "global",
+   "asset": "equity",
+   "group": "globalall",
+   "match": "similar",
+   "swap": false
+  },
+  "1159250": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "group": "sp500",
+   "match": "exact",
+   "swap": false
+  },
+  "1159169": {
+   "cat": "em",
+   "region": "em",
+   "asset": "equity",
+   "group": "em",
+   "match": "similar",
+   "swap": false
+  },
+  "1159177": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159185": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159060": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159078": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159086": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159151": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159268": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159276": {
+   "cat": "bond",
+   "region": "us",
+   "asset": "bond",
+   "swap": false
+  },
+  "1158989": {
+   "cat": "bond",
+   "region": "em",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159102": {
+   "cat": "bond",
+   "region": "global",
+   "asset": "bond",
+   "swap": false
+  },
+  "1159094": {
+   "cat": "global",
+   "region": "europe",
+   "asset": "equity",
+   "group": "europe",
+   "match": "similar",
+   "swap": false
+  },
+  "1159110": {
+   "cat": "em",
+   "region": "china",
+   "asset": "equity",
+   "group": "china",
+   "match": "similar",
+   "swap": false
+  },
+  "1159128": {
+   "cat": "sector",
+   "region": "global",
+   "asset": "equity",
+   "swap": false
+  },
+  "1159136": {
+   "cat": "sector",
+   "region": "global",
+   "asset": "equity",
+   "swap": false
+  },
+  "1159144": {
+   "cat": "sector",
+   "region": "global",
+   "asset": "equity",
+   "swap": false
+  },
+  "1248376": {
+   "cat": "sector",
+   "region": "global",
+   "asset": "equity",
+   "swap": false
+  },
+  "1159193": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-tech",
+   "match": "similar",
+   "swap": false
+  },
+  "1159201": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-health",
+   "match": "similar",
+   "swap": false
+  },
+  "1159219": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "group": "us-fin",
+   "match": "similar",
+   "swap": false
+  },
+  "1159227": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "swap": false
+  },
+  "1248368": {
+   "cat": "sector",
+   "region": "us",
+   "asset": "equity",
+   "swap": false
+  },
+  "1159235": {
+   "cat": "global",
+   "region": "global",
+   "asset": "equity",
+   "group": "globalall",
+   "match": "similar",
+   "swap": false
+  },
+  "1159243": {
+   "cat": "us",
+   "region": "us",
+   "asset": "equity",
+   "group": "nasdaq",
+   "match": "exact",
+   "swap": false
+  },
+  "1248384": {
+   "cat": "em",
+   "region": "india",
+   "asset": "equity",
+   "swap": false
+  }
+ }
+}

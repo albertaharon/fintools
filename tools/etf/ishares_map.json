@@ -1,0 +1,31 @@
+{
+  "_comment": "iShares (BlackRock Ireland, TASE manager 1779) funds listed on TASE. sec = TASE security number; ticker = stockanalysis TLV symbol (null = not available there, listed 2026); pid = iShares UK product page id (any share class of the same fund: holdings and fund size are fund-level). Collected 2026-11-06.",
+  "funds": [
+    {"sec":"1159250","ticker":"IS.FF702","pid":"253743"},
+    {"sec":"1159169","ticker":"IS.FF101","pid":"264659"},
+    {"sec":"1159177","ticker":"IS.FF102","pid":"251715"},
+    {"sec":"1159185","ticker":"IS.FF103","pid":"251832"},
+    {"sec":"1158989","ticker":"IS.FF201","pid":"251824"},
+    {"sec":"1159060","ticker":"IS.FF202","pid":"251714"},
+    {"sec":"1159078","ticker":"IS.FF203","pid":"251833"},
+    {"sec":"1159086","ticker":"IS.FF204","pid":"288500"},
+    {"sec":"1159094","ticker":"IS.FF301","pid":"251861"},
+    {"sec":"1159102","ticker":"IS.FF302","pid":"291772"},
+    {"sec":"1159110","ticker":"IS.FF401","pid":"273192"},
+    {"sec":"1159128","ticker":"IS.FF402","pid":"284216"},
+    {"sec":"1159136","ticker":"IS.FF403","pid":"284217"},
+    {"sec":"1159144","ticker":"IS.FF404","pid":"284219"},
+    {"sec":"1159151","ticker":"IS.FF405","pid":"258126"},
+    {"sec":"1159193","ticker":"IS.FF501","pid":"280510"},
+    {"sec":"1159201","ticker":"IS.FF502","pid":"280507"},
+    {"sec":"1159219","ticker":"IS.FF503","pid":"280523"},
+    {"sec":"1159227","ticker":"IS.FF504","pid":"280526"},
+    {"sec":"1159235","ticker":"IS.FF505","pid":"251850"},
+    {"sec":"1159243","ticker":"IS.FF701","pid":"253741"},
+    {"sec":"1159268","ticker":"IS.FF703","pid":"251716"},
+    {"sec":"1159276","ticker":"IS.FF704","pid":"253744"},
+    {"sec":"1248368","ticker":null,"pid":"280503"},
+    {"sec":"1248376","ticker":null,"pid":"319084"},
+    {"sec":"1248384","ticker":null,"pid":"297617"}
+  ]
+}

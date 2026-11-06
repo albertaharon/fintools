@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>קרנות סל זרות בבורסה בתל אביב — INVESCO ו-iShares | כלים פיננסיים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:#1a7a4a; --green-lt:#e8f5ee; --green-dk:#0f5233; --teal:#17a589;
+      --red:#c0392b; --red-lt:#fdecea; --amber:#d68910; --amber-lt:#fef9e7;
+      --blue:#1d4ed8; --blue-lt:#e8effd; --bg:#f4f6f5; --surface:#fff;
+      --border:#d8e2dc; --text:#1c2b22; --muted:#607060;
+      --shadow:0 2px 12px rgba(0,0,0,.07); --radius:14px;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body { max-width:100%; overflow-x:hidden; }
+    html { scroll-behavior:smooth; }
+    input[inputmode="decimal"] { direction:ltr; text-align:right; }
+    body { background:var(--bg); font-family:'Heebo',sans-serif; color:var(--text); min-height:100vh; padding-bottom:4.5rem; }
+    button { font-family:inherit; }
+
+    header { background:linear-gradient(135deg,var(--green-dk) 0%,var(--green) 60%,var(--teal) 100%);
+      color:#fff; padding:2.2rem 0 1.9rem; text-align:center; position:relative; overflow:hidden; }
+    header::before { content:''; position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+    header h1 { font-family:'Frank Ruhl Libre',serif; font-size:2rem; font-weight:700; letter-spacing:-.5px; position:relative; }
+    header p { margin-top:.5rem; opacity:.88; font-size:.95rem; font-weight:300; position:relative; }
+    .back-link { display:inline-flex; gap:.4rem; color:rgba(255,255,255,.85); text-decoration:none; font-size:.88rem; position:relative; margin-bottom:.3rem; }
+    .back-link:hover { color:#fff; text-decoration:underline; }
+
+    .container { max-width:1240px; margin:0 auto; padding:0 1.25rem 2rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:1.4rem 1.5rem; margin-top:1.4rem; }
+    .card h2 { font-size:1.1rem; font-weight:700; color:var(--green-dk); margin-bottom:.35rem; }
+    .card .lead { font-size:.86rem; color:var(--muted); line-height:1.6; margin-bottom:1rem; }
+
+    .asof { display:flex; flex-wrap:wrap; gap:.35rem 1.4rem; margin-top:1.4rem; padding:.65rem 1rem;
+      background:var(--green-lt); border:1px solid #bfe0cf; border-radius:10px; font-size:.8rem; color:var(--green-dk); }
+    .asof b { font-variant-numeric:tabular-nums; }
+
+    /* ── controls ── */
+    .ctl { display:grid; gap:.75rem; margin-bottom:1rem; }
+    .ctl-row { display:flex; flex-wrap:wrap; gap:.6rem .8rem; align-items:center; }
+    .search { flex:1 1 260px; position:relative; }
+    .search input { width:100%; padding:.6rem .9rem .6rem 2.2rem; border:1.5px solid var(--border); border-radius:10px; font-family:inherit; font-size:.95rem; background:var(--bg); outline:none; }
+    .search input:focus { border-color:var(--green); background:#fff; box-shadow:0 0 0 3px rgba(26,122,74,.12); }
+    .search .ico { position:absolute; left:.8rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+    .seg { display:inline-flex; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; }
+    .seg button { padding:.5rem .95rem; border:none; background:#fff; color:var(--muted); font-size:.85rem; font-weight:600; cursor:pointer; }
+    .seg button + button { border-right:1px solid var(--border); }
+    .seg button.on { background:var(--green); color:#fff; }
+    .seg.view button.on { background:var(--green-dk); }
+    .chips { display:flex; flex-wrap:wrap; gap:.45rem; }
+    .chip { padding:.38rem .8rem; border:1.5px solid var(--border); background:#fff; border-radius:999px; font-size:.82rem; font-weight:500; color:var(--text); cursor:pointer; }
+    .chip:hover { border-color:var(--green); }
+    .chip.on { background:var(--green-lt); border-color:var(--green); color:var(--green-dk); font-weight:700; }
+    .chip .n { color:var(--muted); font-weight:400; margin-right:.25rem; font-variant-numeric:tabular-nums; }
+    .sel { padding:.5rem .7rem; border:1.5px solid var(--border); border-radius:9px; font-family:inherit; font-size:.85rem; background:#fff; color:var(--text); cursor:pointer; }
+    .count { font-size:.8rem; color:var(--muted); margin-right:auto; }
+    .linkbtn { background:none; border:none; color:var(--green); font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:underline; }
+
+    .tag { display:inline-block; padding:0 .45rem; border-radius:5px; font-size:.68rem; font-weight:700; line-height:1.55; vertical-align:middle; letter-spacing:.02em; }
+    .tag.inv { background:var(--green-lt); color:var(--green-dk); border:1px solid #bfe0cf; }
+    .tag.ish { background:var(--blue-lt); color:var(--blue); border:1px solid #c5d5f8; }
+    .badge { display:inline-block; background:var(--amber-lt); border:1px solid var(--amber); color:#8a5a00; border-radius:5px; padding:0 .35rem; font-size:.68rem; font-weight:600; }
+    .badge.swap { background:#f1ecfb; border-color:#c9b8ec; color:#5b36a3; }
+    .badge.phys { background:#eef3f0; border-color:var(--border); color:var(--muted); }
+
+    /* ── fund list ── */
+    .list { border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
+    .lh, .fr { display:grid; grid-template-columns:2.7rem minmax(0,2.3fr) 8.6rem 6.4rem 5.8rem 5rem 8.2rem 1.6rem; gap:.6rem; align-items:start; padding:.7rem .8rem; }
+    .lh { background:#1c2b22; color:#fff; font-size:.74rem; font-weight:600; align-items:center; padding-top:.55rem; padding-bottom:.55rem; position:sticky; top:0; z-index:5; }
+    .lh button { background:none; border:none; color:#fff; font:inherit; cursor:pointer; text-align:right; padding:0; }
+    .lh button.on::after { content:' ▾'; color:#7ee2b0; }
+    .lh select { font-family:inherit; font-size:.78rem; font-weight:600; padding:.2rem .35rem; border:1.5px solid #7ee2b0; border-radius:6px; background:#fff; color:var(--green-dk); margin-top:.2rem; max-width:100%; }
+    .fr { border-top:1px solid #eef1ef; cursor:pointer; }
+    .fr:nth-of-type(odd) { background:#fbfdfc; }
+    .fr:hover { background:var(--green-lt); }
+    .fr.open { background:var(--green-lt); }
+    .fr:focus-visible { outline:2px solid var(--green); outline-offset:-2px; }
+    .add { width:2.1rem; height:2.1rem; border-radius:50%; border:1.5px solid var(--green); background:#fff; color:var(--green); font-size:1.15rem; font-weight:700; cursor:pointer; line-height:1; display:grid; place-items:center; }
+    .add:hover { background:var(--green-lt); }
+    .add.in { background:var(--green); color:#fff; }
+    .nm { font-weight:700; color:var(--green-dk); font-size:.95rem; line-height:1.35; }
+    .nm-en { font-size:.7rem; color:var(--muted); direction:ltr; text-align:right; margin-top:.1rem; }
+    .dsc { font-size:.78rem; color:var(--text); line-height:1.5; margin-top:.35rem; }
+    .cmpbtn { margin-top:.4rem; }
+    .cell { font-variant-numeric:tabular-nums; font-size:.86rem; }
+    .cell::before { display:none; content:attr(data-l); font-size:.66rem; color:var(--muted); font-weight:500; margin-bottom:.1rem; }
+    .num { direction:ltr; unicode-bidi:isolate; display:inline-block; }
+    .secno { display:flex; align-items:center; gap:.35rem; }
+    .cp { font-size:.66rem; font-weight:600; color:var(--green); background:#fff; border:1px solid var(--green); border-radius:5px; padding:0 .4rem; cursor:pointer; line-height:1.55; }
+    .cp:hover { background:var(--green-lt); } .cp.done { background:var(--green); color:#fff; }
+    .sub { font-size:.7rem; color:var(--muted); margin-top:.2rem; line-height:1.4; font-weight:400; }
+    .ret { font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; display:inline-block; }
+    .ret.pos { color:var(--green); } .ret.neg { color:var(--red); } .ret.part { color:var(--amber); }
+    .dash { color:#aab5aa; font-size:1rem; }
+    .chev { color:var(--muted); font-size:.8rem; transition:transform .15s; display:inline-block; padding-top:.2rem; }
+    .fr.open .chev { transform:rotate(90deg); }
+    .empty { padding:2rem 1rem; text-align:center; color:var(--muted); font-size:.9rem; }
+
+    .detail { padding:1rem 1.1rem 1.3rem; background:#fafdfb; border-top:1px solid #dcebe2; }
+    .d-sum { font-size:.9rem; line-height:1.7; background:#fff; border:1px solid #bfe0cf; border-right:4px solid var(--green); border-radius:8px; padding:.7rem .9rem; margin-bottom:1rem; }
+    .d-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+    .box { background:#fff; border:1px solid var(--border); border-radius:10px; padding:.8rem .9rem; min-width:0; }
+    .box h4 { font-size:.78rem; color:var(--muted); font-weight:700; margin-bottom:.6rem; letter-spacing:.03em; }
+    .bar-row { display:grid; grid-template-columns:minmax(0,1fr) 3.4rem; gap:.5rem; align-items:center; margin-bottom:.45rem; font-size:.8rem; }
+    .bar-row .lbl { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bar-row .val { text-align:left; direction:ltr; font-variant-numeric:tabular-nums; color:var(--green-dk); font-weight:600; }
+    .bar { grid-column:1 / -1; height:5px; background:#e6ede9; border-radius:3px; overflow:hidden; margin-top:-.2rem; }
+    .bar > span { display:block; height:100%; background:linear-gradient(90deg,var(--green),var(--teal)); border-radius:3px; }
+    .bar.rest > span { background:#c9d3cd; }
+    .meta { font-size:.76rem; color:var(--muted); margin-top:.9rem; line-height:1.8; }
+    .meta b { color:var(--text); font-weight:600; }
+    .box .none { font-size:.8rem; color:var(--muted); line-height:1.6; }
+
+    /* ── compare ── */
+    .cgrid { display:grid; gap:1rem; }
+    .ccard { border:1px solid var(--border); border-radius:12px; background:#fff; overflow:hidden; scroll-margin-top:1rem; }
+    .ccard.flash { box-shadow:0 0 0 3px rgba(26,122,74,.35); }
+    .chead { display:flex; flex-wrap:wrap; gap:.4rem .8rem; align-items:center; padding:.75rem 1rem; background:var(--green-lt); border-bottom:1px solid #cfe5d8; }
+    .chead h3 { font-size:1rem; color:var(--green-dk); }
+    .chead .note { font-size:.78rem; color:var(--muted); flex-basis:100%; line-height:1.5; }
+    .ccols { display:grid; grid-template-columns:1fr 1fr; }
+    @media (max-width:760px) { .ccols { grid-template-columns:1fr; } }
+    .ccol { padding:.9rem 1rem; }
+    .ccol + .ccol { border-right:1px solid #eef1ef; }
+    @media (max-width:760px) { .ccol + .ccol { border-right:none; border-top:1px solid #eef1ef; } }
+    .ccol .nm { margin:.35rem 0 .1rem; }
+    .stat { display:flex; justify-content:space-between; gap:.6rem; align-items:center; padding:.35rem 0; border-bottom:1px dashed #e3eae6; font-size:.84rem; }
+    .stat:last-of-type { border-bottom:none; }
+    .stat .k { color:var(--muted); }
+    .stat .v { font-weight:600; font-variant-numeric:tabular-nums; text-align:left; display:flex; gap:.4rem; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .win { background:var(--green); color:#fff; border-radius:5px; padding:0 .38rem; font-size:.66rem; font-weight:700; }
+    .cverdict { padding:.7rem 1rem; background:#fafbfa; border-top:1px solid #eef1ef; font-size:.84rem; line-height:1.7; color:var(--text); }
+    .cverdict b { color:var(--green-dk); }
+    .addfull { width:100%; margin-top:.6rem; padding:.5rem; border-radius:8px; border:1.5px solid var(--green); background:#fff; color:var(--green); font-weight:700; font-size:.85rem; cursor:pointer; }
+    .addfull:hover { background:var(--green-lt); } .addfull.in { background:var(--green); color:#fff; }
+
+    /* ── builder ── */
+    .builder { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:1.5rem; }
+    @media (max-width:1000px) { .builder { grid-template-columns:1fr; } }
+    .tf { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.9rem; }
+    .field label { display:block; font-size:.8rem; font-weight:500; color:var(--muted); margin-bottom:.3rem; }
+    .field input, .field select { width:100%; padding:.5rem .8rem; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:.92rem; background:var(--bg); outline:none; }
+    .field input:focus, .field select:focus { border-color:var(--green); background:#fff; box-shadow:0 0 0 3px rgba(26,122,74,.12); }
+    .addbox { position:relative; margin-bottom:.9rem; }
+    .addbox input { width:100%; padding:.65rem .9rem; border:1.5px dashed var(--green); border-radius:10px; font-family:inherit; font-size:.92rem; background:var(--green-lt); outline:none; }
+    .addbox input:focus { border-style:solid; background:#fff; box-shadow:0 0 0 3px rgba(26,122,74,.12); }
+    .pop { position:absolute; z-index:30; top:calc(100% + 4px); right:0; left:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:320px; overflow:auto; }
+    .pop[hidden] { display:none; }
+    .opt { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.2rem .7rem; padding:.55rem .8rem; cursor:pointer; border-bottom:1px solid #f0f3f1; font-size:.85rem; }
+    .opt:last-child { border-bottom:none; }
+    .opt.act, .opt:hover { background:var(--green-lt); }
+    .opt .m { font-size:.72rem; color:var(--muted); }
+    .opt .nm { font-size:.88rem; }
+    .pf { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .pr { display:grid; grid-template-columns:minmax(0,1fr) 4.8rem 4.6rem 1.7rem; gap:.6rem; align-items:center; padding:.6rem .75rem; border-bottom:1px solid #eef1ef; background:var(--green-lt); }
+    .pr:last-child { border-bottom:none; }
+    .pr .nm { font-size:.88rem; }
+    .pr .m { font-size:.72rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.15rem .55rem; align-items:center; margin-top:.2rem; }
+    .pr input { width:100%; padding:.4rem .5rem; border:1.5px solid var(--border); border-radius:7px; font-family:inherit; font-size:.9rem; background:#fff; outline:none; }
+    .pr input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(26,122,74,.12); }
+    .pr .rt { text-align:left; font-size:.8rem; font-weight:700; direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
+    .pr .rt.pos { color:var(--green); } .pr .rt.neg { color:var(--red); } .pr .rt.na { color:#aab5aa; font-weight:400; font-size:.72rem; }
+    .rm { width:1.7rem; height:1.7rem; border-radius:50%; border:none; background:#fff; color:var(--muted); font-size:1rem; cursor:pointer; }
+    .rm:hover { background:var(--red-lt); color:var(--red); }
+    .phead { display:grid; grid-template-columns:minmax(0,1fr) 4.8rem 4.6rem 1.7rem; gap:.6rem; padding:.45rem .75rem; background:#1c2b22; color:#fff; font-size:.72rem; font-weight:600; }
+    .pempty { padding:1.4rem 1rem; text-align:center; color:var(--muted); font-size:.88rem; line-height:1.7; background:#fafbfa; }
+    .acts { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.7rem; }
+    .btn { background:#fff; color:var(--green); border:1.5px solid var(--green); padding:.42rem .85rem; border-radius:8px; cursor:pointer; font-size:.8rem; font-weight:600; }
+    .btn:hover { background:var(--green-lt); } .btn.done { background:var(--green); color:#fff; }
+    .tot { display:flex; justify-content:space-between; align-items:center; margin-top:.8rem; padding:.6rem .8rem; border-radius:8px; background:var(--bg); font-size:.86rem; font-weight:600; flex-wrap:wrap; gap:.4rem; }
+    .tot.ok { background:var(--green-lt); color:var(--green-dk); } .tot.bad { background:var(--amber-lt); color:#8a5a00; }
+
+    .headline { background:linear-gradient(135deg,var(--green-lt) 0%,#f3faf6 100%); border:1px solid #bfe0cf; border-radius:12px; padding:1.05rem 1.2rem; margin-bottom:1rem; }
+    .headline .hl-top { font-size:.82rem; color:var(--muted); font-weight:500; margin-bottom:.35rem; }
+    .headline .hl-big { font-size:2.1rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-1px; line-height:1.1; direction:ltr; unicode-bidi:isolate; display:inline-block; }
+    .hl-big.pos { color:var(--green-dk); } .hl-big.neg { color:var(--red); }
+    .headline .hl-sub { font-size:.83rem; margin-top:.45rem; line-height:1.6; }
+    .headline.na { background:var(--amber-lt); border-color:var(--amber); }
+    .headline.na .hl-big { font-size:1.1rem; color:#8a5a00; letter-spacing:0; }
+    .kpis { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin-bottom:1rem; }
+    .kpi { border-radius:12px; padding:.75rem .85rem; border:1px solid var(--border); background:#f4f6f5; }
+    .kpi .k-lbl { font-size:.72rem; color:var(--muted); margin-bottom:.2rem; line-height:1.3; }
+    .kpi .k-val { font-size:1.12rem; font-weight:700; font-variant-numeric:tabular-nums; }
+    .kpi .k-sub { font-size:.68rem; color:var(--muted); margin-top:.2rem; line-height:1.35; }
+    .warn { background:var(--amber-lt); border:1px solid var(--amber); color:#7a5000; border-radius:10px; padding:.65rem .85rem; font-size:.82rem; line-height:1.6; margin-bottom:.8rem; }
+    .warn ul { margin:.25rem .9rem 0 0; }
+    .info { background:var(--blue-lt); border:1px solid #c5d5f8; color:#1e3a8a; border-radius:10px; padding:.65rem .85rem; font-size:.82rem; line-height:1.6; margin-bottom:.8rem; }
+    .secttl { font-size:.78rem; font-weight:700; color:var(--muted); margin:1.1rem 0 .55rem; letter-spacing:.03em; }
+    .tw { overflow-x:auto; border:1px solid var(--border); border-radius:10px; }
+    table { width:100%; border-collapse:collapse; font-size:.8rem; }
+    th { background:#eef3f0; padding:.45rem .55rem; text-align:right; font-size:.72rem; }
+    td { padding:.4rem .55rem; border-top:1px solid #eef1ef; text-align:right; }
+
+    .assump { margin-top:1.5rem; padding:1.1rem 1.2rem; background:#fafbfa; border:1px solid var(--border); border-radius:10px; }
+    .assump h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.04em; margin-bottom:.7rem; }
+    .assump li, .assump p { font-size:.8rem; color:var(--muted); line-height:1.65; margin-bottom:.5rem; }
+    .assump ul { margin:0 1.1rem .5rem 0; } .assump strong { color:var(--text); }
+    .assump .disclaimer { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--border); color:var(--red); }
+    footer { text-align:center; padding:1.2rem 1rem; color:var(--muted); font-size:.78rem; }
+
+    .pbar { position:fixed; bottom:0; right:0; left:0; z-index:40; background:#1c2b22; color:#fff; padding:.65rem 1rem; display:flex; gap:.9rem; align-items:center; justify-content:center; flex-wrap:wrap; font-size:.88rem; transform:translateY(110%); transition:transform .2s; }
+    .pbar.show { transform:none; }
+    .pbar b { font-variant-numeric:tabular-nums; }
+    .pbar .go { background:#7ee2b0; color:#0f3d26; border:none; border-radius:8px; padding:.4rem .9rem; font-weight:700; cursor:pointer; font-size:.84rem; }
+    .pbar .ok { color:#7ee2b0; } .pbar .bad { color:#ffd479; }
+
+    @media (max-width:900px) {
+      .lh { display:none; }
+      .fr { grid-template-columns:2.6rem minmax(0,1fr) 1.4rem; row-gap:.55rem; }
+      .fr .cell { grid-column:2 / 3; display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; border-top:1px dashed #e3eae6; padding-top:.35rem; }
+      .fr .cell::before { display:block; margin:0; font-size:.72rem; }
+      .fr .cell > * { text-align:left; }
+      .fr .chev { grid-column:3; grid-row:1; }
+      .d-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:600px) {
+      header { padding:1.4rem 0 1.2rem; } header h1 { font-size:1.2rem; }
+      .container { padding-left:1rem; padding-right:1rem; }
+      .card { padding:1.1rem 1rem; }
+      .tf { grid-template-columns:1fr; }
+      .pr, .phead { grid-template-columns:minmax(0,1fr) 4.2rem 4rem 1.6rem; }
+      .headline .hl-big { font-size:1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="index.html" class="back-link">← חזרה לדף הראשי</a>
+    <h1>קרנות סל זרות בבורסה בתל אביב</h1>
+    <p>INVESCO ו-iShares במקום אחד: מה יש בכל קרן, מי זולה וגדולה יותר, ומחשבון להרכבת תיק</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="asof" id="asof"></div>
+
+  <!-- ═══ EXPLORER ═══ -->
+  <div class="card" id="explorer">
+    <h2>מצאו קרן</h2>
+    <p class="lead">חפשו לפי שם, מספר נייר או מדד, סננו לפי סוג חשיפה, ולחצו על + כדי להוסיף קרן לתיק שלמטה. כשיש לאותה חשיפה קרן גם אצל INVESCO וגם אצל iShares, אפשר להשוות ביניהן בלשונית "השוואת מנהלים".</p>
+    <div class="ctl">
+      <div class="ctl-row">
+        <div class="search"><input id="q" type="search" placeholder="חיפוש: S&P, נאסד&quot;ק, 1159250, אג&quot;ח…" autocomplete="off" aria-label="חיפוש קרן"><span class="ico">⌕</span></div>
+        <div class="seg" id="mgrSeg" role="group" aria-label="מנהל">
+          <button data-v="all" class="on">הכל</button><button data-v="INVESCO">INVESCO</button><button data-v="iShares">iShares</button>
+        </div>
+        <div class="seg view" id="viewSeg" role="group" aria-label="תצוגה">
+          <button data-v="list" class="on">רשימה</button><button data-v="compare">השוואת מנהלים</button>
+        </div>
+      </div>
+      <div class="ctl-row" id="listCtl">
+        <div class="chips" id="chips" role="group" aria-label="סוג חשיפה"></div>
+        <label style="font-size:.8rem;color:var(--muted)">מיון: <select class="sel" id="sortSel" aria-label="מיון"></select></label>
+        <span class="count" id="count"></span>
+      </div>
+    </div>
+    <div id="listView"></div>
+    <div id="compareView" hidden></div>
+  </div>
+
+  <!-- ═══ BUILDER ═══ -->
+  <div class="card" id="builder">
+    <h2>מחשבון תיק</h2>
+    <p class="lead">מרכיבים תיק מכל הקרנות: מוסיפים קרנות (מהרשימה למעלה או מהחיפוש כאן), מקלידים אחוז לכל אחת, ורואים דמי ניהול משוקללים, תשואת התיק לשנה שבחרתם והרכב התיק בפועל. הקישור לדף שומר את התיק, כך שאפשר לשתף אותו.</p>
+    <div class="builder">
+      <div>
+        <div class="tf">
+          <div class="field"><label for="cYear">שנה</label><select id="cYear"></select></div>
+          <div class="field"><label for="cAmt">סכום השקעה (₪)</label><input id="cAmt" type="text" inputmode="decimal" value="100000"></div>
+        </div>
+        <div class="addbox">
+          <input id="addq" type="text" placeholder="＋ הוסיפו קרן: הקלידו שם, מספר נייר או מדד" autocomplete="off" aria-label="הוספת קרן לתיק" role="combobox" aria-expanded="false" aria-controls="pop">
+          <div class="pop" id="pop" role="listbox" hidden></div>
+        </div>
+        <div id="pf"></div>
+        <div class="tot" id="tot"></div>
+        <div class="acts" id="acts"></div>
+      </div>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <div class="assump">
+    <h3>איך לקרוא את הנתונים</h3>
+    <ul>
+      <li><strong>תשואה = שינוי מחיר, לא תשואה כוללת.</strong> חושבה ממחירי הסגירה של הנייר בבורסה בשקלים (מקור: stockanalysis.com, נבדק מדגמית מול עמודי הבורסה). המחירים אינם מתואמים לחלוקת דיבידנד. הקרן של INVESCO על מדד S&amp;P 500 מחלקת דיבידנד רבעוני (כ-1.1% בשנה), ולכן תשואתה האמיתית גבוהה מעט ממה שמוצג. לא בדקתי באופן שיטתי את מדיניות החלוקה של שאר הקרנות.</li>
+      <li><strong>דמי הניהול כבר כלולים במחיר.</strong> הם מנוכים מתוך הקרן עצמה ולכן אין לנכות אותם שוב. הם מוצגים להשוואת עלות.</li>
+      <li><strong>למה חלק מהקרנות בלי תשואה בשנה מסוימת?</strong> תשואה לשנה מלאה דורשת מחיר בסוף השנה הקודמת. קרן שנרשמה במהלך השנה לא הייתה בידיכם מתחילתה, ובשנת הרישום מוצגת בטבלה תשואה חלקית עם תווית. בקרנות עם מסחר דליל נדרש מחיר ב-14 הימים שלפני סוף השנה, אחרת התשואה מוסתרת, כדי לא להציג תשואה שנמדדה מנקודת התחלה ישנה. במחשבון התיק קרן כזו אינה נכללת.</li>
+      <li><strong>תחילת מסחר.</strong> בקרנות iShares ותיקות רשום בבורסה מחיר רישום מ-2019, אבל המסחר בפועל התחיל רק בסוף 2021. מוצג התאריך שבו התחיל מסחר בפועל, ותאריך הרישום מצוין מתחתיו.</li>
+      <li><strong>גודל הקרן</strong> (AUM) כפי שמפרסם המנהל באתרו, במטבע שמוצג שם. הרשימות ממוינות לפי גודל מהגדולה לקטנה. שלוש קרנות נקובות באירו, ולצורך המיון בלבד הומרו בקירוב לדולר.</li>
+      <li><strong>החזקות והתפלגות.</strong> נקראו מעמודי הקרנות באתרי המנהלים. מוצגות עשר ההחזקות הגדולות ופילוח לפי מדינה וענף כפי שהמנהל מפרסם. אצל INVESCO מדובר בהחזקות מדד הייחוס ובחשיפה כלכלית (לכן ב-STOXX Europe 600 מופיעה ארה"ב), אצל iShares בהחזקות הקרן בפועל. בקרני אג"ח אין רשימת החזקות. הרשימות המלאות באתרי המנהלים.</li>
+      <li><strong>סינתטי מול פיזי.</strong> בקרנות INVESCO מסוימות (למשל S&amp;P 500, MSCI World, נאסד"ק 100) הקרן מחזיקה סל מניות ומחליפה את התשואה מול המדד באמצעות swap, ולכן הסל בפועל שונה מרשימת מדד הייחוס. קרנות iShares שבדף מחזיקות את הניירות בפועל.</li>
+      <li><strong>מה לא נכלל:</strong> מס רווחי הון, עמלות ברוקר, מרווחי קנייה ומכירה. הקרנות נקובות בדולר או באירו, ולכן התשואה בשקלים מושפעת גם משער החליפין. שלוש קרנות iShares חדשות (אנרגיה, שבבים, הודו) נרשמו ב-4.11.2026 וטרם יש להן תשואה.</li>
+      <li><strong>הרכב התיק</strong> מחושב מהסיווג של כל קרן (מניות או אג"ח, ואזור לפי מדד הייחוס), לא מרשימת ההחזקות. קרן עולמית נספרת כ"עולמי" גם אם רוב החשיפה שלה לארה"ב.</li>
+    </ul>
+    <p class="disclaimer">המידע כללי בלבד ואינו ייעוץ או המלצה להשקעה. תשואות העבר אינן מעידות על העתיד. דמי הניהול כפי שמופיעים בבורסה בתאריך הנתונים ועלולים להשתנות. הדף אינו קשור ל-INVESCO, ל-iShares/BlackRock או לבורסה. הנתונים מתעדכנים ידנית באמצעות סקריפט, ותאריך העדכון מופיע בראש הדף.</p>
+  </div>
+</div>
+
+<div class="pbar" id="pbar"><span id="pbarTxt"></span><button class="go" id="pbarGo" type="button">למחשבון התיק ↓</button></div>
+<footer>כלים פיננסיים — קרנות סל זרות בבורסה בתל אביב</footer>
+
+<script src="etf_data.js"></script>
+<script>
+const D = window.ETF_DATA, F = D.funds, GRP = D.groups, GNOTE = D.groupNotes;
+const CUR_YEAR = +D.pricesAsOf.slice(0, 4), LAST_FULL = CUR_YEAR - 1;
+const BY = {}; F.forEach(f => { BY[f.sec] = f; });
+const CAT = { us: 'ארה"ב', global: 'עולמי ואירופה', em: 'שווקים מתעוררים', sector: 'ענפים ונושאים', bond: 'אג"ח' };
+const REG = { us: 'ארה"ב', global: 'עולמי', europe: 'אירופה', em: 'שווקים מתעוררים', china: 'סין', india: 'הודו' };
+const el = id => document.getElementById(id);
+const fmtDate = iso => iso.split('-').reverse().join('.');
+const sgn = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d) + '%';
+const nf = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 });
+const r1 = v => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.]/g, '')); return isFinite(n) ? n : 0; };
+const tag = f => '<span class="tag ' + (f.mgr === 'INVESCO' ? 'inv' : 'ish') + '">' + f.mgr + '</span>';
+const yLabel = y => +y === CUR_YEAR ? y + ' (עד ' + fmtDate(D.pricesAsOf) + ')' : String(y);
+const retOf = (f, y) => f.returns[y] || { r: null, why: 'none' };
+
+el('asof').innerHTML = '<span>מחירי הבורסה נכון ל-<b>' + fmtDate(D.pricesAsOf) + '</b></span>' +
+  '<span>גודל הקרנות נכון ל-<b>' + fmtDate(D.aumAsOf) + '</b></span>' +
+  '<span>INVESCO: החזקות נקראו ב-<b>' + fmtDate(D.generated) + '</b></span><span>iShares: החזקות נכון ל-<b>' + fmtDate(D.aumAsOf) + '</b></span>' +
+  '<span><b>' + F.length + '</b> קרנות: ' + F.filter(f => f.mgr === 'INVESCO').length + ' INVESCO, ' + F.filter(f => f.mgr === 'iShares').length + ' iShares</span>';
+
+/* ───────────── shared: copy ───────────── */
+function copyText(txt) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt);
+  return new Promise((ok, no) => {
+    const t = document.createElement('textarea'); t.value = txt; t.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy') ? ok() : no(); } catch (e) { no(e); } t.remove();
+  });
+}
+function flash(btn, ok, okTxt) {
+  const old = btn.dataset.old || btn.textContent; btn.dataset.old = old;
+  btn.textContent = ok ? okTxt : 'לא הצליח'; btn.classList.toggle('done', ok);
+  setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 1400);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.cp'); if (!b) return;
+  e.stopPropagation();
+  copyText(b.dataset.copy).then(() => flash(b, true, 'הועתק ✓'), () => flash(b, false));
+}, true);
+
+/* ───────────── text helpers ───────────── */
+const TOP_SKIP = ['Other', 'Cash', 'Cash and/or Derivatives', 'Cash and/or derivatives'];
+function verbal(f) {
+  const out = [];
+  const real = (f.country || []).filter(c => !TOP_SKIP.includes(c[2]));
+  const secs = (f.sector || []).filter(s => !TOP_SKIP.includes(s[2]));
+  if (f.credit) {
+    const ig = f.credit.find(c => c[0].startsWith('דרגת')), hy = f.credit.find(c => c[0].startsWith('תשואה'));
+    out.push('אג"ח של בנקים: כ-' + r1(ig ? ig[1] : 0) + '% בדרגת השקעה וכ-' + r1(hy ? hy[1] : 0) + '% מתחתיה.');
+    if (real.length) out.push('בפילוח לפי מדינה: ' + real.slice(0, 3).map(c => c[0] + ' (' + r1(c[1]) + '%)').join(', ') + '.');
+    return out.join(' ');
+  }
+  if (f.asset === 'bond') {
+    out.push('קרן אג"ח.' + (secs.length ? ' לפי סוג: ' + secs.slice(0, 2).map(s => s[0] + ' (' + r1(s[1]) + '%)').join(' ו') + '.' : ''));
+    if (real.length) out.push('לפי מדינה: ' + real.slice(0, 3).map(c => c[0] + ' (' + r1(c[1]) + '%)').join(', ') + '.');
+    return out.join(' ');
+  }
+  const top = real.slice(0, 3).filter(c => c[1] >= 2);
+  if (top.length) {
+    if (top[0][1] >= 95) out.push('כמעט כל הקרן (' + top[0][1].toFixed(1) + '%) מושקעת ב' + top[0][0] + '.');
+    else {
+      const rest = Math.max(0, 100 - top.reduce((s, c) => s + c[1], 0));
+      out.push('כ-' + r1(top[0][1]) + '% מהקרן מושקעים ב' + top[0][0] + top.slice(1).map(c => ', כ-' + r1(c[1]) + '% ב' + c[0]).join('') + ', והשאר (כ-' + r1(rest) + '%) במדינות אחרות.');
+    }
+  }
+  if (secs.length) {
+    if (secs[0][1] >= 95) out.push('קרן ענפית: כמעט כולה ' + secs[0][0] + '.');
+    else out.push((f.cat === 'sector' ? 'התת-ענפים הגדולים: ' : 'הענפים הגדולים: ') + secs.slice(0, 2).map(s => s[0] + ' (' + r1(s[1]) + '%)').join(' ו') + '.');
+  }
+  return out.join(' ');
+}
+function bars(list, dec) {
+  const rows = list.map(x => [x[0], x[1]]), sum = rows.reduce((s, x) => s + x[1], 0);
+  const rest = 100 - sum, mx = Math.max.apply(null, rows.map(x => x[1]).concat(rest > 0.5 && rest < 100 ? [0] : [0])) || 1;
+  const row = (l, v, cls) => '<div class="bar-row"><span class="lbl" title="' + esc(l) + '">' + esc(l) + '</span><span class="val">' + v.toFixed(dec || 1) + '%</span><div class="bar ' + (cls || '') + '"><span style="width:' + (v / mx * 100).toFixed(1) + '%"></span></div></div>';
+  return rows.map(x => row(x[0], x[1])).join('') + (rest > 0.5 && rest < 99 ? row('יתר', rest, 'rest') : '');
+}
+function structBadge(f) { return f.swap === true ? '<span class="badge swap">סינתטי (swap)</span>' : f.swap === false ? '<span class="badge phys">פיזי</span>' : ''; }
+function detailHtml(f) {
+  const noTop = f.asset === 'bond'
+    ? 'זו קרן אג"ח, ולכן לא מוצגת רשימת החזקות. ההרכב מוצג לפי סוג ומדינה.'
+    : 'לא נמצאה רשימת החזקות.';
+  const top = f.top10 ? '<div class="box"><h4>10 ההחזקות הגדולות</h4>' + bars(f.top10, 2) + '</div>' : '<div class="box"><h4>החזקות</h4><p class="none">' + noTop + '</p></div>';
+  const c = f.country ? '<div class="box"><h4>לפי מדינה</h4>' + bars(f.country) + '</div>' : '';
+  const s = f.sector ? '<div class="box"><h4>' + (f.asset === 'bond' ? 'לפי סוג' : f.cat === 'sector' && f.mgr === 'iShares' ? 'לפי תת-ענף' : 'לפי ענף') + '</h4>' + bars(f.sector) + '</div>'
+    : (f.credit ? '<div class="box"><h4>לפי דירוג אשראי</h4>' + bars(f.credit) + '<p class="sub">דירוג מפורט: ' + f.rating.map(r => esc(r[0]) + ' ' + r[1].toFixed(1) + '%').join(', ') + '</p></div>' : '');
+  const g = f.group ? '<p class="sub" style="margin-top:.6rem">יש מקביל אצל ' + (f.mgr === 'INVESCO' ? 'iShares' : 'INVESCO') + ' (' + esc(GRP[f.group]) + '). <button type="button" class="linkbtn" data-cmp="' + f.group + '">להשוואה</button></p>' : '';
+  return '<div class="detail"><div class="d-sum">' + esc(verbal(f)) + '</div><div class="d-grid">' + top + c + s + '</div>' +
+    '<div class="meta"><b>מדד ייחוס:</b> <span dir="ltr">' + esc(f.ref) + '</span> · <b>מטבע הקרן:</b> ' + (f.ccy === 'EUR' ? 'אירו' : 'דולר') + ' · <b>מבנה:</b> ' + structBadge(f) +
+    (f.isin ? ' · <b>ISIN:</b> <span dir="ltr">' + f.isin + '</span>' : '') + ' · <b>סמל בבורסה:</b> <span dir="ltr">' + (f.ticker || '—') + '</span></div>' + g + '</div>';
+}
+
+/* ───────────── return cell ───────────── */
+function retCell(f, y) {
+  const r = retOf(f, y);
+  if (r.r != null) {
+    let s = '<span class="ret ' + (r.r >= 0 ? 'pos' : 'neg') + '">' + sgn(r.r) + '</span>';
+    if (+y === CUR_YEAR && f.stale) s += '<div class="sub">מחיר אחרון: ' + fmtDate(f.lastDate) + '</div>';
+    return s;
+  }
+  if (r.why === 'listed') return '<span class="ret part">' + sgn(r.partial) + '</span><div class="sub"><span class="badge">חלקית</span> מאז ' + fmtDate(r.from) + '</div>';
+  if (r.why === 'illiquid') return '<span class="dash">—</span><div class="sub">אין מחיר בסמוך לסוף השנה (מסחר דליל)</div>';
+  return '<span class="dash">—</span><div class="sub">טרם נסחרה (מ-' + fmtDate(f.firstTrade) + ')</div>';
+}
+function whyNot(f, y) {
+  const r = retOf(f, y);
+  if (r.why === 'listed') return 'נרשמה ב-' + fmtDate(f.firstTrade) + ', אחרי תחילת השנה';
+  if (r.why === 'illiquid') return 'מסחר דליל: אין מחיר בסמוך לסוף ' + (+y - 1) + ' או ' + y;
+  return 'נרשמה בבורסה רק ב-' + fmtDate(f.firstTrade);
+}
+
+/* ───────────── state ───────────── */
+const S = { q: '', mgr: 'all', cat: 'all', view: 'list', sort: 'aum', year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
+
+/* ───────────── explorer ───────────── */
+const SORTS = { aum: 'גודל קרן (גדולה → קטנה)', fee: 'דמי ניהול (זול → יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה → נמוכה)', first: 'תחילת מסחר (ותיקה → חדשה)', name: 'שם' };
+el('sortSel').innerHTML = Object.keys(SORTS).map(k => '<option value="' + k + '">' + SORTS[k] + '</option>').join('');
+function matches(f) {
+  if (S.mgr !== 'all' && f.mgr !== S.mgr) return false;
+  if (S.cat !== 'all' && f.cat !== S.cat) return false;
+  if (S.q) {
+    const hay = (f.name + ' ' + f.nameEn + ' ' + f.sec + ' ' + f.ref + ' ' + f.mgr + ' ' + (f.ticker || '') + ' ' + (f.isin || '') + ' ' + (CAT[f.cat] || '')).toLowerCase();
+    return S.q.toLowerCase().split(/\s+/).every(t => hay.includes(t));
+  }
+  return true;
+}
+function sorted(list) {
+  const a = list.slice();
+  const y = S.year, rv = f => { const r = retOf(f, y); return r.r != null ? r.r : -1e9; };
+  if (S.sort === 'aum') a.sort((p, q) => q.aumUsd - p.aumUsd);
+  else if (S.sort === 'fee') a.sort((p, q) => p.fee - q.fee || q.aumUsd - p.aumUsd);
+  else if (S.sort === 'ret') a.sort((p, q) => rv(q) - rv(p) || q.aumUsd - p.aumUsd);
+  else if (S.sort === 'first') a.sort((p, q) => p.firstTrade.localeCompare(q.firstTrade) || q.aumUsd - p.aumUsd);
+  else a.sort((p, q) => p.name.localeCompare(q.name, 'he'));
+  return a;
+}
+function renderChips() {
+  const cnt = k => F.filter(f => (S.mgr === 'all' || f.mgr === S.mgr) && (k === 'all' || f.cat === k) && (!S.q || (() => { const c = S.cat; S.cat = 'all'; const m = matches(f); S.cat = c; return m; })())).length;
+  el('chips').innerHTML = ['all'].concat(Object.keys(CAT)).map(k =>
+    '<button type="button" class="chip' + (S.cat === k ? ' on' : '') + '" data-v="' + k + '">' + (k === 'all' ? 'כל החשיפות' : CAT[k]) + '<span class="n">' + cnt(k) + '</span></button>').join('');
+}
+function rowHtml(f) {
+  const inPf = S.pf.some(p => p.sec === f.sec), open = S.open.has(f.sec);
+  const hasTwin = f.group;
+  return '<div class="fr' + (open ? ' open' : '') + '" data-sec="' + f.sec + '" tabindex="0" role="button" aria-expanded="' + open + '">' +
+    '<div><button type="button" class="add' + (inPf ? ' in' : '') + '" data-add="' + f.sec + '" aria-label="' + (inPf ? 'הסר מהתיק' : 'הוסף לתיק') + ': ' + esc(f.name) + '" title="' + (inPf ? 'בתיק. לחיצה להסרה' : 'הוסף לתיק') + '">' + (inPf ? '✓' : '+') + '</button></div>' +
+    '<div><div class="nm">' + tag(f) + ' ' + esc(f.name) + '</div><div class="nm-en">' + esc(f.nameEn) + '</div><div class="dsc">' + esc(f.desc) + '</div>' +
+      (hasTwin ? '<div class="cmpbtn"><button type="button" class="linkbtn" data-cmp="' + f.group + '">יש מקביל אצל ' + (f.mgr === 'INVESCO' ? 'iShares' : 'INVESCO') + ' · להשוואה</button></div>' : '') + '</div>' +
+    '<div class="cell" data-l="מספר נייר"><span class="secno"><span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button></span></div>' +
+    '<div class="cell" data-l="תחילת מסחר"><span class="num">' + fmtDate(f.firstTrade) + '</span>' + (f.listed ? '<div class="sub">נרשמה ' + fmtDate(f.listed) + '</div>' : '') + '</div>' +
+    '<div class="cell" data-l="גודל הקרן"><span class="num">' + f.aum + '</span></div>' +
+    '<div class="cell" data-l="דמי ניהול"><span class="num">' + f.fee.toFixed(2) + '%</span></div>' +
+    '<div class="cell" data-l="תשואה שקלית ב-' + S.year + '"><div>' + retCell(f, S.year) + '</div></div>' +
+    '<div class="chev">◀</div></div>' + (open ? detailHtml(f) : '');
+}
+function renderList() {
+  const list = sorted(F.filter(matches));
+  renderChips();
+  el('count').innerHTML = list.length + ' מתוך ' + F.length + ' קרנות' + (S.q || S.mgr !== 'all' || S.cat !== 'all' ? ' · <button class="linkbtn" id="clr" type="button">נקה סינון</button>' : '');
+  const th = (k, t) => '<button type="button" data-sort="' + k + '" class="' + (S.sort === k ? 'on' : '') + '">' + t + '</button>';
+  const head = '<div class="lh"><div></div><div>' + th('name', 'קרן') + '</div><div>מספר נייר</div><div>' + th('first', 'תחילת מסחר') + '</div><div>' + th('aum', 'גודל הקרן') + '</div><div>' + th('fee', 'דמי ניהול') + '</div>' +
+    '<div>' + th('ret', 'תשואה שקלית בשנת') + '<br><select id="yearSel" aria-label="שנה לתשואה">' + D.years.map(y => '<option value="' + y + '"' + (String(y) === S.year ? ' selected' : '') + '>' + yLabel(y) + '</option>').join('') + '</select></div><div></div></div>';
+  const mobYear = '<div class="ctl-row" style="display:none" id="mobYear"></div>';
+  el('listView').innerHTML = '<div class="list">' + head + (list.length ? list.map(rowHtml).join('') : '<div class="empty">לא נמצאו קרנות שמתאימות לסינון.</div>') + '</div>';
+  if (window.matchMedia('(max-width:900px)').matches) {      /* year picker for narrow screens (the header row is hidden there) */
+    el('listView').insertAdjacentHTML('afterbegin', '<div class="ctl-row" style="margin-bottom:.7rem"><label style="font-size:.82rem;color:var(--muted)">תשואה שקלית בשנת: <select class="sel" id="yearSelM">' + D.years.map(y => '<option value="' + y + '"' + (String(y) === S.year ? ' selected' : '') + '>' + yLabel(y) + '</option>').join('') + '</select></label></div>');
+  }
+  el('sortSel').value = S.sort;
+}
+
+/* compare */
+function renderCompare() {
+  const y = S.year;
+  const yearSelHtml = '<div class="ctl-row" style="margin-bottom:.9rem"><label style="font-size:.85rem;color:var(--muted)">תשואה שקלית בשנת: <select class="sel" id="yearSelC">' + D.years.map(v => '<option value="' + v + '"' + (String(v) === S.year ? ' selected' : '') + '>' + yLabel(v) + '</option>').join('') + '</select></label>' +
+    '<span class="sub" style="margin:0">הסכום לדוגמה לחישוב ההפרש בדמי ניהול: ₪' + nf.format(S.amt) + '</span></div>';
+  const cards = Object.keys(GRP).map(g => {
+    const fs = F.filter(f => f.group === g); if (fs.length < 2) return '';
+    const exact = fs[0].match === 'exact';
+    const minFee = Math.min.apply(null, fs.map(f => f.fee)), maxAum = Math.max.apply(null, fs.map(f => f.aumUsd));
+    const rets = fs.map(f => retOf(f, y).r), haveR = rets.every(r => r != null), maxR = haveR ? Math.max.apply(null, rets) : null;
+    const col = f => {
+      const inPf = S.pf.some(p => p.sec === f.sec), r = retOf(f, y);
+      return '<div class="ccol">' + tag(f) + '<div class="nm">' + esc(f.name) + '</div><div class="nm-en">' + esc(f.nameEn) + '</div>' +
+        '<div class="stat"><span class="k">דמי ניהול</span><span class="v"><span class="num">' + f.fee.toFixed(2) + '%</span>' + (f.fee === minFee && fs.some(o => o.fee !== f.fee) ? '<span class="win">הזולה</span>' : '') + '</span></div>' +
+        '<div class="stat"><span class="k">גודל הקרן</span><span class="v"><span class="num">' + f.aum + '</span>' + (f.aumUsd === maxAum ? '<span class="win">הגדולה</span>' : '') + '</span></div>' +
+        '<div class="stat"><span class="k">תשואה ב-' + y + '</span><span class="v">' + (r.r != null ? '<span class="ret ' + (r.r >= 0 ? 'pos' : 'neg') + '">' + sgn(r.r) + '</span>' + (haveR && r.r === maxR && rets[0] !== rets[1] ? '<span class="win">הגבוהה</span>' : '') : '<span class="sub" style="margin:0">' + esc(whyNot(f, y)) + '</span>') + '</span></div>' +
+        '<div class="stat"><span class="k">מבנה</span><span class="v">' + structBadge(f) + '</span></div>' +
+        '<div class="stat"><span class="k">תחילת מסחר</span><span class="v"><span class="num">' + fmtDate(f.firstTrade) + '</span></span></div>' +
+        '<div class="stat"><span class="k">מספר נייר</span><span class="v"><span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button></span></div>' +
+        '<button type="button" class="addfull' + (inPf ? ' in' : '') + '" data-add="' + f.sec + '">' + (inPf ? '✓ בתיק (לחיצה להסרה)' : '+ הוסף לתיק') + '</button></div>';
+    };
+    const feeDiff = Math.max.apply(null, fs.map(f => f.fee)) - minFee, cheap = fs.find(f => f.fee === minFee);
+    let verdict = feeDiff > 0.0001
+      ? '<b>' + cheap.mgr + '</b> זולה ב-' + feeDiff.toFixed(2) + '%: כ-<b>₪' + nf.format(S.amt * feeDiff / 100) + '</b> בשנה על ₪' + nf.format(S.amt) + '. '
+      : 'דמי הניהול זהים. ';
+    const big = fs.find(f => f.aumUsd === maxAum);
+    verdict += '<b>' + big.mgr + '</b> גדולה יותר (' + big.aum + ' מול ' + fs.find(f => f !== big).aum + '). ';
+    if (haveR && rets[0] !== rets[1]) { const w = fs[rets.indexOf(maxR)]; verdict += 'ב-' + y + ' תשואת <b>' + w.mgr + '</b> גבוהה ב-' + Math.abs(rets[0] - rets[1]).toFixed(1) + ' נקודות אחוז'; verdict += exact ? '.' : ', אבל המדדים אינם זהים.'; }
+    else if (!haveR) {
+      const have = fs.filter(f => retOf(f, y).r != null);
+      verdict += have.length ? 'ב-' + y + ' יש תשואה מלאה רק ל-<b>' + have[0].mgr + '</b> (' + sgn(retOf(have[0], y).r) + '). השנייה לא נסחרה בתחילת השנה, ולכן אי אפשר להשוות תשואות.' : 'ב-' + y + ' אין תשואה מלאה באף אחת מהקרנות.';
+    }
+    if (fs.some(f => f.swap === true) && fs.some(f => f.swap === false)) verdict += ' שימו לב: אחת הקרנות סינתטית (swap) והשנייה מחזיקה את הניירות בפועל.';
+    return '<div class="ccard" id="cmp-' + g + '"><div class="chead"><h3>' + esc(GRP[g]) + '</h3><span class="badge' + (exact ? '' : '') + '">' + (exact ? 'אותו מדד' : 'חשיפה דומה, לא אותו מדד') + '</span><div class="note">' + esc(GNOTE[g]) + '</div></div>' +
+      '<div class="ccols">' + fs.map(col).join('') + '</div><div class="cverdict">' + verdict + '</div></div>';
+  }).join('');
+  el('compareView').innerHTML = yearSelHtml + '<div class="cgrid">' + cards + '</div>';
+}
+
+function render() {
+  el('listView').hidden = S.view !== 'list'; el('compareView').hidden = S.view !== 'compare'; el('listCtl').style.display = S.view === 'list' ? '' : 'none';
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view));
+  document.querySelectorAll('#mgrSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.mgr));
+  if (S.view === 'list') renderList(); else renderCompare();
+}
+
+/* explorer events */
+el('q').addEventListener('input', e => { S.q = e.target.value.trim(); if (S.view !== 'list') S.view = 'list'; render(); });
+el('mgrSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.mgr = b.dataset.v; if (S.view !== 'list') S.view = 'list'; render(); });
+el('viewSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v; render(); });
+el('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; S.cat = b.dataset.v; render(); });
+el('sortSel').addEventListener('change', e => { S.sort = e.target.value; render(); });
+el('explorer').addEventListener('change', e => {
+  if (['yearSel', 'yearSelM', 'yearSelC'].includes(e.target.id)) { S.year = e.target.value; render(); }
+});
+el('explorer').addEventListener('click', e => {
+  const sortBtn = e.target.closest('[data-sort]'); if (sortBtn) { S.sort = sortBtn.dataset.sort; render(); return; }
+  if (e.target.id === 'clr') { S.q = ''; S.mgr = 'all'; S.cat = 'all'; el('q').value = ''; render(); return; }
+  const cmp = e.target.closest('[data-cmp]');
+  if (cmp) { e.stopPropagation(); S.view = 'compare'; render(); const c = el('cmp-' + cmp.dataset.cmp); if (c) { c.scrollIntoView({ block: 'start' }); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1600); } return; }
+  const add = e.target.closest('[data-add]'); if (add) { e.stopPropagation(); togglePf(add.dataset.add); return; }
+  if (e.target.closest('.cp, select, a')) return;
+  const row = e.target.closest('.fr'); if (row) toggleRow(row.dataset.sec);
+});
+el('explorer').addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.fr')) { e.preventDefault(); toggleRow(e.target.dataset.sec); }
+});
+function toggleRow(sec) { if (S.open.has(sec)) S.open.delete(sec); else S.open.add(sec); const y = window.scrollY; renderList(); window.scrollTo(0, y); }
+
+/* ───────────── portfolio ───────────── */
+const calcYears = D.years.filter(y => F.some(f => retOf(f, y).r != null));
+el('cYear').innerHTML = calcYears.map(y => '<option value="' + y + '">' + yLabel(y) + '</option>').join('');
+if (!calcYears.includes(+S.cYear)) S.cYear = String(calcYears[calcYears.length - 1]);
+
+function togglePf(sec) {
+  const i = S.pf.findIndex(p => p.sec === sec);
+  if (i >= 0) S.pf.splice(i, 1); else S.pf.push({ sec, w: 0 });
+  afterPf(); render();
+}
+function afterPf() { renderPf(); renderResult(); renderBar(); saveHash(); }
+
+function renderPf() {
+  const y = S.cYear;
+  let h = '';
+  if (!S.pf.length) {
+    h = '<div class="pf"><div class="pempty">התיק ריק.<br>הוסיפו קרנות עם <b>＋</b> ברשימה למעלה, או הקלידו בשדה ההוספה כאן.</div></div>';
+  } else {
+    h = '<div class="pf"><div class="phead"><div>קרן</div><div>אחוז מהתיק</div><div style="text-align:left">תשואה ' + y + '</div><div></div></div>' +
+      S.pf.map(p => {
+        const f = BY[p.sec], r = retOf(f, y), has = r.r != null;
+        return '<div class="pr" data-sec="' + f.sec + '"><div><div class="nm">' + tag(f) + ' ' + esc(f.name) + '</div><div class="m"><span>נייר <span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button></span><span>דמי ניהול <span class="num">' + f.fee.toFixed(2) + '%</span></span><span>גודל <span class="num">' + f.aum + '</span></span></div></div>' +
+          '<input type="text" inputmode="decimal" aria-label="אחוז ב' + esc(f.name) + '" value="' + (p.w || '') + '" placeholder="0">' +
+          (has ? '<span class="rt ' + (r.r >= 0 ? 'pos' : 'neg') + '">' + sgn(r.r) + '</span>' : '<span class="rt na" title="' + esc(whyNot(f, y)) + '">אין נתון</span>') +
+          '<button type="button" class="rm" data-rm="' + f.sec + '" aria-label="הסר ' + esc(f.name) + '">×</button></div>';
+      }).join('') + '</div>';
+  }
+  el('pf').innerHTML = h;
+  el('acts').innerHTML = S.pf.length ? '<button class="btn" id="eqBtn" type="button">חלוקה שווה</button><button class="btn" id="fillBtn" type="button">השלם ל-100% בשורה האחרונה</button><button class="btn" id="resetBtn" type="button">איפוס אחוזים</button><button class="btn" id="clearBtn" type="button">רוקן תיק</button><button class="btn" id="shareBtn" type="button">העתק קישור לתיק</button>' : '';
+}
+
+function totals() { const t = S.pf.reduce((s, p) => s + p.w, 0); return Math.round(t * 100) / 100; }
+function renderTot() {
+  const t = totals(), left = Math.round((100 - t) * 100) / 100, ok = Math.abs(left) < 0.005, tl = el('tot');
+  tl.style.display = S.pf.length ? '' : 'none';
+  tl.className = 'tot ' + (ok ? 'ok' : 'bad');
+  tl.innerHTML = '<span>סה"כ הוקצה: <span class="num">' + t + '%</span></span><span>' + (ok ? 'התיק מלא ✓' : left > 0 ? 'נותרו להקצאה <span class="num">' + left + '%</span>' : 'חריגה של <span class="num">' + Math.abs(left) + '%</span>') + '</span>';
+  return { t, left, ok };
+}
+
+function renderResult() {
+  const { t, left, ok } = renderTot();
+  const res = el('result'), y = S.cYear, amt = S.amt;
+  if (!S.pf.length) { res.innerHTML = '<div class="info">כאן יוצגו דמי הניהול, התשואה וההרכב של התיק. שלושה צעדים: (1) מוסיפים קרנות, (2) מקלידים אחוז לכל קרן, (3) בוחרים שנה.</div>'; return; }
+  const rows = S.pf.filter(p => p.w > 0).map(p => ({ f: BY[p.sec], w: p.w }));
+  if (!rows.length) { res.innerHTML = '<div class="info">הקלידו אחוז ליד כל קרן. אפשר ללחוץ על "חלוקה שווה" ולשנות משם.</div>'; return; }
+
+  let warnHtml = '';
+  /* overlap: two funds of the same exposure group */
+  const gs = {}; rows.forEach(x => { if (x.f.group) (gs[x.f.group] = gs[x.f.group] || []).push(x.f); });
+  Object.keys(gs).filter(g => gs[g].length > 1).forEach(g => {
+    warnHtml += '<div class="info"><b>חפיפה:</b> ' + gs[g].map(f => esc(f.mgr + ' ' + f.name)).join(' ו') + ' נותנות חשיפה ' + (gs[g][0].match === 'exact' ? 'לאותו מדד' : 'דומה') + ' (' + esc(GRP[g]) + '). החזקה של שתיהן אינה מגוונת, זו אותה חשיפה בשני מקומות. <button type="button" class="linkbtn" data-cmp="' + g + '">להשוואה</button></div>';
+  });
+  if (!ok) { res.innerHTML = warnHtml + '<div class="warn">הסכום חייב להגיע בדיוק ל-100% כדי לחשב. כרגע ' + (left > 0 ? 'נותרו להקצאה ' + left + '%.' : 'יש חריגה של ' + Math.abs(left) + '%.') + '</div>'; return; }
+
+  const fee = rows.reduce((s, x) => s + x.w * x.f.fee, 0) / 100;
+  const missing = rows.filter(x => retOf(x.f, y).r == null);
+  const feeKpi = '<div class="kpi"><div class="k-lbl">דמי ניהול משוקללים של התיק</div><div class="k-val">' + fee.toFixed(3) + '%</div><div class="k-sub">בשנה, מתוך הסכום המושקע</div></div>' +
+    '<div class="kpi"><div class="k-lbl">עלות דמי ניהול בשנה</div><div class="k-val">₪' + nf.format(amt * fee / 100) + '</div><div class="k-sub">על ₪' + nf.format(amt) + '. כבר מגולמת במחיר הקרנות, לא מנוכה שוב</div></div>';
+
+  /* composition: asset class + region, from the fund classification */
+  const bk = {}; rows.forEach(x => { const k = (x.f.asset === 'bond' ? 'אג"ח ' : 'מניות ') + REG[x.f.region]; bk[k] = (bk[k] || 0) + x.w; });
+  const comp = Object.keys(bk).map(k => [k, bk[k]]).sort((a, b) => b[1] - a[1]);
+  const eq = rows.filter(x => x.f.asset === 'equity').reduce((s, x) => s + x.w, 0);
+  const compHtml = '<div class="secttl">מה יש בתיק בפועל</div><div class="box"><p class="sub" style="margin:0 0 .6rem">מניות ' + r1(eq) + '% · אג"ח ' + r1(100 - eq) + '%</p>' + bars(comp.map(c => [c[0], c[1]])) + '</div>' +
+    '<p class="sub">לפי סיווג הקרנות (סוג נכס ואזור המדד), לא לפי רשימת ההחזקות.</p>';
+
+  let suggest = '';
+  if (missing.length) {
+    const okYears = calcYears.filter(v => rows.every(x => retOf(x.f, v).r != null));
+    if (okYears.length) suggest = '<div class="info">בשנה ' + okYears.map(v => '<button type="button" class="linkbtn" data-year="' + v + '">' + yLabel(v) + '</button>').join(' · ') + ' יש תשואה לכל הקרנות בתיק.</div>';
+    else suggest = '<div class="info">אין שנה שבה לכל הקרנות בתיק יש תשואה מלאה. נסו להסיר את הקרנות החדשות ביותר.</div>';
+  }
+  if (missing.length) {
+    res.innerHTML = warnHtml + '<div class="headline na"><div class="hl-top">התשואה של התיק ב-' + y + '</div><div class="hl-big">לא ניתן לחשב</div></div>' +
+      '<div class="warn">בתיק יש קרנות ללא תשואה מלאה ל-' + y + ':<ul>' + missing.map(x => '<li><b>' + esc(x.f.mgr + ' ' + x.f.name) + '</b>: ' + esc(whyNot(x.f, y)) + '</li>').join('') + '</ul>בחרו שנה מאוחרת יותר, או הסירו את הקרנות האלה מהתיק.</div>' +
+      '<div class="kpis">' + feeKpi + '</div>' + suggest + compHtml;
+    return;
+  }
+  const ret = rows.reduce((s, x) => s + x.w * retOf(x.f, y).r, 0) / 100, end = amt * (1 + ret / 100), cls = ret >= 0 ? 'pos' : 'neg';
+  res.innerHTML = warnHtml +
+    '<div class="headline"><div class="hl-top">תשואת התיק ב-' + yLabel(y) + ' (תיק שהורכב בתחילת השנה)</div><div class="hl-big ' + cls + '">' + sgn(ret, 2) + '</div>' +
+    '<div class="hl-sub">₪' + nf.format(amt) + ' הפכו ל-<strong>₪' + nf.format(end) + '</strong> (' + (end >= amt ? 'רווח' : 'הפסד') + ' של ₪' + nf.format(Math.abs(end - amt)) + '). שינוי מחיר בשקלים, ללא מס ועמלות.</div></div>' +
+    '<div class="kpis">' + feeKpi + '</div>' + compHtml +
+    '<div class="secttl">תרומה של כל קרן</div><div class="tw"><table><thead><tr><th>קרן</th><th>משקל</th><th>תשואה</th><th>תרומה לתיק</th></tr></thead><tbody>' +
+    rows.map(x => { const r = retOf(x.f, y).r; return '<tr><td>' + esc(x.f.mgr + ' ' + x.f.name) + '</td><td><span class="num">' + x.w + '%</span></td><td><span class="num" style="color:' + (r >= 0 ? 'var(--green)' : 'var(--red)') + '">' + sgn(r) + '</span></td><td><span class="num">' + sgn(x.w * r / 100, 2) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
+}
+
+/* builder events */
+el('pf').addEventListener('input', e => {
+  const row = e.target.closest('.pr'); if (!row || e.target.tagName !== 'INPUT') return;
+  S.pf.find(p => p.sec === row.dataset.sec).w = num(e.target.value);
+  renderResult(); renderBar(); saveHash();
+});
+el('pf').addEventListener('change', e => {
+  const row = e.target.closest('.pr'); if (!row || e.target.tagName !== 'INPUT') return;
+  const v = Math.min(100, num(e.target.value)); S.pf.find(p => p.sec === row.dataset.sec).w = v; e.target.value = v ? String(v) : '';
+  renderResult(); renderBar(); saveHash();
+});
+el('pf').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { togglePf(b.dataset.rm); } });
+el('result').addEventListener('click', e => {
+  const yb = e.target.closest('[data-year]'); if (yb) { S.cYear = yb.dataset.year; el('cYear').value = S.cYear; renderPf(); renderResult(); saveHash(); return; }
+  const c = e.target.closest('[data-cmp]'); if (c) { S.view = 'compare'; render(); const t = el('cmp-' + c.dataset.cmp); el('explorer').scrollIntoView(); if (t) setTimeout(() => t.scrollIntoView({ block: 'start' }), 60); }
+});
+el('acts').addEventListener('click', e => {
+  const id = e.target.id; if (!id) return;
+  if (id === 'eqBtn') { const n = S.pf.length, base = Math.floor(10000 / n) / 100; S.pf.forEach(p => { p.w = base; }); S.pf[n - 1].w = Math.round((100 - base * (n - 1)) * 100) / 100; renderPf(); renderResult(); renderBar(); saveHash(); }
+  else if (id === 'fillBtn') { const o = S.pf.slice(0, -1).reduce((s, p) => s + p.w, 0); S.pf[S.pf.length - 1].w = Math.max(0, Math.round((100 - o) * 100) / 100); renderPf(); renderResult(); renderBar(); saveHash(); }
+  else if (id === 'resetBtn') { S.pf.forEach(p => { p.w = 0; }); renderPf(); renderResult(); renderBar(); saveHash(); }
+  else if (id === 'clearBtn') { S.pf = []; afterPf(); render(); }
+  else if (id === 'shareBtn') { saveHash(); copyText(location.href).then(() => flash(e.target, true, 'הקישור הועתק ✓'), () => flash(e.target, false)); }
+});
+el('cYear').addEventListener('change', e => { S.cYear = e.target.value; renderPf(); renderResult(); saveHash(); });
+el('cAmt').addEventListener('input', e => { S.amt = num(e.target.value); renderResult(); if (S.view === 'compare') renderCompare(); saveHash(); });
+
+/* add-by-search combobox */
+const addq = el('addq'), pop = el('pop'); let actIdx = -1, popList = [];
+function openPop() {
+  const q = addq.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  popList = sorted0().filter(f => !S.pf.some(p => p.sec === f.sec)).filter(f => { const h = (f.name + ' ' + f.nameEn + ' ' + f.sec + ' ' + f.ref + ' ' + f.mgr + ' ' + (CAT[f.cat] || '')).toLowerCase(); return q.every(t => h.includes(t)); }).slice(0, 40);
+  actIdx = popList.length ? 0 : -1;
+  pop.innerHTML = popList.length ? popList.map((f, i) => '<div class="opt' + (i === 0 ? ' act' : '') + '" role="option" data-sec="' + f.sec + '"><div><div class="nm">' + tag(f) + ' ' + esc(f.name) + '</div><div class="m">נייר ' + f.sec + ' · ' + esc(CAT[f.cat]) + '</div></div><div class="m" style="text-align:left">' + f.aum + '<br>דמי ניהול ' + f.fee.toFixed(2) + '%</div></div>').join('') : '<div class="opt"><div class="m">לא נמצאו קרנות</div></div>';
+  pop.hidden = false; addq.setAttribute('aria-expanded', 'true');
+}
+function sorted0() { return F.slice().sort((a, b) => b.aumUsd - a.aumUsd); }
+function closePop() { pop.hidden = true; addq.setAttribute('aria-expanded', 'false'); }
+function pickOpt(sec) { if (!sec) return; S.pf.push({ sec, w: 0 }); addq.value = ''; closePop(); afterPf(); render(); setTimeout(() => { const i = document.querySelector('.pr[data-sec="' + sec + '"] input'); if (i) i.focus(); }, 30); }
+addq.addEventListener('focus', openPop); addq.addEventListener('input', openPop);
+addq.addEventListener('keydown', e => {
+  const opts = [...pop.querySelectorAll('.opt[data-sec]')];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!opts.length) return; actIdx = (actIdx + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length; opts.forEach((o, i) => o.classList.toggle('act', i === actIdx)); opts[actIdx].scrollIntoView({ block: 'nearest' }); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (popList[actIdx]) pickOpt(popList[actIdx].sec); }
+  else if (e.key === 'Escape') closePop();
+});
+pop.addEventListener('mousedown', e => { const o = e.target.closest('.opt[data-sec]'); if (o) { e.preventDefault(); pickOpt(o.dataset.sec); } });
+document.addEventListener('click', e => { if (!e.target.closest('.addbox')) closePop(); });
+
+/* sticky bar */
+function renderBar() {
+  const bar = el('pbar'); if (!S.pf.length) { bar.classList.remove('show'); return; }
+  const t = totals(), ok = Math.abs(100 - t) < 0.005;
+  el('pbarTxt').innerHTML = 'בתיק <b>' + S.pf.length + '</b> קרנות · הוקצה <b class="' + (ok ? 'ok' : 'bad') + '">' + t + '%</b>' + (ok ? ' ✓' : '');
+  bar.classList.add('show');
+}
+el('pbarGo').addEventListener('click', () => el('builder').scrollIntoView());
+
+/* ───────────── share link (portfolio lives in the URL hash) ───────────── */
+function saveHash() {
+  const p = S.pf.map(x => x.sec + ':' + (x.w || '')).join(',');
+  const h = S.pf.length ? '#p=' + p + '&y=' + S.cYear + '&a=' + S.amt : '';
+  try { history.replaceState(null, '', location.pathname + location.search + h); } catch (e) { /* file:// or sandbox */ }
+}
+function loadHash() {
+  const m = {}; location.hash.replace(/^#/, '').split('&').forEach(kv => { const i = kv.indexOf('='); if (i > 0) m[kv.slice(0, i)] = kv.slice(i + 1); });
+  if (m.p) m.p.split(',').forEach(tok => { const [sec, w] = tok.split(':'); if (BY[sec] && !S.pf.some(p => p.sec === sec)) S.pf.push({ sec, w: Math.min(100, num(w || 0)) }); });
+  if (m.y && calcYears.includes(+m.y)) S.cYear = m.y;
+  if (m.a && num(m.a) > 0) S.amt = num(m.a);
+}
+loadHash();
+el('cYear').value = S.cYear; el('cAmt').value = String(S.amt);
+
+render(); renderPf(); renderResult(); renderBar();
+window.addEventListener('resize', () => { if (S.view === 'list') { clearTimeout(window.__rz); window.__rz = setTimeout(renderList, 150); } });
+</script>
+<script>
+/* numeric fields are text inputs — keep the typed content numeric */
+function isNumField(el) { return el instanceof HTMLInputElement && el.getAttribute("inputmode") === "decimal"; }
+document.addEventListener("beforeinput", function (e) {
+  if (!isNumField(e.target)) return;
+  if (typeof e.data === "string" && e.data.length === 1 && /[^0-9.\-]/.test(e.data)) e.preventDefault();
+});
+document.addEventListener("change", function (e) {
+  if (!isNumField(e.target)) return;
+  var clean = e.target.value.replace(/[^0-9.\-]/g, "");
+  if (clean !== e.target.value) e.target.value = clean;
+}, true);
+</script>
+</body>
+</html>
