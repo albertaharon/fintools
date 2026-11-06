@@ -115,6 +115,11 @@
     .a-row input { width:100%; padding:.35rem .5rem; border:1.5px solid var(--border); border-radius:7px;
       font-family:'Heebo',sans-serif; font-size:.88rem; background:#fff; outline:none; }
     .a-row input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(26,122,74,.12); }
+    .a-fee .num { display:inline-block; color:var(--text); font-weight:600; }
+    .cp { font-family:'Heebo',sans-serif; font-size:.68rem; font-weight:600; color:var(--green); background:#fff;
+      border:1px solid var(--green); border-radius:5px; padding:0 .4rem; margin:0 .25rem; cursor:pointer; line-height:1.5; }
+    .cp:hover { background:var(--green-lt); }
+    .cp.done { background:var(--green); color:#fff; }
     .a-head { background:#1c2b22; color:#fff; font-size:.72rem; font-weight:600; }
     .a-head > div:last-child, .a-row > .a-ret { text-align:left; }
     .a-ret { font-size:.8rem; font-weight:700; direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
@@ -380,7 +385,7 @@ function renderAlloc() {
       const ret = has ? '<span class="a-ret ' + (r.r >= 0 ? 'pos' : 'neg') + '">' + sgn(r.r) + '</span>'
         : '<span class="a-ret na" title="' + (r.why === 'listed' ? 'נרשמה ב-' + fmtDate(f.firstTrade) + ', אחרי תחילת השנה' : 'טרם נסחרה') + '">אין נתון</span>';
       return '<div class="a-row' + (W[f.sec] > 0 ? ' on' : '') + '" data-sec="' + f.sec + '"><div class="a-nm">' + esc(f.name) +
-        '<div class="a-fee">דמי ניהול ' + f.fee.toFixed(2) + '%</div></div>' +
+        '<div class="a-fee">נייר <span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button> · דמי ניהול ' + f.fee.toFixed(2) + '%</div></div>' +
         '<input type="text" inputmode="decimal" aria-label="אחוז ב' + esc(f.name) + '" value="' + (W[f.sec] || '') + '" placeholder="0">' + ret + '</div>';
     }).join('');
 }
@@ -440,6 +445,21 @@ el('alloc').addEventListener('change', e => {          /* sanitise with a visibl
   const v = Math.min(100, num(e.target.value));
   W[row.dataset.sec] = v; e.target.value = v ? String(v) : '';
   row.classList.toggle('on', v > 0); renderResult();
+});
+function copyText(txt) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt);
+  return new Promise((ok, no) => {                       /* fallback for non-secure contexts */
+    const t = document.createElement('textarea'); t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy') ? ok() : no(); } catch (e) { no(e); } t.remove();
+  });
+}
+el('alloc').addEventListener('click', e => {
+  const b = e.target.closest('.cp'); if (!b) return;
+  copyText(b.dataset.copy).then(() => {
+    b.textContent = 'הועתק ✓'; b.classList.add('done');
+    setTimeout(() => { b.textContent = 'העתק'; b.classList.remove('done'); }, 1400);
+  }, () => { b.textContent = 'לא הצליח'; setTimeout(() => { b.textContent = 'העתק'; }, 1400); });
 });
 el('cAmt').addEventListener('input', renderResult);
 cYear.addEventListener('change', () => { renderAlloc(); renderResult(); });
