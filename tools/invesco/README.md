@@ -9,6 +9,7 @@ Everything here is public market data. Nothing personal.
 |---|---|---|---|
 | 1 | Daily ILS prices for the 17 funds | `python3 update_prices.py` — fully automatic, no browser | every time |
 | 2 | Top-10 holdings + country/sector from invesco.com | browser step (below) → `holdings_raw.json` | monthly |
+| 2b | Fund size (AUM) for sorting — the number under "AUM" at the top of each Invesco fund page → `aum.json` | browser step | monthly, with step 2 |
 | 3 | Security numbers, fees, reference index from TASE | browser step (below) → `tase_funds.json` | only when TASE lists a new Invesco fund or a fee changes |
 | 4 | Build the page data | `python3 build_data.py` | every time |
 
@@ -75,3 +76,9 @@ user agent and waits 1 s between funds. `type=full&range=10Y` returns the full d
   (latest close for the current year). No prior-year close means the fund was not held at the start of
   the year: the return is withheld. In the table the listing year shows a flagged partial return.
 * Returns are price returns of the TASE unit (no distribution adjustment).
+
+## Sorting
+
+Both lists are sorted by fund size (AUM), largest first. Two funds are quoted in EUR; for the ordering only,
+`build_data.py` converts them at `EURUSD_FOR_SORT` (1.15). STOXX Europe 600 (€524M) and Health Care
+($629.78M) are close enough that their order depends on that rate.

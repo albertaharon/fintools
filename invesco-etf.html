@@ -191,7 +191,7 @@
   <!-- ═══ TABLE ═══ -->
   <div class="card">
     <h2>כל הקרנות במבט אחד</h2>
-    <p class="lead">לחיצה על שורה פותחת את החזקות הקרן והתפלגותה לפי מדינה וענף. בעמודה "תשואה שקלית" בוחרים שנה ורואים את התשואה של כל קרן באותה שנה.</p>
+    <p class="lead">הקרנות ממוינות לפי גודל, מהגדולה לקטנה. לחיצה על שורה פותחת את החזקות הקרן והתפלגותה לפי מדינה וענף. בעמודה "תשואה שקלית" בוחרים שנה ורואים את התשואה של כל קרן באותה שנה.</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -201,6 +201,7 @@
             <th class="c-sec">מספר נייר</th>
             <th>תחילת מסחר בת"א</th>
             <th class="c-desc">מה הקרן עושה</th>
+            <th>גודל הקרן</th>
             <th>דמי ניהול</th>
             <th><span class="th-lbl">תשואה שקלית בשנת</span><select id="yearSel" aria-label="שנה לתשואה"></select></th>
           </tr>
@@ -214,7 +215,7 @@
   <!-- ═══ CALCULATOR ═══ -->
   <div class="card">
     <h2>מחשבון תיק</h2>
-    <p class="lead">מחלקים אחוזים בין קרנות אינבסקו, ורואים את דמי הניהול של התיק ואת התשואה שהיה מניב אילו הורכב בתחילת השנה שבחרתם. מתעדכן תוך כדי הקלדה.</p>
+    <p class="lead">הקרנות ממוינות לפי גודל, מהגדולה לקטנה. מחלקים אחוזים בין קרנות אינבסקו, ורואים את דמי הניהול של התיק ואת התשואה שהיה מניב אילו הורכב בתחילת השנה שבחרתם. מתעדכן תוך כדי הקלדה.</p>
     <div class="calc">
       <div>
         <div class="top-fields">
@@ -237,6 +238,7 @@
       <li><strong>תשואה = שינוי מחיר, לא תשואה כוללת.</strong> חושבה ממחירי הסגירה של הנייר בבורסה בשקלים (מקור המחירים: stockanalysis.com. נבדק מדגמית מול עמודי הבורסה ותואם להם). המחירים אינם מתואמים לחלוקת דיבידנד. הקרן על מדד S&amp;P 500 מחלקת דיבידנד רבעוני (כ-1.1% בשנה לפי אינבסקו), ולכן תשואתה האמיתית גבוהה מעט ממה שמוצג. בקרנות צוברות אין הבדל. לא בדקתי באופן שיטתי את מדיניות החלוקה של כל קרן.</li>
       <li><strong>דמי הניהול כבר כלולים במחיר.</strong> הם מנוכים מתוך הקרן עצמה, ולכן אין לנכות אותם שוב מהתשואה. הם מוצגים כדי להשוות עלות.</li>
       <li><strong>למה חלק מהקרנות בלי תשואה בשנה מסוימת?</strong> תשואה לשנה מלאה דורשת מחיר בסוף השנה הקודמת. קרן שנרשמה במהלך השנה (או אחריה) לא נסחרה בתחילתה, ולא ניתן היה להחזיק אותה מתחילת השנה. בטבלה מוצגת בשנת הרישום תשואה חלקית מיום הרישום, עם תווית "חלקית". במחשבון היא אינה נכללת.</li>
+      <li><strong>גודל הקרן</strong> (AUM) כפי שמופיע בעמוד הקרן באתר אינבסקו, במטבע שמוצג שם. שתי קרנות מוצגות באירו, ולצורך המיון בלבד הומרו בקירוב לדולר, כך שהסדר בין קרנות קרובות בגודלן עשוי להשתנות.</li>
       <li><strong>קרנות עם מסחר דליל.</strong> בקרנות שנסחרות בנפח קטן המחיר האחרון עלול להיות ישן. בשורות כאלה מצוין תאריך המסחר האחרון.</li>
       <li><strong>החזקות והתפלגות.</strong> נקראו מעמוד כל קרן באתר אינבסקו. מוצגות עשר ההחזקות הגדולות של מדד הייחוס ופירוט לפי מדינה וענף כפי שאינבסקו מפרסמת (חשיפה כלכלית, ולכן לעיתים כוללת מדינות שאינן מדינת ההתאגדות). אינבסקו מציינת שנתוני רכיבי המדד מוגבלים עקב רישיון של ספק המדד. הרשימה המלאה זמינה באתר אינבסקו. בקרן אג"ח האתר מציג רק בטחונות, ולכן אין רשימת החזקות.</li>
       <li><strong>מבנה סינתטי.</strong> בכמה מהקרנות (למשל S&amp;P 500, MSCI World, נאסד"ק 100) הקרן מחזיקה סל מניות ומחליפה את התשואה מול המדד באמצעות swap, ולכן הסל בפועל שונה מרשימת מדד הייחוס.</li>
@@ -262,7 +264,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 el('asof').innerHTML =
   '<span>מחירי הבורסה נכון ל-<b>' + fmtDate(D.pricesAsOf) + '</b></span>' +
   '<span>החזקות והתפלגות נקראו מאתר אינבסקו ב-<b>' + fmtDate(D.generated) + '</b></span>' +
-  '<span><b>' + F.length + '</b> קרנות</span>';
+  '<span>גודל הקרנות נכון ל-<b>' + fmtDate(D.aumAsOf) + '</b></span><span><b>' + F.length + '</b> קרנות</span>';
 
 /* ─────────── shared helpers ─────────── */
 function yearLabel(y) { return +y === CUR_YEAR ? y + ' (עד ' + fmtDate(D.pricesAsOf) + ')' : String(y); }
@@ -345,9 +347,10 @@ function renderTable() {
       '<td class="c-sec num">' + f.sec + '</td>' +
       '<td class="num">' + fmtDate(f.firstTrade) + '</td>' +
       '<td class="c-desc desc">' + esc(f.desc) + '</td>' +
+      '<td class="num">' + f.aum + '</td>' +
       '<td class="num">' + f.fee.toFixed(2) + '%</td>' +
       '<td>' + retCell(f, y) + '</td></tr>' +
-    '<tr class="detail" data-sec="' + f.sec + '"' + (open.has(f.sec) ? '' : ' hidden') + '><td colspan="7">' + (open.has(f.sec) ? detailHtml(f) : '') + '</td></tr>').join('');
+    '<tr class="detail" data-sec="' + f.sec + '"' + (open.has(f.sec) ? '' : ' hidden') + '><td colspan="8">' + (open.has(f.sec) ? detailHtml(f) : '') + '</td></tr>').join('');
 }
 function toggle(row) {
   const sec = row.dataset.sec, det = row.nextElementSibling, f = F.find(x => x.sec === sec);
@@ -374,7 +377,7 @@ const cYear = el('cYear');
 calcYears.forEach(y => cYear.add(new Option(yearLabel(y), y)));
 cYear.value = String(CUR_YEAR - 1);
 
-const DEFAULT_W = { '1183441': 60, '1183490': 20, '1185172': 20 };
+const DEFAULT_W = {};                       /* no sample allocation: the user starts from an empty portfolio */
 const W = {}; F.forEach(f => { W[f.sec] = DEFAULT_W[f.sec] || 0; });
 
 function renderAlloc() {
@@ -385,7 +388,7 @@ function renderAlloc() {
       const ret = has ? '<span class="a-ret ' + (r.r >= 0 ? 'pos' : 'neg') + '">' + sgn(r.r) + '</span>'
         : '<span class="a-ret na" title="' + (r.why === 'listed' ? 'נרשמה ב-' + fmtDate(f.firstTrade) + ', אחרי תחילת השנה' : 'טרם נסחרה') + '">אין נתון</span>';
       return '<div class="a-row' + (W[f.sec] > 0 ? ' on' : '') + '" data-sec="' + f.sec + '"><div class="a-nm">' + esc(f.name) +
-        '<div class="a-fee">נייר <span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button> · דמי ניהול ' + f.fee.toFixed(2) + '%</div></div>' +
+        '<div class="a-fee">נייר <span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button> · גודל <span class="num">' + f.aum + '</span> · דמי ניהול ' + f.fee.toFixed(2) + '%</div></div>' +
         '<input type="text" inputmode="decimal" aria-label="אחוז ב' + esc(f.name) + '" value="' + (W[f.sec] || '') + '" placeholder="0">' + ret + '</div>';
     }).join('');
 }
