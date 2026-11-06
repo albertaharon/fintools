@@ -6,7 +6,7 @@ Feeds `tase-etfs.html` through the generated file `../../etf_data.js`. Public ma
 
 | Step | What | How | How often |
 |---|---|---|---|
-| 1 | Daily ILS prices, all funds | `python3 update_prices.py` — automatic, no browser | every time |
+| 1 | Prices: year-end closes, latest price, listing date | browser, TASE history page → `tase_history.json` (extractor: `tase_history_extractor.js`) | full range each January; quick mode (from 1 Jan of this year) to refresh the latest price |
 | 2 | INVESCO: top-10 + country/sector, fund size | browser, invesco.com/uk pages → `holdings_raw.json`, `aum.json` | monthly |
 | 3 | iShares: top-10 + sector/geography, fund size | browser, ishares.com/uk pages → `ishares_raw.json` | monthly |
 | 4 | Security numbers, fees, reference index | browser, market.tase.co.il → `tase_funds.json` (INVESCO), `tase_ishares.json` | when a fund is added or a fee changes |
@@ -60,21 +60,22 @@ Rules learned the hard way:
 
 ## Price source and return rules
 
-`stockanalysis.com/api/symbol/a/TLV-<ticker>/history` — robots.txt allows it, honest user agent, 1 s between
-funds. `type=full&range=10Y` = full daily series; `type=chart` = first trading day. Last closes were
-verified against the TASE pages (all iShares funds; INVESCO FF1, FF14–FF17).
+**Source: the TASE history page of each fund** (desktop layout, custom range `pType=8&dFrom=2019-01-01&dTo=<today>`).
+`stockanalysis.com` was used first and dropped: it misses trading days, and for many iShares funds it only
+starts in Feb 2025 although TASE shows trading since 2019 (the first version of the page was wrong because of
+that, e.g. it showed iShares Core S&P 500 as listed 2025-02-05 and INVESCO Nasdaq-100 as listed 2025).
+TASE publishes `שער נעילה מתואם` (adjusted close); returns use it, which also handles the 2025 100:1 unit
+change of INVESCO S&P 500 (close 258,000 → adjusted 2,569.68 for 2022-12-29). Whether it is also adjusted for
+dividends is not established, so the page calls the result a price return.
 
-* Full-year return of year Y = close on/before 31 Dec Y-1 → close on/before 31 Dec Y (latest close for the
-  current year). **Both year-end prices must be within 14 calendar days of 31 Dec**, otherwise the return is
-  withheld ("illiquid"): thinly traded funds otherwise silently get a return measured from an old price.
-  (This check removed 2022–2023 returns for four thin INVESCO funds that an earlier version of the page
-  had shown, and fixed iShares 2021.)
-* No prior-year close at all = not held at the start of the year → withheld; in the listing year the table
-  shows a flagged partial return (not used by the calculator).
-* Several iShares funds show one **registration quote in 2019** and real trading from late 2021
-  (`REGISTRATION_GAP_DAYS`): the first row is dropped from the series and kept as `listed`.
-* Returns are price returns of the TASE unit (no distribution adjustment); the feed's adjusted close equals
-  the close for every fund.
+* Full-year return of year Y = adjusted close at the last TRADED day on/before 31 Dec Y-1 → same for Y (latest
+  traded day for the current year). **Both must be within 14 calendar days of the 31 Dec**, otherwise the return is
+  withheld ("illiquid"). TASE lists no-trade days with the last price carried, so "the row exists" is not
+  evidence of a trade; the extractor treats a row as a trade only if it has a high price.
+* No row yet at the start of the year (listing year) → withheld ("listed"), no partial returns are shown.
+* Verified: latest prices equal the TASE page for all iShares funds; the iShares S&P 500 / INVESCO S&P 500 returns
+  are consistent with S&P 500 USD returns × USD/ILS.
+* Nothing here needs `update_prices.py` any more (deleted).
 
 ## Sorting
 

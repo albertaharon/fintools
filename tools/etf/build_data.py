@@ -4,12 +4,12 @@
 INVESCO inputs  : tase_funds.json (TASE facts) · holdings_raw.json (invesco.com exposures) · aum.json
 iShares inputs  : ishares_map.json (ids) · tase_ishares.json (TASE facts) · ishares_raw.json (ishares.com)
 Shared inputs   : fund_text_he.json (Hebrew names/descriptions/translations) · fund_meta.json (hand-curated
-                  category, region, comparison groups) · prices.json (update_prices.py, fully automatic)
+                  category, region, comparison groups) · tase_history.json (year-end prices, listing dates,
+                  read from each fund's TASE history page in a browser)
 
-Returns are PRICE returns of the TASE-listed unit in ILS (close-to-close); the price feed carries no
-distribution adjustment. A full-year return needs a close on or before 31 Dec of the previous year;
-otherwise it is withheld (the fund was not held at the start of the year). In a fund's listing year the
-partial return since listing is kept, flagged as partial, for the information list only.
+Returns are PRICE returns in ILS from TASE's adjusted close ('שער נעילה מתואם'). A full-year return needs a
+traded price within MAX_GAP_DAYS of 31 Dec of BOTH the previous and the current year; a fund that was not
+yet trading at the start of the year, or whose last trade was too far from the year end, gets no return.
 """
 import datetime, json, os, re
 
@@ -17,7 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "..", "etf_data.js")
 load = lambda n: json.load(open(os.path.join(HERE, n), encoding="utf-8"))
 
-text, meta, prices = load("fund_text_he.json"), load("fund_meta.json"), load("prices.json")
+text, meta, hist = load("fund_text_he.json"), load("fund_meta.json"), load("tase_history.json")["funds"]
 inv_tase, inv_raw, inv_aum = load("tase_funds.json")["funds"], load("holdings_raw.json")["funds"], load("aum.json")
 ish_map, ish_tase, ish_raw = load("ishares_map.json")["funds"], load("tase_ishares.json")["funds"], load("ishares_raw.json")["funds"]
 
@@ -25,8 +25,6 @@ ish_map, ish_tase, ish_raw = load("ishares_map.json")["funds"], load("tase_ishar
 # ordering they are converted at an approximate rate; the displayed figure stays in the source currency.
 EURUSD_FOR_SORT = 1.15
 MAX_GAP_DAYS = 14        # a year-end price older than this (illiquid fund) is not accepted as the year-end price
-REGISTRATION_GAP_DAYS = 90   # some funds show one registration quote years before real trading starts
-UNLISTED_FIRST_TRADE = "2026-11-04"          # iShares energy / semiconductors / India: first trading day (TASE history page)
 
 def fmt_aum(ccy, v):
     sym = {"USD": "$", "EUR": "€"}[ccy]
@@ -52,55 +50,50 @@ def tr(dic, k):
     if k in dic: return dic[k]
     missing.add(k); return k
 
-def last_on_or_before(rows, date, max_gap=None):
-    v = None
-    for r in rows:
-        if r[0] <= date: v = r
-        else: break
-    if v and max_gap is not None and (datetime.date.fromisoformat(date) - datetime.date.fromisoformat(v[0])).days > max_gap:
-        return "stale"
-    return v
+def parse_ye(txt):
+    out = {}
+    for tok in (txt or "").split():
+        y, rest = tok.split("=", 1)
+        p = rest.split("|")
+        out[int(y)] = {"date": p[0], "close": float(p[1]), "adj": float(p[2])}
+    return out
 
-asof = max(rows[-1][0] for rows in prices.values())
+TODAY_ASOF = max(d for h in hist.values() for d in [e for e in re.findall(r"\d{4}-\d{2}-\d{2}", h.get("ye", ""))] or ["2000-01-01"])
+asof = TODAY_ASOF
 cur_year = int(asof[:4])
+
+def gap_days(year_end_year, date):
+    return (datetime.date(year_end_year, 12, 31) - datetime.date.fromisoformat(date)).days
 
 def build(mgr, sec, ticker, fact, name_en, ccy_aum, aum_v, raw, extra):
     t = text["funds"][sec]
     d = {"mgr": mgr, "sec": sec, "ticker": ticker, "name": t["name"], "nameEn": name_en, "desc": t["desc"],
          "fee": fact["fee"], "ccy": fact["ccy"], "ref": fact["ref"],
          "aum": fmt_aum(ccy_aum, aum_v), "aumUsd": aum_v * (EURUSD_FOR_SORT if ccy_aum == "EUR" else 1)}
-    d.update({k: v for k, v in meta["funds"][sec].items()})
-    rows = prices.get(ticker) if ticker else None
-    if rows:
-        listed = rows[0][0]
-        if len(rows) > 1 and (datetime.date.fromisoformat(rows[1][0]) - datetime.date.fromisoformat(rows[0][0])).days > REGISTRATION_GAP_DAYS:
-            rows = rows[1:]                      # lone registration quote; real trading starts at the next row
-            d["listed"] = listed
-        first, last = rows[0], rows[-1]
-        d["firstTrade"], d["lastDate"], d["lastPrice"] = first[0], last[0], last[1]
-        d["stale"] = (datetime.date.fromisoformat(asof) - datetime.date.fromisoformat(last[0])).days > 5
-        if abs(last[2] - last[1]) / last[1] > 1e-4 and False: pass
-        if fact.get("last") and abs(fact["last"] - last[1]) / fact["last"] > 0.005:
-            print("WARNING price mismatch vs TASE page:", sec, fact["last"], last[1])
-        rets = {}
-        for y in range(first[0] and int(first[0][:4]), cur_year + 1):
-            start = last_on_or_before(rows, "%d-12-31" % (y - 1), MAX_GAP_DAYS)
-            end = last_on_or_before(rows, "%d-12-31" % y, MAX_GAP_DAYS) if y < cur_year else last
-            if end is None or (end != "stale" and end[0] < "%d-01-01" % y):
-                rets[y] = {"r": None, "why": "none"}
-            elif start == "stale" or end == "stale":
-                rets[y] = {"r": None, "why": "illiquid"}
-                print("withheld (no price within %d days of year end): %s %s %s" % (MAX_GAP_DAYS, sec, ticker, y))
-            elif start is None:
-                rets[y] = {"r": None, "why": "listed", "partial": round((end[1] / first[1] - 1) * 100, 2), "from": first[0], "to": end[0]}
-            else:
-                rets[y] = {"r": round((end[1] / start[1] - 1) * 100, 2), "from": start[0], "to": end[0]}
-        d["returns"] = {str(y): v for y, v in rets.items()}
-        d["adjDiffers"] = any(abs(c - a) / c > 1e-4 for _, c, a in rows)
-    else:                                       # listed so recently that no price history exists yet
-        d["firstTrade"] = UNLISTED_FIRST_TRADE
+    d.update(meta["funds"][sec])
+    h = hist[sec]
+    ye = parse_ye(h.get("ye"))
+    first_year = int(h["first"][:4])
+    d["firstTrade"] = h["first"]
+    if ye:
+        ly = max(ye); last = ye[ly]
+        d["lastDate"], d["lastPrice"] = last["date"], last["close"]
+        d["stale"] = (datetime.date.fromisoformat(asof) - datetime.date.fromisoformat(last["date"])).days > 5
+        if fact.get("last") and abs(fact["last"] - last["close"]) / fact["last"] > 0.005:
+            print("WARNING latest price differs from the TASE page:", sec, fact["last"], last["close"])
+    else:
         d["lastDate"], d["lastPrice"], d["stale"] = None, fact.get("last"), False
-        d["returns"], d["adjDiffers"] = {}, False
+    rets = {}
+    for y in range(first_year, cur_year + 1):
+        if y == first_year:
+            rets[y] = {"r": None, "why": "listed"}; continue
+        a, b = ye.get(y - 1), ye.get(y)
+        if a is None or b is None or gap_days(y - 1, a["date"]) > MAX_GAP_DAYS or (y < cur_year and gap_days(y, b["date"]) > MAX_GAP_DAYS):
+            rets[y] = {"r": None, "why": "illiquid"}
+            print("withheld (no trade within %d days of the year end): %s %s %s" % (MAX_GAP_DAYS, sec, t["name"], y))
+            continue
+        rets[y] = {"r": round((b["adj"] / a["adj"] - 1) * 100, 2), "from": a["date"], "to": b["date"]}
+    d["returns"] = {str(y): v for y, v in rets.items()}
     d.update(extra(raw))
     return d
 
@@ -142,6 +135,5 @@ open(OUT, "w", encoding="utf-8").write(
     "window.ETF_DATA = " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n")
 print("wrote", os.path.normpath(OUT), os.path.getsize(OUT), "bytes;", len(funds), "funds;", "years", years, "prices as of", asof)
 if missing: print("WARNING untranslated names:", sorted(missing))
-if any(f["adjDiffers"] for f in funds): print("NOTE: some funds now carry adjusted closes - review the 'price return' wording")
 for f in funds:
-    if f["stale"]: print("stale price:", f["mgr"], f["ticker"], "last trade", f["lastDate"])
+    if f["stale"]: print("stale price:", f["mgr"], f["name"], "last trade", f["lastDate"])
