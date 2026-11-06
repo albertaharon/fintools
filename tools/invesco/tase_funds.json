@@ -1,0 +1,160 @@
+{
+ "_comment": "Static facts about the Invesco UCITS ETFs listed on TASE. Source: each fund's 'נתונים עיקריים' page on market.tase.co.il, read in a browser on 2026-11-06. Public market data only. Re-collect when TASE lists a new Invesco fund or changes a fee.",
+ "asOf": "2026-11-06",
+ "funds": [
+  {
+   "sec": "1183441",
+   "fullName": "INVESCO S&P 500 UCITS ETF",
+   "fee": 0.05,
+   "ccy": "USD",
+   "ref": "S&P 500 - NTR",
+   "cls": "אמריקה- שווקים מפותחים",
+   "ticker": "IN.FF1"
+  },
+  {
+   "sec": "1183458",
+   "fullName": "INVESCO S&P 500 ESG UCITS ETF",
+   "fee": 0.09,
+   "ccy": "USD",
+   "ref": "S&P 500 Scored & Screened Index - NTR",
+   "cls": "אמריקה- שווקים מפותחים",
+   "ticker": "IN.FF2"
+  },
+  {
+   "sec": "1183466",
+   "fullName": "INVESCO FINANCIALS S&P US SELECT SECTOR UCITS ETF",
+   "fee": 0.14,
+   "ccy": "USD",
+   "ref": "S&P Select Sector Capped 20% Financials",
+   "cls": "Financial",
+   "ticker": "IN.FF3"
+  },
+  {
+   "sec": "1183474",
+   "fullName": "INVESCO HEALTH CARE S&P US SELECT SECTOR UCITS ETF",
+   "fee": 0.14,
+   "ccy": "USD",
+   "ref": "S&P Select Sector Capped 20% Health Care Index",
+   "cls": "Health Care",
+   "ticker": "IN.FF4"
+  },
+  {
+   "sec": "1183482",
+   "fullName": "INVESCO KBW NASDAQ FINTECH UCITS ETF",
+   "fee": 0.49,
+   "ccy": "USD",
+   "ref": "KBW Nasdaq Financial Technology - NTR",
+   "cls": "Fintech",
+   "ticker": "IN.FF5"
+  },
+  {
+   "sec": "1183490",
+   "fullName": "INVESCO MSCI EMERGING MARKETS UCITS ETF",
+   "fee": 0.09,
+   "ccy": "USD",
+   "ref": "MSCI EMERGING MARKETS - NTR",
+   "cls": "גלובלי- שווקים מתעוררים",
+   "ticker": "IN.FF6"
+  },
+  {
+   "sec": "1185164",
+   "fullName": "INVESCO MSCI WORLD UCITS ETF ACC",
+   "fee": 0.05,
+   "ccy": "USD",
+   "ref": "MSCI WORLD INDEX - NTR",
+   "cls": "גלובלי- שווקים מפותחים",
+   "ticker": "IN.FF7"
+  },
+  {
+   "sec": "1185172",
+   "fullName": "INVESCO STOXX EUROPE 600 UCITS ETF ACC",
+   "fee": 0.19,
+   "ccy": "EUR",
+   "ref": "STOXX Europe 600 - NTR",
+   "cls": "אירופה- שווקים מפותחים",
+   "ticker": "IN.FF8"
+  },
+  {
+   "sec": "1185180",
+   "fullName": "INVESCO TECHNOLOGY S&P US SELECT SECTOR UCITS ETF ACC",
+   "fee": 0.14,
+   "ccy": "USD",
+   "ref": "S&P Select Sector Capped 20% Technology Index",
+   "cls": "Information technology",
+   "ticker": "IN.FF9"
+  },
+  {
+   "sec": "1185206",
+   "fullName": "Invesco USD AT1 CoCo Bond UCITS ETF",
+   "fee": 0.39,
+   "ccy": "USD",
+   "ref": "iBoxx USD Contingent Convertible Liquid Developed Market AT1 (8/5% Issuer Cap) Index",
+   "cls": "חברות והמרה חשופת מט\"ח",
+   "ticker": "IN.FF10"
+  },
+  {
+   "sec": "1186055",
+   "fullName": "Invesco CoinShares Global Blockchain UCITS ETF Acc",
+   "fee": 0.65,
+   "ccy": "USD",
+   "ref": "CoinShares Blockchain Global Equity Index",
+   "cls": "Blockchain",
+   "ticker": "IN.FF11"
+  },
+  {
+   "sec": "1186063",
+   "fullName": "INVESCO NASDAQ-100 SWAP UCITS ETF ACC",
+   "fee": 0.2,
+   "ccy": "USD",
+   "ref": "NASDAQ 100 - NTR",
+   "cls": "אמריקה- שווקים מפותחים",
+   "ticker": "IN.FF12"
+  },
+  {
+   "sec": "1186071",
+   "fullName": "INVESCO MSCI CHINA ALL SHARES STOCK CONNECT UCITS ETF ACC",
+   "fee": 0.35,
+   "ccy": "USD",
+   "ref": "MSCI China All Shares Stock Connect Select Index",
+   "cls": "אסיה ופסיפיק- שווקים מתעוררים",
+   "ticker": "IN.FF13"
+  },
+  {
+   "sec": "1206895",
+   "fullName": "Invesco Russell 2000 UCITS ETF Acc",
+   "fee": 0.25,
+   "ccy": "USD",
+   "ref": "Russell 2000 Total Return Index",
+   "cls": "אמריקה- שווקים מפותחים",
+   "ticker": "IN.FF15"
+  },
+  {
+   "sec": "1207190",
+   "fullName": "INVESCO EURO STOXX 50 UCITS ETF ACC",
+   "fee": 0.05,
+   "ccy": "EUR",
+   "ref": "EURO STOXX 50 - NTR",
+   "cls": "אירופה- כללי",
+   "ticker": "IN.FF14"
+  },
+  {
+   "sec": "1207208",
+   "fullName": "INVESCO S&P 500 EQUAL WEIGHT UCITS ETF ACC",
+   "fee": 0.2,
+   "ccy": "USD",
+   "ref": "S&P 500 Equal Weight - NTR",
+   "cls": "אמריקה- שווקים מפותחים",
+   "ticker": "IN.FF16"
+  },
+  {
+   "sec": "1209220",
+   "fullName": "Invesco FTSE ALL-WORLD UCITS ETF",
+   "fee": 0.15,
+   "ccy": "USD",
+   "ref": "FTSE ALL WORLD",
+   "cls": "גלובלי- כללי",
+   "ticker": "IN.FF17"
+  }
+ ],
+ "_tickerNote": "ticker = TASE symbol used by stockanalysis.com (TLV-IN.FFn). Mapping verified by name for all 17 and by last close vs the TASE page for FF1, FF14-FF17 on 2026-11-06."
+}
