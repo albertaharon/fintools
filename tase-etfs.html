@@ -250,7 +250,7 @@
   <!-- ═══ EXPLORER ═══ -->
   <div class="card" id="explorer">
     <h2>מצאו קרן</h2>
-    <p class="lead">חפשו לפי שם, מספר נייר או מדד, סננו לפי סוג חשיפה, ולחצו על + כדי להוסיף קרן לתיק שלמטה. כשיש לאותה חשיפה קרן גם אצל INVESCO וגם אצל iShares, אפשר להשוות ביניהן בלשונית "השוואת מנהלים".</p>
+    <p class="lead">חפשו לפי שם, מספר נייר או מדד, סננו לפי סוג חשיפה או לפי מבנה (פיזית או סינתטית), ולחצו על + כדי להוסיף קרן לתיק שלמטה. כשיש לאותה חשיפה קרן גם אצל INVESCO וגם אצל iShares, אפשר להשוות ביניהן בלשונית "השוואת מנהלים".</p>
     <div class="ctl">
       <div class="ctl-row">
         <div class="search"><input id="q" type="search" placeholder="חיפוש: S&P, נאסד&quot;ק, 1159250, אג&quot;ח…" autocomplete="off" aria-label="חיפוש קרן"><span class="ico">⌕</span></div>
@@ -263,6 +263,9 @@
       </div>
       <div class="ctl-row" id="listCtl">
         <div class="chips" id="chips" role="group" aria-label="סוג חשיפה"></div>
+        <div class="seg" id="structSeg" role="group" aria-label="מבנה הקרן" title="פיזית: מחזיקה את הניירות בפועל · סינתטית: מקבלת את תשואת המדד בחוזה swap">
+          <button data-v="all" class="on">כל המבנים</button><button data-v="phys">פיזית</button><button data-v="swap">סינתטית (swap)</button>
+        </div>
         <label style="font-size:.8rem;color:var(--muted)">מיון: <select class="sel" id="sortSel" aria-label="מיון"></select></label>
         <span class="count" id="count"></span>
       </div>
@@ -394,7 +397,12 @@ function bars(list, dec) {
   const row = (l, v, cls) => '<div class="bar-row"><span class="lbl" title="' + esc(l) + '">' + esc(l) + '</span><span class="val">' + v.toFixed(dec || 1) + '%</span><div class="bar ' + (cls || '') + '"><span style="width:' + (v / mx * 100).toFixed(1) + '%"></span></div></div>';
   return rows.map(x => row(x[0], x[1])).join('') + (rest > 0.5 && rest < 99 ? row('יתר', rest, 'rest') : '');
 }
-function structBadge(f) { return f.swap === true ? '<span class="badge swap">סינתטי (swap)</span>' : f.swap === false ? '<span class="badge phys">פיזי</span>' : ''; }
+const STRUCT_TIP = { swap: 'סינתטית: הקרן מחזיקה סל ניירות אחר ומקבלת את תשואת המדד מצד שלישי בחוזה swap', phys: 'פיזית: הקרן מחזיקה בפועל את ניירות הערך של המדד (או מדגם מייצג שלהם)' };
+function structBadge(f, short) {
+  if (f.swap === true) return '<span class="badge swap" title="' + STRUCT_TIP.swap + '">' + (short ? 'סינתטית' : 'סינתטי (swap)') + '</span>';
+  if (f.swap === false) return '<span class="badge phys" title="' + STRUCT_TIP.phys + '">' + (short ? 'פיזית' : 'פיזי') + '</span>';
+  return '';
+}
 function detailHtml(f) {
   const noTop = f.asset === 'bond'
     ? 'זו קרן אג"ח, ולכן לא מוצגת רשימת החזקות. ההרכב מוצג לפי סוג ומדינה.'
@@ -430,7 +438,7 @@ function whyNot(f, y) {
 
 /* ───────────── state ───────────── */
 let modalG = null, lastFocus = null;
-const S = { q: '', mgr: 'all', cat: 'all', view: 'list', sort: 'aum', year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
+const S = { q: '', mgr: 'all', cat: 'all', struct: 'all', view: 'list', sort: 'aum', year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
 
 /* ───────────── explorer ───────────── */
 const SORTS = { aum: 'גודל קרן (גדולה → קטנה)', fee: 'דמי ניהול (זול → יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה → נמוכה)', first: 'תחילת מסחר (ותיקה → חדשה)', name: 'שם' };
@@ -438,6 +446,7 @@ el('sortSel').innerHTML = Object.keys(SORTS).map(k => '<option value="' + k + '"
 function matches(f) {
   if (S.mgr !== 'all' && f.mgr !== S.mgr) return false;
   if (S.cat !== 'all' && f.cat !== S.cat) return false;
+  if (S.struct !== 'all' && (S.struct === 'swap') !== (f.swap === true)) return false;
   if (S.q) {
     const hay = (f.name + ' ' + f.nameEn + ' ' + f.sec + ' ' + f.ref + ' ' + f.mgr + ' ' + (f.ticker || '') + ' ' + (f.isin || '') + ' ' + (CAT[f.cat] || '')).toLowerCase();
     return S.q.toLowerCase().split(/\s+/).every(t => hay.includes(t));
@@ -464,7 +473,7 @@ function rowHtml(f) {
   const hasTwin = f.group;
   return '<div class="fr' + (open ? ' open' : '') + '" data-sec="' + f.sec + '" tabindex="0" role="button" aria-expanded="' + open + '">' +
     '<div><button type="button" class="add' + (inPf ? ' in' : '') + '" data-add="' + f.sec + '" aria-label="' + (inPf ? 'הסר מהתיק' : 'הוסף לתיק') + ': ' + esc(f.name) + '" title="' + (inPf ? 'בתיק. לחיצה להסרה' : 'הוסף לתיק') + '">' + (inPf ? '✓' : '+') + '</button></div>' +
-    '<div><div class="nm">' + tag(f) + ' ' + esc(f.name) + '</div><div class="nm-en">' + esc(f.nameEn) + '</div><div class="dsc">' + esc(f.desc) + '</div>' +
+    '<div><div class="nm">' + tag(f) + ' ' + structBadge(f, true) + ' ' + esc(f.name) + '</div><div class="nm-en">' + esc(f.nameEn) + '</div><div class="dsc">' + esc(f.desc) + '</div>' +
       (hasTwin ? '<div class="cmpbtn"><button type="button" class="linkbtn" data-cmp="' + f.group + '">יש מקביל אצל ' + (f.mgr === 'INVESCO' ? 'iShares' : 'INVESCO') + ' · להשוואה</button></div>' : '') + '</div>' +
     '<div class="cell" data-l="מספר נייר"><span class="secno"><span class="num">' + f.sec + '</span><button type="button" class="cp" data-copy="' + f.sec + '" aria-label="העתק מספר נייר ' + f.sec + '">העתק</button></span></div>' +
     '<div class="cell" data-l="תחילת מסחר"><span class="num">' + fmtDate(f.firstTrade) + '</span>' + (f.listed ? '<div class="sub">נרשמה ' + fmtDate(f.listed) + '</div>' : '') + '</div>' +
@@ -476,7 +485,7 @@ function rowHtml(f) {
 function renderList() {
   const list = sorted(F.filter(matches));
   renderChips();
-  el('count').innerHTML = list.length + ' מתוך ' + F.length + ' קרנות' + (S.q || S.mgr !== 'all' || S.cat !== 'all' ? ' · <button class="linkbtn" id="clr" type="button">נקה סינון</button>' : '');
+  el('count').innerHTML = list.length + ' מתוך ' + F.length + ' קרנות' + (S.q || S.mgr !== 'all' || S.cat !== 'all' || S.struct !== 'all' ? ' · <button class="linkbtn" id="clr" type="button">נקה סינון</button>' : '');
   const th = (k, t) => '<button type="button" data-sort="' + k + '" class="' + (S.sort === k ? 'on' : '') + '">' + t + '</button>';
   const head = '<div class="lh"><div></div><div>' + th('name', 'קרן') + '</div><div>מספר נייר</div><div>' + th('first', 'תחילת מסחר') + '</div><div>' + th('aum', 'גודל הקרן') + '</div><div>' + th('fee', 'דמי ניהול') + '</div>' +
     '<div>' + th('ret', 'תשואה שקלית בשנת') + '<br><select id="yearSel" aria-label="שנה לתשואה">' + D.years.map(y => '<option value="' + y + '"' + (String(y) === S.year ? ' selected' : '') + '>' + yLabel(y) + '</option>').join('') + '</select></div><div></div></div>';
@@ -533,6 +542,7 @@ function render() {
   el('listView').hidden = S.view !== 'list'; el('compareView').hidden = S.view !== 'compare'; el('listCtl').style.display = S.view === 'list' ? '' : 'none';
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view));
   document.querySelectorAll('#mgrSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.mgr));
+  document.querySelectorAll('#structSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.struct));
   if (S.view === 'list') renderList(); else renderCompare();
   if (modalG) renderModal();
 }
@@ -541,6 +551,7 @@ function render() {
 el('q').addEventListener('input', e => { S.q = e.target.value.trim(); if (S.view !== 'list') S.view = 'list'; render(); });
 el('mgrSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.mgr = b.dataset.v; if (S.view !== 'list') S.view = 'list'; render(); });
 el('viewSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v; render(); });
+el('structSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.struct = b.dataset.v; render(); });
 el('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; S.cat = b.dataset.v; render(); });
 el('sortSel').addEventListener('change', e => { S.sort = e.target.value; render(); });
 el('explorer').addEventListener('change', e => {
@@ -548,7 +559,7 @@ el('explorer').addEventListener('change', e => {
 });
 el('explorer').addEventListener('click', e => {
   const sortBtn = e.target.closest('[data-sort]'); if (sortBtn) { S.sort = sortBtn.dataset.sort; render(); return; }
-  if (e.target.id === 'clr') { S.q = ''; S.mgr = 'all'; S.cat = 'all'; el('q').value = ''; render(); return; }
+  if (e.target.id === 'clr') { S.q = ''; S.mgr = 'all'; S.cat = 'all'; S.struct = 'all'; el('q').value = ''; render(); return; }
   const cmp = e.target.closest('[data-cmp]');
   if (cmp) { e.stopPropagation(); openCmp(cmp.dataset.cmp); return; }
   const add = e.target.closest('[data-add]'); if (add) { e.stopPropagation(); togglePf(add.dataset.add); return; }
