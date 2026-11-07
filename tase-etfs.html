@@ -441,7 +441,7 @@ let modalG = null, lastFocus = null;
 const S = { q: '', mgr: 'all', cat: 'all', struct: 'all', view: 'list', sort: 'aum', year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
 
 /* ───────────── explorer ───────────── */
-const SORTS = { aum: 'גודל קרן (גדולה → קטנה)', fee: 'דמי ניהול (זול → יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה → נמוכה)', first: 'תחילת מסחר (ותיקה → חדשה)', name: 'שם' };
+const SORTS = { aum: 'גודל קרן (גדולה ← קטנה)', fee: 'דמי ניהול (זול ← יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה ← נמוכה)', first: 'תחילת מסחר (ותיקה ← חדשה)', name: 'שם' };
 el('sortSel').innerHTML = Object.keys(SORTS).map(k => '<option value="' + k + '">' + SORTS[k] + '</option>').join('');
 function matches(f) {
   if (S.mgr !== 'all' && f.mgr !== S.mgr) return false;
