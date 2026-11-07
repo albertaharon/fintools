@@ -75,7 +75,11 @@
     .lh, .fr { display:grid; grid-template-columns:2.7rem minmax(0,2.3fr) 8.6rem 6.4rem 5.8rem 5rem 8.2rem 1.6rem; gap:.6rem; align-items:start; padding:.7rem .8rem; }
     .lh { background:#1c2b22; color:#fff; font-size:.74rem; font-weight:600; align-items:center; padding-top:.55rem; padding-bottom:.55rem; position:sticky; top:0; z-index:5; }
     .lh button { background:none; border:none; color:#fff; font:inherit; cursor:pointer; text-align:right; padding:0; }
-    .lh button.on::after { content:' ▾'; color:#7ee2b0; }
+    .lh button::after { content:' ⇅'; color:#7ee2b0; opacity:.45; }
+    .lh button.on::after { content:' ▾'; color:#7ee2b0; opacity:1; }
+    .lh button.on.rev::after { content:' ▴'; }   /* ▾ = values go down the list, ▴ = values go up */
+    .revbtn { border:1.5px solid var(--border); background:#fff; color:var(--green-dk); border-radius:8px; font:inherit; font-size:.8rem; font-weight:600; padding:.35rem .6rem; cursor:pointer; }
+    .revbtn.on { background:var(--green-lt); border-color:#bfe0cf; }
     .lh select { font-family:inherit; font-size:.78rem; font-weight:600; padding:.2rem .35rem; border:1.5px solid #7ee2b0; border-radius:6px; background:#fff; color:var(--green-dk); margin-top:.2rem; max-width:100%; }
     .fr { border-top:1px solid #eef1ef; cursor:pointer; }
     .fr:nth-of-type(odd) { background:#fbfdfc; }
@@ -267,6 +271,7 @@
           <button data-v="all" class="on">כל המבנים</button><button data-v="phys">פיזית</button><button data-v="swap">סינתטית (swap)</button>
         </div>
         <label style="font-size:.8rem;color:var(--muted)">מיון: <select class="sel" id="sortSel" aria-label="מיון"></select></label>
+        <button type="button" class="revbtn" id="revBtn" aria-label="הפוך את סדר המיון" title="הפוך את סדר המיון">⇅ הפוך סדר</button>
         <span class="count" id="count"></span>
       </div>
     </div>
@@ -438,10 +443,10 @@ function whyNot(f, y) {
 
 /* ───────────── state ───────────── */
 let modalG = null, lastFocus = null;
-const S = { q: '', mgr: 'all', cat: 'all', struct: 'all', view: 'list', sort: 'aum', year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
+const S = { q: '', mgr: 'all', cat: 'all', struct: 'all', view: 'list', sort: 'aum', rev: false, year: String(CUR_YEAR), open: new Set(), pf: [], cYear: String(CUR_YEAR), amt: 100000 };
 
 /* ───────────── explorer ───────────── */
-const SORTS = { aum: 'גודל קרן (גדולה ← קטנה)', fee: 'דמי ניהול (זול ← יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה ← נמוכה)', first: 'תחילת מסחר (ותיקה ← חדשה)', name: 'שם' };
+const SORTS = { aum: 'גודל קרן (גדולה ← קטנה)', fee: 'דמי ניהול (זול ← יקר)', ret: 'תשואה בשנה שנבחרה (גבוהה ← נמוכה)', first: 'תחילת מסחר (ותיקה ← חדשה)', sec: 'מספר נייר (קטן ← גדול)', name: 'שם (א ← ת)' };
 el('sortSel').innerHTML = Object.keys(SORTS).map(k => '<option value="' + k + '">' + SORTS[k] + '</option>').join('');
 function matches(f) {
   if (S.mgr !== 'all' && f.mgr !== S.mgr) return false;
@@ -454,13 +459,17 @@ function matches(f) {
   return true;
 }
 function sorted(list) {
+  const d = S.rev ? -1 : 1, y = S.year;
+  const has = f => retOf(f, y).r != null;
+  const byAum = (p, q) => q.aumUsd - p.aumUsd;               /* tie-break: bigger fund first, whatever the direction */
   const a = list.slice();
-  const y = S.year, rv = f => { const r = retOf(f, y); return r.r != null ? r.r : -1e9; };
-  if (S.sort === 'aum') a.sort((p, q) => q.aumUsd - p.aumUsd);
-  else if (S.sort === 'fee') a.sort((p, q) => p.fee - q.fee || q.aumUsd - p.aumUsd);
-  else if (S.sort === 'ret') a.sort((p, q) => rv(q) - rv(p) || q.aumUsd - p.aumUsd);
-  else if (S.sort === 'first') a.sort((p, q) => p.firstTrade.localeCompare(q.firstTrade) || q.aumUsd - p.aumUsd);
-  else a.sort((p, q) => p.name.localeCompare(q.name, 'he'));
+  if (S.sort === 'ret') {                                    /* funds without a return stay at the bottom in both directions */
+    a.sort((p, q) => (has(q) - has(p)) || (has(p) ? d * (retOf(q, y).r - retOf(p, y).r) : 0) || byAum(p, q));
+  } else {
+    const key = { aum: (p, q) => q.aumUsd - p.aumUsd, fee: (p, q) => p.fee - q.fee, first: (p, q) => p.firstTrade.localeCompare(q.firstTrade),
+      sec: (p, q) => +p.sec - +q.sec, name: (p, q) => p.name.localeCompare(q.name, 'he') }[S.sort];
+    a.sort((p, q) => d * key(p, q) || byAum(p, q));
+  }
   return a;
 }
 function renderChips() {
@@ -486,15 +495,15 @@ function renderList() {
   const list = sorted(F.filter(matches));
   renderChips();
   el('count').innerHTML = list.length + ' מתוך ' + F.length + ' קרנות' + (S.q || S.mgr !== 'all' || S.cat !== 'all' || S.struct !== 'all' ? ' · <button class="linkbtn" id="clr" type="button">נקה סינון</button>' : '');
-  const th = (k, t) => '<button type="button" data-sort="' + k + '" class="' + (S.sort === k ? 'on' : '') + '">' + t + '</button>';
-  const head = '<div class="lh"><div></div><div>' + th('name', 'קרן') + '</div><div>מספר נייר</div><div>' + th('first', 'תחילת מסחר') + '</div><div>' + th('aum', 'גודל הקרן') + '</div><div>' + th('fee', 'דמי ניהול') + '</div>' +
+  const th = (k, t) => '<button type="button" data-sort="' + k + '" class="' + (S.sort === k ? 'on' + ((k === 'aum' || k === 'ret' ? S.rev : !S.rev) ? ' rev' : '') : '') + '" title="' + (S.sort === k ? 'לחיצה להיפוך הסדר' : 'מיון לפי עמודה זו') + '">' + t + '</button>';
+  const head = '<div class="lh"><div></div><div>' + th('name', 'קרן') + '</div><div>' + th('sec', 'מספר נייר') + '</div><div>' + th('first', 'תחילת מסחר') + '</div><div>' + th('aum', 'גודל הקרן') + '</div><div>' + th('fee', 'דמי ניהול') + '</div>' +
     '<div>' + th('ret', 'תשואה שקלית בשנת') + '<br><select id="yearSel" aria-label="שנה לתשואה">' + D.years.map(y => '<option value="' + y + '"' + (String(y) === S.year ? ' selected' : '') + '>' + yLabel(y) + '</option>').join('') + '</select></div><div></div></div>';
   const mobYear = '<div class="ctl-row" style="display:none" id="mobYear"></div>';
   el('listView').innerHTML = '<div class="list">' + head + (list.length ? list.map(rowHtml).join('') : '<div class="empty">לא נמצאו קרנות שמתאימות לסינון.</div>') + '</div>';
   if (window.matchMedia('(max-width:900px)').matches) {      /* year picker for narrow screens (the header row is hidden there) */
     el('listView').insertAdjacentHTML('afterbegin', '<div class="ctl-row" style="margin-bottom:.7rem"><label style="font-size:.82rem;color:var(--muted)">תשואה שקלית בשנת: <select class="sel" id="yearSelM">' + D.years.map(y => '<option value="' + y + '"' + (String(y) === S.year ? ' selected' : '') + '>' + yLabel(y) + '</option>').join('') + '</select></label></div>');
   }
-  el('sortSel').value = S.sort;
+  el('sortSel').value = S.sort; el('revBtn').classList.toggle('on', S.rev); el('revBtn').setAttribute('aria-pressed', S.rev);
 }
 
 /* compare */
@@ -553,12 +562,13 @@ el('mgrSeg').addEventListener('click', e => { const b = e.target.closest('button
 el('viewSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v; render(); });
 el('structSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.struct = b.dataset.v; render(); });
 el('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; S.cat = b.dataset.v; render(); });
-el('sortSel').addEventListener('change', e => { S.sort = e.target.value; render(); });
+el('sortSel').addEventListener('change', e => { S.sort = e.target.value; S.rev = false; render(); });
+el('revBtn').addEventListener('click', () => { S.rev = !S.rev; render(); });
 el('explorer').addEventListener('change', e => {
   if (['yearSel', 'yearSelM', 'yearSelC'].includes(e.target.id)) { S.year = e.target.value; render(); }
 });
 el('explorer').addEventListener('click', e => {
-  const sortBtn = e.target.closest('[data-sort]'); if (sortBtn) { S.sort = sortBtn.dataset.sort; render(); return; }
+  const sortBtn = e.target.closest('[data-sort]'); if (sortBtn) { if (S.sort === sortBtn.dataset.sort) S.rev = !S.rev; else { S.sort = sortBtn.dataset.sort; S.rev = false; } render(); return; }
   if (e.target.id === 'clr') { S.q = ''; S.mgr = 'all'; S.cat = 'all'; S.struct = 'all'; el('q').value = ''; render(); return; }
   const cmp = e.target.closest('[data-cmp]');
   if (cmp) { e.stopPropagation(); openCmp(cmp.dataset.cmp); return; }
